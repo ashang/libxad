@@ -1,0 +1,496 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+
+<html>
+
+<head>
+<title>Clusters and File Allocation</title>
+<LINK REV="made" HREF="mailto:webmaster@storagereview.com">
+<SCRIPT language="JavaScript1.2" type="text/javascript" src="/styles/load_css.js"></SCRIPT>
+</HEAD>
+
+<BODY bgcolor="#ffffff" leftmargin=0 topmargin=0 marginwidth=0 marginheight=0>
+<BASEFONT face=arial size=3>
+<TABLE border=0 cellspacing=0 cellpadding=0 width="100%" align=center>
+    <TR>
+	<TD width="1%" valign="top" background="/images/sideline.gif"><img border="0" src="/images/buffer.gif" width="35" height="5"></TD>
+	
+	<TD>
+	<TABLE border=0 width="97%" align=center>
+    	<TR>
+		<TD nowrap>
+			<P align=center>
+			<A HREF="http://www.maximumpc.com/" TARGET="_blank"><IMG SRC="/images/maxpcn.gif" WIDTH="60" HEIGHT="60" BORDER="0" ALT=""></A> &nbsp; <A HREF="http://maximumpcads.snv.futurenet.com/cgi-bin/accipiter/adclick.exe/area=PC.STORAGEREVIEW/adsize=468X60?963051325" TARGET="_blank"><IMG BORDER=0 SRC="http://maximumpcads.snv.futurenet.com/cgi-bin/accipiter/adserver.exe/area=PC.STORAGEREVIEW/adsize=468X60?963051325" HEIGHT=60 WIDTH=468 ALT=""></A> &nbsp; <A HREF="http://maximumpcads.snv.futurenet.com/cgi-bin/accipiter/adclick.exe/area=PC.STORAGEREVIEWBUYBTN/adsize=120X90?963051325" TARGET="_blank"><IMG BORDER=0 SRC="http://maximumpcads.snv.futurenet.com/cgi-bin/accipiter/adserver.exe/area=PC.STORAGEREVIEWBUYBTN/adsize=120X90?963051325" HEIGHT=90 WIDTH=120 ALT=""></A>
+			<BR><BR>
+			<FONT size=1>Reprinted, with permission, from</FONT><BR>
+			<A href="http://www.pcguide.com/" onmouseover="window.status='The PC Guide'; return true;" target="new_window"><FONT size=4>The PC Guide</FONT></A>
+			</P>
+		</TD>
+		</TR>
+    	<TR>
+		<TD>
+
+<center><hr width="95%" noshade><em><b>
+Clusters and File Allocation
+</b></em><hr width="95%" noshade></center>
+
+<table border=0 bgcolor=black cellpadding=1 cellspacing=0 align=center width="95%"><tr><td>
+<table border=0 cellpadding=0 cellspacing=0 width="100%" bgcolor="#eeeeee">
+<tr><th bgcolor="#a0b7c7">
+<a name="topics">Further Topics</a>
+</th></tr>
+<tr><td>
+
+<table border=0 cellpadding=0 cellspacing=0 width="100%">
+<tr><td>&nbsp;<img src="/images/openbook.gif" width=15 height=16 border=0 alt="">&nbsp;Hard Disk Drives</td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="/guide/guide_construct.html" onmouseover="window.status='Construction and Operation of the Hard Disk Drive'; return true;">Construction and Operation of the Hard Disk Drive</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="/guide/guide_geometry.html" onmouseover="window.status='Hard Disk Geometry and Low-Level Data Structures'; return true;">Hard Disk Geometry and Low-Level Data Structures</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="/guide/guide_performance.html" onmouseover="window.status='Hard Disk Performance'; return true;">Hard Disk Performance</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="/guide/guide_bios_capacity.html" onmouseover="window.status='Hard Disk BIOS and Capacity Factors'; return true;">Hard Disk BIOS and Capacity Factors</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="/guide/guide_interface_config.html" onmouseover="window.status='Hard Disk Interfaces and Configuration'; return true;">Hard Disk Interfaces and Configuration</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/openfolder.gif" width=16 height=14 border=0 alt="">&nbsp;<a href="/guide/guide_structures_filesys.html" onmouseover="window.status='Hard Disk Logical Structures and File Systems'; return true;">Hard Disk Logical Structures and File Systems</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="guide_structures_os.html" onmouseover="window.status='Operating Systems and File Systems'; return true;">Operating Systems and File Systems</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="guide_structures_pc.html" onmouseover="window.status='PC File Systems'; return true;">PC File Systems</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="guide_structures_boot.html" onmouseover="window.status='Major Disk Structures and the Boot Process'; return true;">Major Disk Structures and the Boot Process</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="guide_structures_fat.html" onmouseover="window.status='FAT File System Disk Volume Structures'; return true;">FAT File System Disk Volume Structures</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/doc.gif" width=13 height=16 border=0 alt="">&nbsp;Clusters and File Allocation</td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>&#183;</b>&nbsp;&nbsp;</font><a href="#Clusters" onmouseover="window.status='Clusters (Allocation Units)'; return true;">Clusters (Allocation Units)</td><td align=right>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>&#183;</b>&nbsp;&nbsp;</font><a href="#Chaining" onmouseover="window.status='File Chaining and FAT Cluster Allocation'; return true;">File Chaining and FAT Cluster Allocation</td><td align=right>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>&#183;</b>&nbsp;&nbsp;</font><a href="#Deletion" onmouseover="window.status='File Deletion and Undeletion'; return true;">File Deletion and Undeletion</td><td align=right>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>&#183;</b>&nbsp;&nbsp;</font><a href="#Fragmentation" onmouseover="window.status='Fragmentation and Defragmentation'; return true;">Fragmentation and Defragmentation</td><td align=right>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>&#183;</b>&nbsp;&nbsp;</font><a href="#Errors" onmouseover="window.status='FAT File System Errors'; return true;">FAT File System Errors</td><td align=right>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="guide_structures_partition.html" onmouseover="window.status='Partitioning, Partition Sizes and Drive Lettering'; return true;">Partitioning, Partition Sizes and Drive Lettering</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="guide_structures_programs.html" onmouseover="window.status='Disk Partitioning and Formatting Programs'; return true;">Disk Partitioning and Formatting Programs</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="guide_structures_compression.html" onmouseover="window.status='Disk Compression'; return true;">Disk Compression</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+</table>
+
+</td></tr></table>
+</td></tr></table>
+
+<p align=center>
+<!-- Group Bottom_Pool (32) -->
+ <!-- Client VXA_Pool2 -->
+  <!-- Client VXA_Pool2 Logged (wait: 0) -->
+   <a href="http://www.storagereview.com/tracker/tracker.cgi/289200?client=VXA_Pool2" target="_blank" onmouseover="window.status='Click To Win A VXA Reliable Tape Drive!!'; return true;" onmouseout="window.status='';return true;"><img src="http://www.storagereview.com/tracker/banners/isp_banner.gif" width=468 height=60 border=0 alt="Click To Win A VXA Reliable Tape Drive!!" ></a>  
+</p>
+
+<table border=0 cellpadding=0 width="95%" align=center>
+<tr><td bgcolor="#0000A5" align=right><nobr><font size="-2" color="#ffff00"><em>
+<a name="Body">Author: Charles M. Kozierok</a>&nbsp;
+</em></font></nobr></td></tr>
+<tr><td bgcolor="#008000">
+<img src="/images/spacer.gif" width=1 height=2 alt=""></td></tr></table>
+
+<table border=0 cellpadding=0 cellspacing=0 align=center valign=top width="95%">
+<tr><td>
+<br>
+<p>One of the most important things that an operating system does is to manage the use of
+disks and other storage media. (After all, DOS does stand for <i>Disk</i> Operating
+System). The key question is: given that we have a disk that can store a certain amount of
+information, and a bunch of files and directories (of varying sizes and descriptions) that
+need to use this space, how do we organize and manage it efficiently?</p>
+
+<p>Various operating systems have come up with different ways of managing the organization
+and allocation of disk space to files. This section describes how the FAT file system
+allocates space to files and manages the use of each disk volume.</p>
+
+<hr noshade>
+<u><b>
+
+<p><a name="Clusters">Clusters (Allocation Units)</a></b></u></p>
+
+<p>As described here, the smallest unit of space on the hard disk that any software can
+access is the sector, which contains 512 bytes. It is
+possible to have an allocation system for the disk where each file is assigned as many
+individual sectors as it needs. For example, a 1 MB file would require approximately 2,048
+individual sectors to store its data.</p>
+
+<p>Under the FAT file system (and in fact, most file systems) individual sectors are not
+used. There are several performance reasons for this. It can get cumbersome to manage the
+disk when files are broken into 512-byte pieces. A 2 GB disk volume using 512 byte sectors
+managed individually would contain over 4 million individual sectors, and keeping track of
+this many pieces of information is time- and resource-consuming. Some operating systems <i>do</i>
+allocate space to files by the sector, but they require some advanced intelligence to do
+this properly. FAT was designed many years ago and is a <i>simple</i> file system, and is
+not capable of managing individual sectors.</p>
+
+<p>What FAT does instead is to group sectors into larger blocks that are called <i>clusters</i>,
+or <i>allocation units</i>. The cluster size is determined primarily by the size of the
+disk volume: generally speaking, larger volumes use larger cluster sizes. For hard disk
+volumes, each cluster ranges in size from 4 sectors (2,048 bytes) to 64 sectors (32,768
+bytes). Floppy disks use much smaller clusters, and in some cases use a cluster of size of
+just 1 sector. The sectors in a cluster are continuous, so each cluster is a continuous
+block of space on the disk. </p>
+
+<p>Cluster sizing (and hence partition or volume size, since they are directly related)
+has an important impact on performance and disk utilization. The cluster size is
+determined when the disk volume is partitioned. Certain utilities (like Partition Magic)
+can alter the cluster size of an existing partition (within limits) but for the mostpart,
+once the partition size is selected it is fixed.</p>
+
+<p>Every file must be allocated an integer number of clusters--a cluster is the smallest
+unit of disk space that can be allocated to a file, which is why clusters are often called
+allocation units. This means that if a volume uses clusters that contain 8,192 bytes, an
+8,000 byte file uses one cluster (8,192 bytes on the disk) but a 9,000 byte file uses two
+clusters (16,384 bytes on the disk). This is why cluster size is so important in making
+sure you maximize the efficient use of the disk--larger cluster sizes result in more
+wasted space. <a href="guide_structures_partition.html" onmouseover="window.status='Partitioning, Partition Sizes and Drive Lettering'; return true;">This issue is given a full treatment here</a>.</p>
+
+<hr noshade>
+<u><b>
+
+<p><a name="Chaining">File Chaining and FAT Cluster Allocation</a></b></u></p>
+
+<p>The <a href="guide_structures_fat.html" onmouseover="window.status='FAT File System Disk Volume Structures'; return true;">file allocation table (FAT)</a> is used to keep track of
+which clusters are assigned to each file. The operating system (and hence any software
+applications) can determine where a file's data is located by using the directory entry
+for the file and file allocation table entries. Similarly, the FAT also keeps track of
+which clusters are open and available for use. When an application needs to create (or
+extend) a file, it requests more clusters from the operating system, which finds them in
+the file allocation table.</p>
+
+<p>There is an entry in the file allocation table for each cluster used on the disk. Each
+entry contains a value that represents how the cluster is being used. There are different
+codes used to represent the different possible statuses that a cluster can have.</p>
+
+<p>Every cluster that is in use by a file has in its entry in the FAT a cluster number
+that links the current cluster to the next cluster that the file is using. Then that
+cluster has in its entry the number of the cluster after <i>it</i>. The last cluster used
+by the file is marked with a special code that tells the system that it is the last
+cluster of the file; this is often a number like 65,535 (16 ones in binary format). Since
+the clusters are linked one to the next in this manner, they are said to be <i>chained</i>.
+Every file (that uses more than one cluster) is chained in this manner. See the example
+that follows for more clarification.</p>
+
+<p>In addition to a cluster number or an end-of-file marker, a cluster's entry can contain
+other special codes to indicate its status. A special code, usually zero, is put in the
+FAT entry of every open (unused) cluster. This tells the operating system which clusters
+are available for assignment to files that need more storage space. Another code is used
+to indicate &quot;bad&quot; clusters. These are clusters where a disk utility (or the
+user) has previously detected one or more unreliable sectors, due to disk defects. These
+clusters are marked as bad so that no future attempts will be made to use them.</p>
+
+<p>Accessing the entire length of a file is done by using a combination of the file's
+directory entry and its cluster entries in the FAT. This is confusing to describe, so
+let's look at an example. Let's consider a disk volume that uses 4,096 byte clusters, and
+a file in the C:\DATA directory called &quot;PCGUIDE.HTM&quot; that is 20,000 bytes in
+size. This file is going to require 5 clusters of storage (because 20,000 divided by 4,096
+is around 4.88).</p>
+
+<p>OK, so we have this file on the disk, and let's say we want to open it up to edit it.
+We open our editor and ask for the file to be opened. To find the cluster on the disk
+containing the first part of the file, the system just looks at the file's directory entry
+to find the starting cluster number for the file; let's suppose it goes there and sees the
+number 12,720. The system then know to go to cluster number 12,720 on the disk to load the
+first part of the file.</p>
+
+<p>To find the second cluster used by this file, the system looks at the FAT entry for
+cluster 12,720. There, it will find another number, which is the next cluster used by the
+file. Let's say this is 12,721. So the next part of the file is loaded from cluster
+12,721, and the FAT entry for 12,721 is examined to find the next cluster used by the
+file. This continues until the last cluster used by the file is found. Then, the system
+will check the FAT entry to find the number of the next cluster, but instead of finding a
+valid cluster number, it will find a special number like 65,535 (special because it is the
+largest number you can store in 16 bits). This is the signal to the system that
+&quot;there are no more clusters in this file&quot;. Then it knows it has retrieved the
+entire file.</p>
+
+<p>Since every cluster is chained to the next one using a number, it isn't necessary for
+the entire file to be stored in one continuous block on the disk. In fact, pieces of the
+file can be located anywhere on the disk, and can even be moved after the file has been
+created. Following these chains of clusters on the disk is done invisibly by the operating
+system so that to the user, each file appears to be in one continuous chunk of disk space.</p>
+
+<hr noshade>
+<u><b>
+
+<p><a name="Deletion">File Deletion and Undeletion</a></b></u></p>
+
+<p>One of the advantages of the FAT file system is the ease with which it allows for files
+to be undeleted, because of the way that it deletes files. Contrary to what many people
+believe, deleting a file does not result in the contents of the file actually being
+removed from the disk. All that the system does is mark the file as deleted.</p>
+
+<p>When you delete a file, the system doesn't really delete the file. It places the hex
+byte code E5h into the first letter of the file name of the file. This is a special tag
+that tells the system &quot;this file has been deleted&quot;. The space that was formerly
+used by the file is available for use by other files, but it is not cleared. It is just
+sort of &quot;left there&quot;.</p>
+
+<p>Over time, these clusters will eventually probably be reused by other files as they
+request more clusters for storage. However, if you accidentally delete a file you can very
+often recover it if you act quickly. If you run a utility like DOS's UNDELETE or Norton
+Utilities' UNERASE immediately, it can identify and recover the deleted files in a
+directory. As long as you provide it with the missing first character of the file name
+(which was overwritten by the E5h code when the file was deleted), it may be able to
+recover all or most of the file.</p>
+
+<p>The less you do between the time the file is deleted and the time when you try to
+undelete it, the more likely you will be able to recover the file. Obviously, if you <a href="#Fragmentation">defragment your disk</a> or do some other large-scale disk
+work, you will most likely lose the file's contents forever. Finally, many utilities will
+protect your files after being deleted so they can be recovered easily without worrying
+about the disk space being reused. For example, Windows 95 sends all deleted files
+initially to its &quot;Recycle Bin&quot;, from which they can be restored if needed.
+Norton Utilities also includes a form of protection for recently-deleted files. </p>
+
+<hr noshade>
+<u><b>
+
+<p><a name="Fragmentation">Fragmentation and Defragmentation</a></b></u></p>
+
+<p>Since each file is stored as a linked list of clusters, the data that is contained in a
+file can be located anywhere on the disk. If you have a 10 MB file stored on a disk using
+4,096-byte clusters, it is using 2,560 clusters. These clusters can be on different
+tracks, different platters of the disk, in fact, they can be anywhere.</p>
+
+<p>However, even though a file can be spread all over the disk, this is far from the
+preferred situation. The reason is performance. As discussed in the <a href="/guide/guide_performance.html" onmouseover="window.status='Hard Disk Performance'; return true;">section describing performance</a>, hard disks are relatively
+slow devices, mainly because they are mechanical (they have moving parts--your processor,
+chipset, memory and system bus do not). Each time the hard disk has to move the heads to a
+different track, it takes time that is equivalent to thousands and thousands of processor
+cycles.</p>
+
+<p>Therefore, we want to minimize the degree to which each file is spread around the disk.
+In the ideal case, every file would in fact be completely contiguous--each cluster it uses
+would be located one after the other on the disk. This would enable the entire file to be
+read, if necessary, without a lot of mechanical movement by the hard disk. There are in
+fact utilities that can optimize the disk by rearranging the files so that they are
+contiguous. This process is called <i>defragmentation</i> or <i>defragmenting</i>. The
+utilities that do this are, unsurprisingly, called <i>defragmenters</i>. The most famous
+one is Norton's SpeedDisk, and Microsoft now includes a DEFRAG program for DOS and a
+built-in defragmenter for Windows 95 as well.</p>
+
+<p>So the big question is: how does fragmentation occur anyway? Why not just arrange the
+disk so that all the files are always contiguous? Well, it is in many cases a gradual
+process--the file system starts out with all or most of its file contiguous, and becomes
+more and more <i>fragmented</i> as a result of the creation and deletion of files over a
+period of time.</p>
+
+<p>To illustrate, let's consider a very simple example using a teeny hard disk that
+contains only 12 clusters. The table below represents the usage of the 12 clusters.
+Initially, the table is empty:</p>
+
+<table border=0 bgcolor=black cellpadding=1 cellspacing=0 align=center width="90%"><tr><td>
+<table border=1 cellpadding=0 cellspacing=0 width="100%" bgcolor="#eeeeee">
+  <tr>
+	<th width="17%">(cluster 1)</th>
+	<th width="16%">(cluster 2)</th>
+	<th width="17%">(cluster 3)</th>
+	<th width="17%">(cluster 4)</th>
+	<th width="16%">(cluster 5)</th>
+	<th width="17%">(cluster 6)</th>
+  </tr>
+  <tr>
+	<th>(cluster 7)</th>
+	<th>(cluster 8)</th>
+	<th>(cluster 9)</th>
+	<th>(cluster 10)</th>
+	<th>(cluster 11)</th>
+	<th>(cluster 12)</th>
+  </tr>
+</table></td></tr></table>
+
+<p>OK, now let's suppose that we create four files: file A takes up 1 cluster, file B
+takes 4, file C takes 2, and file D takes 3. We store them in the free available space,
+and they start out all contiguous, as follows:</p>
+
+<table border=0 bgcolor=black cellpadding=1 cellspacing=0 align=center width="90%"><tr><td>
+<table border=1 cellpadding=0 cellspacing=0 width="100%" bgcolor="#eeeeee">
+  <tr>
+    <th width="17%">A</th>
+    <th width="16%">B</th>
+    <th width="17%">B</th>
+    <th width="17%">B</th>
+    <th width="16%">B</th>
+    <th width="17%">C</th>
+  </tr>
+  <tr>
+    <th>C</th>
+    <th>D</th>
+    <th>D</th>
+    <th>D</th>
+    <th>&nbsp;</th>
+    <th>&nbsp;</th>
+  </tr>
+</table></td></tr></table>
+
+<p>Next, we decide that we don't need file C, so we delete it. This leaves the disk
+looking like this:</p>
+
+<table border=0 bgcolor=black cellpadding=1 cellspacing=0 align=center width="90%"><tr><td>
+<table border=1 cellpadding=0 cellspacing=0 width="100%" bgcolor="#eeeeee">
+  <tr>
+    <th width="17%">A</th>
+    <th width="16%">B</th>
+    <th width="17%">B</th>
+    <th width="17%">B</th>
+    <th width="16%">B</th>
+    <th width="17%">&nbsp;</th>
+  </tr>
+  <tr>
+    <th>&nbsp;</th>
+    <th>D</th>
+    <th>D</th>
+    <th>D</th>
+    <th>&nbsp;</th>
+    <th>&nbsp;</th>
+  </tr>
+</table></td></tr></table>
+
+<p>Then, we create a new file E that needs 3 clusters. Well, there are no contiguous
+blocks on the disk left that are 3 clusters long, so we have to split E into two
+fragments, using part of the space formerly occupied by C. Here's what the
+&quot;disk&quot; looks like now:</p>
+
+<table border=0 bgcolor=black cellpadding=1 cellspacing=0 align=center width="90%"><tr><td>
+<table border=1 cellpadding=0 cellspacing=0 width="100%" bgcolor="#eeeeee">
+  <tr>
+    <th width="17%">A</th>
+    <th width="16%">B</th>
+    <th width="17%">B</th>
+    <th width="17%">B</th>
+    <th width="16%">B</th>
+    <th width="17%">E</th>
+  </tr>
+  <tr>
+    <th>E</th>
+    <th>D</th>
+    <th>D</th>
+    <th>D</th>
+    <th>E</th>
+    <th>&nbsp;</th>
+  </tr>
+</table></td></tr></table>
+
+<p>Next, we delete files A and E and create file F which takes up 5 clusters. The disk now
+looks like this:</p>
+
+<table border=0 bgcolor=black cellpadding=1 cellspacing=0 align=center width="90%"><tr><td>
+<table border=1 cellpadding=0 cellspacing=0 width="100%" bgcolor="#eeeeee">
+  <tr>
+    <th width="17%">F</th>
+    <th width="16%">B</th>
+    <th width="17%">B</th>
+    <th width="17%">B</th>
+    <th width="16%">B</th>
+    <th width="17%">F</th>
+  </tr>
+  <tr>
+    <th>F</th>
+    <th>D</th>
+    <th>D</th>
+    <th>D</th>
+    <th>F</th>
+    <th>F</th>
+  </tr>
+</table></td></tr></table>
+
+<p>As you can see, file F ends up being broken into three fragments. This is a highly
+simplified example of course, because real disks have thousands of files and thousands of
+clusters, so the problem there is magnified. This gives you the general idea of what
+happens though. What a defragmentation program does is to rearrange the disk to get the
+files back into contiguous form. After running the utility, the disk would look something
+like this: </p>
+
+<table border=0 bgcolor=black cellpadding=1 cellspacing=0 align=center width="90%"><tr><td>
+<table border=1 cellpadding=0 cellspacing=0 width="100%" bgcolor="#eeeeee">
+  <tr>
+    <th width="17%">B</th>
+    <th width="16%">B</th>
+    <th width="17%">B</th>
+    <th width="17%">B</th>
+    <th width="16%">F</th>
+    <th width="17%">F</th>
+  </tr>
+  <tr>
+    <th>F</th>
+    <th>F</th>
+    <th>F</th>
+    <th>D</th>
+    <th>D</th>
+    <th>D</th>
+  </tr>
+</table></td></tr></table>
+
+<hr noshade>
+<u><b>
+
+<p><a name="Errors">FAT File System Errors</a></b></u></p>
+
+<p>As a result of how the FAT file system allocates space and chains file together, there
+are several common types of errors that can crop up over time. Note that I am talking here
+about errors in the <i>logical structure </i>of the disk, not physical disk errors, bad
+sectors, etc. Most of these errors can be detected by using a standard disk error-checking
+program that analyzes the file system's integrity, such as Microsoft's SCANDISK or
+Norton's Disk Doctor (NDD). In fact, I highly recommend in the System Care Guide that every hard disk volume be scanned for routine file system problems on
+a daily basis.</p>
+
+<p>File system errors are occasionally the result of corruption on the disk that can have
+at its root a real hardware problem. These errors can therefore result from any system
+problem that can cause disk corruption, such as resource conflicts, bad drivers, etc. Far
+more often, however, file system problems occur as a result of a software problem. Program
+crashes, for example, often leave around clusters that had space allocated to them but not
+assigned to a file. </p>
+
+<p>A power failure on a PC running Windows will often result in one or more file system
+errors due to files not being closed properly. This is why you are always supposed to exit
+Windows before shutting down a PC. It is also why the newest version of Windows 95 (OEM
+SR2) automatically scans the disk for errors when it starts, if it detects that Windows
+ended without doing a proper file system shutdown.</p>
+
+<p>The following are the most common errors encountered on a FAT disk: 
+
+<ul>
+  <li><b>Lost Clusters:</b> Virtually every DOS user has come across this problem. Lost
+    clusters are simply clusters that are marked in the FAT as being in use, but that the
+    system cannot link to any file. <a href="#Clusters">Every file consists of a
+    series of clusters</a> that can be traced by starting with the directory entry and
+    following the linked list of clusters to the end of the file. Disk checking programs can
+    check an entire disk volume for lost clusters using the following procedure (or something
+    similar to it). First, create a copy in memory of the FAT, noting all of the clusters
+    marked as in use. Starting at the root directory, trace through the clusters used by each
+    file and mark them as &quot;accounted for&quot;, since they have been seen to be connected
+    to a file. Then do the same for all the subdirectories of the root directory, and then <i>their</i>
+    subdirectories, and so on. When finished, every cluster that is marked in the FAT as in
+    use should be accounted for. Any that are in use but not accounted for are
+    &quot;orphans&quot; that don't belong to any file.<br>
+    Lost clusters are usually the result of interrupted file activity of some sort. The
+    program that detects them will usually give you the choice of clearing them (marking them
+    as &quot;available&quot; and returning them to the pool of free clusters) or saving them
+    as a file. In the latter case, the program generates a file name and links the lost
+    clusters to that name, so that a real file is formed. Usually this file will then be
+    corrupted or damaged in some way, but you can often at least see what this orphaned data
+    was and in some cases, recover it.</li>
+  <li><b>Cross-Linked Files:</b> On rare occasions, two files can end up pointing to the same
+    data on the disk. Both files will have the starting cluster number in the directory entry
+    pointing to the same cluster number. Obviously this is a problem, since each time you use
+    either file, you will overwrite the other one. The only solution to this problem is to
+    make new copies of each of the affected files. You will generally lose the contents of one
+    or the other of the files (in fact, by the time you discover this problem, you have
+    already lost the contents of one of them, since no sector can contain information from two
+    files at the same time).</li>
+  <li><b>Invalid Files or Directories:</b> Very rarely, the internal structures of file or
+    directories can become damaged so that some entries are no longer following the
+    &quot;rules&quot; for how a file or directory is supposed to be laid out. An example would
+    be a directory that doesn't have a pointer to its parent directory, or a file that has an
+    invalid start cluster. Sometimes files get assigned an invalid date or time by a buggy
+    piece of software. These problems can usually be fixed by the disk scanning software.</li>
+  <li><b>Allocation or FAT Errors:</b> Occasionally the entries in the FAT can become
+    corrupted or set to invalid values. Again, most disk-checking utilities will detect and
+    correct these sorts of problems on the fly.</li>
+</ul>
+<p>
+<b><u>Next:</u></b> <a href="guide_structures_partition.html" onmouseover="window.status='Partitioning, Partition Sizes and Drive Lettering'; return true;">Partitioning, Partition Sizes and Drive Lettering</a>
+</td></tr></table>
+
+<hr width="95%" noshade>
+<center><a href="#topics">Further Topics</a></center>
+<hr width="95%" noshade>
+
+<DIV align=center><BR>
+<A HREF="#top" onmouseover="window.status='Return to the top of this page'; return true;" onmouseout="window.status='';return true;"><IMG SRC="/images/blue_up_arrow.gif" width=32 height=32 border=0 alt="Return to the top of this page"></A>
+<BR>
+<FONT size=1>Copyright &copy; 1998-1999 Charles M. Kozierok. All rights reserved.</FONT>
+</DIV>
+</TD></TR></TABLE></TD></TR></TABLE>
+
+</BODY></HTML>

@@ -1,0 +1,636 @@
+Path: senator-bedfellow.mit.edu!bloom-beacon.mit.edu!news.kodak.com!news-nysernet-16.sprintlink.net!news-east1.sprintlink.net!news-peer1.sprintlink.net!news.sprintlink.net!pln-e!extra.newsguy.com!lotsanews.com!skynet.be!dispose.news.demon.net!demon!grolier!freenix!teaser.fr!not-for-mail
+From: jloup@gzip.OmitThis.org (Jean-loup Gailly)
+Newsgroups: comp.compression,comp.compression.research,news.answers,comp.answers
+Subject: comp.compression Frequently Asked Questions (part 3/3)
+Supersedes: <compr3_09jan99@gzip_org>
+Followup-To: comp.compression
+Date: 5 Sep 1999 22:37:53 +0200
+Organization: none
+Approved: news-answers-request@mit.edu
+Distribution: world
+Expires: 31 Oct 1999 16:17:20 GMT
+Message-ID: <compr3_05sep99@gzip_org>
+References: <compr1_05sep99@gzip_org> <compr2_05sep99@gzip_org>
+Reply-To: jloup@gzip.OmitThis.org
+NNTP-Posting-Host: dip208.teaser.fr
+X-Trace: feed.teaser.fr 936563617 7925 194.51.100.208 (5 Sep 1999 20:33:37 GMT)
+X-Complaints-To: usenet@feed.teaser.fr
+NNTP-Posting-Date: 5 Sep 1999 20:33:37 GMT
+Summary: *** READ THIS BEFORE POSTING ***
+Keywords: data compression, FAQ
+Lines: 613
+Xref: senator-bedfellow.mit.edu comp.compression:47324 comp.compression.research:3104 news.answers:165991 comp.answers:37559
+
+Archive-name: compression-faq/part3
+Last-modified: Feb 7th, 1996
+
+This file is part 3 of a set of Frequently Asked Questions for the
+groups comp.compression and comp.compression.research.
+
+If you did not get part 1 or 2, you can get them at
+http://www.faqs.org/faqs/compression-faq/part1/preamble.html or
+or ftp://rtfm.mit.edu/pub/usenet/news.answers/compression-faq/
+
+If you don't want to see this FAQ regularly, please add the subject line to
+your kill file. If you have corrections or suggestions for this FAQ, send them
+to Jean-loup Gailly <jloup at gzip.org>.  Thank you.
+
+Contents
+========
+
+Part 3: (Long) list of image compression hardware
+
+[85] Image compression hardware
+[99] Acknowledgments
+
+
+Search for "Subject: [#]" to get to question number # quickly. Some news
+readers can also take advantage of the message digest format used here.
+
+------------------------------------------------------------------------------
+
+Subject: [85] Image compression hardware
+
+Here is a list of sources of image compression hardware (JPEG, MPEG,
+H.261 and others), reposted with the author's permission.  The list is
+certainly dated already, but it is a good starting point for
+seeking compression chips. (Please send corrections/additions to
+jloup at gzip.org). References are taken from:
+
+   VIDEO COMPRESSION OPTIONS, IEEE CICC 6-May-92
+   John J. Bloomer, jbloomer@crd.ge.com, Fathy F. Yassa, Aiman A. Abdel-Malek
+   General Electric Corporate R&D, KWC317 Signals and Systems Laboratory
+   PO Box 8, Schenectady NY, 12301
+
+(Too many people have sent comments, corrections or additions so I am
+just making a common acknowledgment here.)
+
+[Check also:
+  http://www.dspnet.com/       Tech-Online's catalog
+  http://www.c-cube.com/       C-Cube Microsystems
+  http://datacompression.com/  DCP Research Corp
+  http://www.ftelinc.com/      FutureTel
+]
+
+ Pipelined Processors, Building Blocks (Chip Sets)
+ -------------------------------------------------
+
+STI3200, IMSA121, STI3208 - SGS-Thompson DCT processors.  602-867-6200
+	- 3200 has multiple block size options, DC to 13.5 MHz
+	- A121 8x8 fixed blocks, DC to 20MHz, add/sub loop, CCITT compatible
+	- 3208 8x8 fixed blocks, DC to 40MHz, CCITT compatible at 20MHz
+
+STI3220 - SGS-Thompson motion estimator (H.261, MPEG).  602-867-6279
+	- 8-bit input pixels, 4-bit H and V vectors out
+	- adjustable block size matcher (8x8, 8x16, 16x16)
+	- +7/-8 search window
+	- 5V, 2W at 18MHz (max), 68 pin PLCC
+
+L64765 , L64735 , L64745 - 3-chip LSI Logic JPEG set.
+    408-433-8000, 800-433-8778
+	- L64765 raster-to-block and color-space converter, jointly developed
+          with Rapid Tech.
+	- L64735 block DCT processor
+	- L64745 JPEG coder support, stand-alone lossless DPCM codec, dynamic
+          Huffman
+	- 27 MB/s on CCIR601 frames
+	- minimal support logic, color and gray scale
+	- 68-pin PGA or PLCC, 27 and 20 MHz versions
+
+L647*0 and L6471* families - LSI Logic H.621/MPEG pieces.  408-433-8000
+	- L64720 motion estimator, 30/40MHz, 8x8, 16x16 blocks, 32x32 or 16x16 
+          search window, 68-pin CPGA or PPGA
+	- L64730 & 735 8x8 DCT processors (12 & 8-9 bits)
+	- L64740 8x8 block quantization
+	- L64760 intra/inter-frame coding decision
+	- L64715 BCH error correction
+	- L64750/L64751 variable length encode/decode (H.261-specific)
+
+ZR36020 and ZR36031 - Zoran DCT processor & quantization/encoding. 408-986-1314
+	- JPEG-like scheme using 16-bit, two's complement fixed point
+          arithmetic
+	- includes bit-rate controls for constant # of pictures per card
+	- 7.4 MHz, < 1W, 20mW in standby mode, 7.5 frames/s (f/s)
+	- 36020 - 44-pin plastic quad flatpack (PQFP) or 48-pin ceramic DIP
+	- 36031 - 100-pin PQFP or 85-pin PGA.
+	- co-developments with Fuji Photo Film Co. Ltd. digital IC-card
+          camera market
+
+	Does 2-passes of image: generate histogram for optimum Huffman
+	tables and quantization compute step size (ala H.261 and
+	MPEG-I) for each macroblock or minimum coded unit (MCU).
+
+	JPEG-compatible codec expected soon.
+
+LDM3104  - Olympus DCT coefficient encoder
+	- constant rate, digital IC-card camera market
+	- 750 mW, 25 mW standby, 100-poin QFP
+
+TMC2312 - TRW quantizer/Huffman encoder, TMC2313 Huffman decoder/dequantizer
+
+TMC2311 - TRW CMOS Fast Cosine Transform Processor.  
+	- 12 Bits, 15 M pixels/s
+	- complies with the CCITT SGXV ( e.g. JPEG, H.261 and MPEG )
+	- includes an adder-subtractor for linear predictive coding
+
+MN195901 - Matsushita Electric Industrial Co.   See ISSCC 1992
+	- 16-bit, 60 MIP video signal processor
+	- 25 uS instruction processing
+	- on-board DCT and absolute differencing
+	- Philips Signetics US fab.
+
+HGCT - Ricoh CRC, Generalized Chen Transform demonstration chip.
+	- 2D JPEG/MPEG/H.261 compatible DCT
+	- includes quantization
+	- 30MHz, 15K gates
+	- licensing possible
+
+GCTX64000 - Graphic Communication Technology Corp. chipset
+	- provides CCITT H.261
+	- VLSI Technology and Hitachi supply H.261 codec core. 1 micron CMOS.
+
+BT - British Telecommunications  plc., Martlesham labs designed
+	- H.261 codec chipset, Motorola fab.
+	- 13 chips total for codec.
+
+
+ Pipelined Processors, Monolithic, Programmable
+ ----------------------------------------------
+
+Vision Processor - Integrated Information Technology Inc. 408-727-1885
+	- generic DCT, motion compensated & entropy coding codec
+	- microcode for still- and motion-video compression (JPEG, H.261 and
+          MPEG1)
+	- 1 micron CMOS, 20 MHz and 33 MHz, PGA and 84-pin QFP  
+	- JPEG only and JPEG/H/261/MPEG versions available, H.261 at 30 f/s.  
+	- used by Compression Labs, Inc. CDV teleconferencing system
+	- rumored to be the heart of the AT&T picture phone
+
+MN195901 - Matsushita Electric Industrial Corp
+	- 40 MHz DSP, built-in DCT
+	- 16-bit fixed-point
+
+AVP1000 -  AT&T  JPEG, MPEG and H.261 codec chipset.  800-372-2447
+	- 1400D decoder, 1400C system controller
+	- 1300E H.261 (CIF, QCIF, CIF240) at 30 f/s, I-frame only MPEG.
+	- 1400E is superset of 1300E, motion with 1/2 pixel resolution over +/-
+          32 pixels
+	- YCbCr video or digital input, on-board rate FIFOs, external RAM
+          required
+	- 0.75 micron, 50 MHz CMOS
+
+	AVP1000 is from AT&T Microelectronics.  The AT&T chip set
+	handles MPEG-1, H.261, and JPEG.  1400D has on board color
+	space convertor.  Limited to 4Mb/s coded rate.  The DSP does
+	the MUSICAM decoding (up to layer II ?)
+
+
+82750PB, 82750DB - Intel DVI  pixel and display YUV color space processors.
+	- proprietary machine code employed for compression
+	- usable for other algorithms (e.g., JPEG, H.261 or MPEG1 at reduced
+          data rates)
+
+
+ Pipelined Processors, Monolithic, Fixed Lossless - Entropy Coders, DPCM, VQ
+ ---------------------------------------------------------------------------
+
+DCP - Integrated Information Tech. Inc. Data Compressor Processor  408-727-1885
+	- LZ codec with on-chip dictionary store
+	- on-chip buffers supporting block moves
+	- targeting disk drives and network controller markets
+	- 3.3V, 84-pin PQFP
+
+Mystic - HP's DC-LZ codec.  408-749-9500
+
+AHA3210 - Advanced Hardware Architectures DC-LZ codec. 509-334-1000
+	- two independent DMA ports for 10 MB/s compress, decompress &
+          pass-thru
+	- addressing allows up to 16 MB record compression
+	- 20 MHz internal clock, 200 mW, 100-pin PQFP
+	- interface to AHA5101/5121 QIC tape controller/formatter
+	- HP licensee
+
+AHA3xxx/xxy - Rice (UNC) algorithm, 20M samples/sec, 4 to 14 bits. 208-883-8000
+
+CRM1000 - CERAM Inc. entropy codec, proprietary algorithm.  719-540-8500
+
+Rice - UNC algorithm prototype, 180 Mb/s.  See IEEE CICC 1992
+	- other CICC 1992 papers:
+	   +JS.E. Kerneny et.al. differential read, pyramidal output CCD
+  	   + A. Aggoun et.al. DPCM processing
+
+DCD - Philips Data Compressor Decompressor IC. 914-945-6000
+	- See CICC 1990 proceedings, H. Blume, et.al.
+	- LZ codec, 20 MHz clock
+	- Internal FIFOs, separate input/output buses, max 10 Mword/s data in
+	- 5 V CMOS, 175-pin PGA
+
+9705 - Second generation Stac Electronics accelerator chip.  619-431-7474
+	- Stacker LZA compression scheme(LZ-based)
+	- compress at approx. 2.5 MB/s, decompress at 6 MB/s (39+ faster than
+          9704)
+	- standby mode 300uA
+	- embedded in tapes and disks (e.g., QIC-122 Ten X Technology
+          512-346-8360)
+	- file compression board & software:
+	    + for the PC/AT - from Stac
+	    + for the Macintosh - from Sigma Design 415-770-0100 (40 MHz 9703)
+	- InfoChip Systems Inc. - proprietary string-matching technology
+          408-727-0514
+
+VCEP or OTI95C71/Am95C71 - Oak Technology Inc. 408-737-0888
+	- AMD CCITT B&W fax image compression
+
+
+ Pipelined Processors, Monolithic, Fixed Lossy
+ ---------------------------------------------
+
+MB86356B - Fujitsu LTD.
+	- JPEG DIS 10918-1 baseline  codec
+	- on-chip quantizer tables
+	- 2.5M pixel/sec input, up to 10MB/sec output
+	- supports progressive and DPCM lossless modes 
+	- 135 pin PGA.
+
+CL550-30 - C-Cube Microsystems 408-944-6300, literature@c-cube.com
+	- JPEG-8-R2 compliant baseline codec
+	- 350-level pipeline, on-chip Huffman and quantizer table
+	- 44.1 MB/sec (15 MB/sec for -10)
+	- RGB, YUV, CMYK supported, CCIR 601 in real-time
+	- 16/32-bit host interface 
+	- 144 pin PGA or QFP, 2.5W at 29.41 MHz
+
+	Limited to 2MB/sec (15Mb/s) coded rate.  35MHz PGA version
+	available.  2:1 horizontal filter, on board programmable color
+	space convertor.  Allows on pair of quantization tables to be
+	loaded while other pair is used to code or decode data stream.
+	Needs maintanence by host.
+
+STI140 - SGS-Thompson JPEG baseline codec.  617-259-0300 [** Now cancelled **]
+	- see CICC 1991 proceedings, M. Bolton.
+	- 20 Mpixel/sec input, up to 20 MB/sec output
+	- supports 24-bit color, 8-bit grey and 12-bit extended pixels
+	- on chip Huffman and quantizer tables
+	- 144 pin PQFP, 5V, < 2W., 10mW power-down mode
+	- 1.2 micron, 3-layer metal CMOS, 20 MHz.	`
+
+UVC7710 - UVC Corp. Integrated Multimedia Processor. Was 714-261-5336, out
+          of business now.
+	- proprietary, patented intra-frame compression, on-chip code tables
+	- 20-35:1, 12.5 Mpixels/sec., compressed audio
+	- includes much of the PC-AT (16-bit ISA) bus interface logic
+	- 128 pin PJQFP plastic
+
+CL950 - C-Cube/JVC implementation of the MPEG-JVC or extended mode MPEG2 
+        announced.  6-9 Mb/sec.
+
+	JVC mode is not MPEG-II compliant (there isn't an MPEG2 standard yet)
+	but is an extension of MPEG1 at a higher rate plus interlace video
+	handling.
+
+CL450 - Announced June 1992.  Scaled down version of CL950, with 3Mb/sec
+        limit.  Does not code or decode JPEG, only MPEG-I decoding.
+
+CD-I - ASICs planned for CD-ROM, Compact Disk-Interactive defacto standards
+	- CD-ROM XA - Sony-Philips-Motorola-Microsoft
+	- CDTV -  Commodore.  YUV processing.
+	- audio ADPCM encode/decode PC/AT boards available from Sony
+          408-432-0190
+
+Motorola MCD250 Full Motion Video Decoder.   512-928-5053.
+    This is a CD-I MPEG Video decoder which requires only a single
+    4Mbit DRAM for FMV decoding. Decodes System and Video Layers
+    at up to 5Mbits/sec, converts from 24/25/30 fps IPB streams to
+    25/30 fps output video in 24bit RGB/YUV format. Supports extra
+    CD-I functions such as windowing and still picture mode.
+    Targetted at low cost consumer applications such as CD-I,
+    CD-Karaoke, Video-CD and cable TV.
+
+Motorola MCD260 MPEG Audio Host Interface and DSP56001-33.  512-928-5053.
+    The MCD260 is a low cost interface IC which goes between a 68K
+    bus and a DSP56K and strips out the MPEG System Layer whilst also
+    buffering and synchronising. A 33MHz 56001 with 8Kwords of DSPRAM
+    decodes the MPEG Audio (Layer 1/II @ 44.1KHz, all modes and bit rates)
+
+Pixel Magic PM-2. Contact: Don Shulsinger, Pixel Magic, 508-688-4410.
+- JBIG compression/decompression at 30 Mb/s (typical and worst-case)
+- G3/G4 compression/decompression at 90 Mb/s (typical), 30 Mb/s (worst-case)
+- scaling on decode from 1/256 to 256X
+- rotation by 90 degrees
+- clipping to a window and padding out to another
+- lookup table filtering on 3x3 neighborhoods
+- on-chip FIFOs on input and output
+- bookmarking for suspend/resume
+
+
+ Codecs Chips Under Development
+ ------------------------------
+
+MPEG1 codec chips due from - TI, Brooktree, Cypress Semiconductor, Motorola 
+(successor to the DSP96002 Multimedia Engine), Xing Technology/Analog Devices, 
+Sony and C-Cube
+
+
+Windbond Electronics Corp. is developing a DSP chip for CD-I, MPEG and JPEG
+
+
+ Using these Chips: Board Level Compression Hardware
+ ------------------------------------------------------
+
++ JPEG Using CL550
+
++ JPEG Using Other Chip Sets
+
++ DSP Chip Based JPEG/MPEG Solutions
+
++ Integrated Compressed Digital Video Boards 
+
+
+ JPEG Using CL550
+ ---------------
+C-Cube - 408-944-6300 ISA and NuBus boards 
+	- for development and limited time-constraint applications
+	- 1-2.5 MB/sec host bus constraints
+	- Image Compression Interface (ISI) software for 3rd party CL550
+          integration
+
+VideoSpigot/SuperSqueeze - SuperMac Technology  408 541-6100
+	- a CL550A on a NuBus board
+	- 24 frame/s with CD-quality audio
+	- reads from Winchester and magneto-optic drives
+
+Fluency VSA-1000 - Fluent Machines, Inc. AT board set.  508 626-2144
+	- compress/decompress real-time synced audio & video to a i386 PC
+          Winchester
+	- NTSC or PAL input, 320x240 pixels saved
+	- uses i960 chip, no additional boards needed
+	- M/S Windows support, 3rd party S/W (e.g., AimTech 603-883-0220)
+
+Super Motion Compression - New Media Graphics  PC/AT board.  800 288-2207
+	- 8Khz, 8-bit compressed audio
+	- 30 f/s JPEG to & from disk
+	- earlier reports: still-frame compression in several seconds per MB
+
+
+Leadview  - Lead Tech Inc. AT board uses the CL550 to compress/decompress
+            JFIF or JTIF format files
+
+Monalisa - Opta Inc. AT board uses the CL550
+
+Squeeze - Rapid Technology AT board
+	- Integrated by a number of vendors into 3rd party multimedia,
+          video-editing PC stations
+
+Parallax Graphics - SBus, VME and PC-AT boards.  408-727-2220 or
+          info@parallax.com
+
+Chips and Technologies - JPEG development kit due.
+
+Image Manipulation Systems, Inc - SBus compression/framebuffer/video I/O boards
+	800-745-5602 or imsinfo%thumper@src.honeywell.com
+
+
+ JPEG Using Other Chipsets
+ -------------------------
+
+Visionary - Rapid Technology JPEG AT board.  716-833-8534
+	-  LSI Logic JPEG chips L647-35, -45 & -65
+	- 30 f/s motion JPEG
+	- 256x240 pixel compression and display from CCIR-601 input
+	- private codec-frame buffer bus
+	- also integrated with TrueVision multimedia hardware
+
+Media 100  - Data Translation nonlinear video production system for the
+          Macintosh  (QuickTime).  22 MB/s (PAL) and 18MB/s (NTSC) throughput.
+
+Alice - Telephoto Communications Inc. 619-452-0903
+	- Alice-H350 (PC/AT) and -H365 (PS/2) codec boards
+	- use a 40 MHz TMS320C51 DSP and a IMSA121 DCT processor chip
+	- JPEG (lossy and lossless), CCITT G3/G4, color and grey-scale images
+
+Xing Technology - Hardware accelerator.  xing@xingtech.com or 805-473-0145
+	- compatible with their VT-Express JPEG Turbo Accelerator Software
+
+Video/1 - PsiTech Inc. 714-968-7818
+	- includes a 6U VME/VSB JPEG Processing Card 
+	- compresses RS-170, NTSC, PAL or Secam video into 8 MB of on-board RAM
+
+
+ DSP Chip Based JPEG/MPEG Solutions
+ ----------------------------------
+
+Optipac - Optivision Inc. PC/AT, ISA & VME codecs.  800-562-8934
+	- JPEG (lossless and lossy), CCITT III/IV
+	- 1 to 5 TMS32C025s
+	- 512x400x16-bit images in < 1 sec.
+
+XCeed ICDP-II - Micron Technology Inc. NuBus card
+	- uses two AT&T Microelectronics DSP-16 DSP chips
+	- driven by Storm Technologies PicturePress software
+	- executes an enhanced JPEG algorithm at near-realtime.
+
+PicturePress Accelerator - Storm Technology 415-691-1111 (see above)
+	- also has a line of VME compression boards
+	- Micro Dynamics Ltd. imaging systems use Storm accelerator
+          301-589-6300
+
+Picture Packer Accelerator - Video & Image Compression Corp.
+	- AT and NuBus boards use the JPEG Open Standard and a TMS320C25
+
+SunVideo (S-bus) - Sun Microsystems
+        - PAL/NTSC framegrabber with an integrated C-Cube CL4000
+	  VideoRISC processor and downloadable video compression for
+	  MPEG, MJPEG or CellB. It achieves about 10 Frames/sec on
+	  MPEG Level 1 picture data compression. The board costs about $1K.
+
+Phoenix System - T/one Inc. uses an Optivision Optipac 3250 to talk to a Storm 
+                 Technologies NuBus PicturePress Accelerator to talk JPEG over 
+                 analog phone lines.
+
+Nextdimension - NeXt Computer Inc. 415-780-3912
+	- 24+8-bit alpha, 640x480, 30 f/s decompression
+	- CL550 version not shipping as announced. 
+
+Spirit-40  - Sonitech International Inc. ISA card. 617-235-6824
+	- two TMS320C40 DSPs for 80 MFLOPS
+	- connect 16 boards in a hypercube for up to 1280 MFLOPS
+	- JPEG, MPEG-1 audio and other voice coding applications included 
+
+HardPak - CERAM Inc., ISA and EISA file compression board.  719-540-8500
+	- 3.4 x 1.8 inch footprint (notebook, laptops)
+	- 32KB on-board write-thru file compression cache
+	- CERAM also has an SBus compressive swap-space accelerator for Suns
+
+macDSP - Spectral Innovations, AT&T DSPC32-based accelerator.  408-727-1314
+	- JPEG functions available
+	- 30 MFLOPS on the NuBus
+
+
+ Integrated Digital Video Boards - Miscellaneous Multimedia, Video Conferencing
+ ------------------------------------------------------------------------------
+
+VCI/oem - Vista Communication Instruments, Inc. +358 0 460 099
+	- two AT-board H.261 video codec, PAL or NTSC cameras and monitors
+	-56 kbps (64 kbps) to 2 Mbps, 64 kbps increments
+	- H.221 framing and synchronizing 	- H.241 network signalling 
+	- H.200/AV.254 forthcoming standard for compressed audio
+	- network interface boards available
+
+MediaStation- VideoLogic Inc., JPEG compression board for ISA bus. 617-494-0530
+	- works with VideoLogic DVA-4000/ISA motion video board, custom bus
+	- CL-550 plus ADPCM and PCM audio support
+	- Inmos Transputer for I/O scheduling
+	- Microsoft Windows Multimedia Extensions and proprietary interfaces
+
+DECspin - Digital Equipment CorpSound/Picture Information Network 508-493-5111
+	- full motion, true-color (24-bit) and greyscale (8-bit black & white)
+	- variable frame size and rate up to 640 x480 x30 NTSC true-color 
+	- Internet or DECnet transmission and disk I/O of live synchronized
+          video/audio
+	- video teleconferencing using standard network protocols 
+	- create and edit of audio and video sequences
+	- voice grade live audio sequences
+	- DECmedia DECvideo and DECaudio hardware and software required
+
+ActionMedia II - Intel/IBM DVI PS/2 and PC/AT boards.  914-642-5472
+	- i750 processor boards for capture and delivery systems
+	- Microsoft programming support libraries
+	- proprietary RTV and PLV compression algorithms resident, time and
+          time/space VQ
+	- Real Time  Video (RTV) algorithm 1.5 , effective 128x120 pixel
+          sequence at 30 f/s.
+	- RTV 1.0 is 128x240 at 10 f/s. 
+	- Presentation Level Video (PLV) - extensive off-line processing,
+          exploits inter-frame coherence.  
+	- i750 processor capable of playing-back PLV-compressed 256x240
+          sequences at 30 f/s. 
+
+DVI Board - Fast Electronic U.S. Inc. laptop board.  508-655-3278
+	- uses Intel i750 chipset
+	- compress or decompress video at up to 30 f/s
+
+EyeQ - New Video Corp. DVI boards for the Macintosh.  213-396-0282
+	- uses Intel i750 chipset
+	- 150 KB/s full-motion compressed video
+	- T1 and Winchester integration paths
+
+Copernicus 1000 & 2000 - DesignTech, 408-453-9510
+	- DVI-based presentation and authoring systems 
+
+Spectrum Signal Processing - DSP96002-based PC-AT board
+	- up to four boards in cascade
+	- other TI, Analog Devices and AT&T-based DSP offerings
+
+Ariel Corp. - Dual DSP96002 PC-AT board with compression support.  201-429-2900
+
+Capture I - UVC Corp., 16-bit ISA bus board.  was 714-261-5336, out
+          of business now.
+	- 30 f/s of 640/480 interlace capture and record (uses UVC7710)
+	- NTSC or PAL input
+	- VPC200/201 development board set - proprietary NTSC video codec
+         (audio card required).  
+
+Leadview  - Lead Technologies, Inc. accelerates an enhanced JPEG algorithm
+   on ISA
+
+IBM - near-term availability:
+	(1) IBM United Kingdom and British Telecommunications plc. 
+	- PC or PS/2 add-on boards by end of 1993
+	- interface to ISDN 2 service (one or two 64kb/s channels)
+	- BT also planning residential videophone product with GEC Marconi Ltd.
+ 
+	(2) IBM Japan PS/2 board 
+	- uses GCTX64000 for H.261 
+	- ISDN (narrowband 64kb/s ) and IEEE 802.5 LAN interfaces
+
+
+Optibase 100 - Optibase, Inc. DSP-based compression/expansion boards.
+   818-719-6566
+	- supports JPEG
+	- supports CCITT G.721 and ANSI T1.301 & T1.303  drafts (voice and
+          music) 
+	- and proprietary compression (AADCT, lossless)
+
+Optibase MPEG Lab Pro and MPEG Lab +. Phone: 214-386-2040 or 800-451-510
+
+Motorola - DSP56002 (fixed-point 40MHz version of the 56001)
+
+AT&T JPEG coder (George Warner <warnergt@aloft.att.com>)
+        - runs on a DSP3210 under the VCOS operating system.
+	  The coder can be used to simultaneously compress/decompress
+	  multiple images and/or be used in conjunction with other DSP
+	  modules to preprocess or postprocess the image data.
+
+	  Other modules available for the DSP3210 include audio coders
+	  (such as MPEG, SBC, CDXA, and G.722), modem/fax data pumps
+	  (V.32bis, V.22bis, and V.29), DTMF, call progress detection,
+	  sample rate conversion, and more.
+
+
+MWave - TI, IBM, Intermetrics multimedia system, due from IBM in 1993. 
+
+Misc. NuBus boards - RasterOps , Radius, Mass Microsystems, Orange Micro,
+IBM M - - Motion.
+
+P.OEM - Interated Systems Inc. fractal compression boards for the PC.
+404-840-0310
+
+two desktop video conferencing products for Sparc's
+with the Parallax XVIDEO board:
+
+Communique! - desktop video conferencing products for Sparcs with the Parallax
+              XVIDEO board:
+        InSoft, Inc., 4718 Old Gettsburg Road, Executive Park West I, Suite 307
+        Mechanicsburg, PA 17055, USA. email: info@insoft.com
+        phone: 717-730-9501, fax: 717-730-9504
+
+PSVC - desktop video conferencing products for Sparcs with the Parallax
+              XVIDEO board:
+	Paradise Software, Inc., 55 Princeton Heightstown Rd, Suite 109
+	Princeton, NJ 08550, USA. email: support@paradise.com
+	phone: 609-275-4475, fax: 609-275-4702
+
+North Valley Research - video and other time-based media in a UNIX environment
+        North Valley Research; 15262 NW Greenbriar Pkwy; Beaverton, OR  97006
+        Phone (503) 531-5707, Fax (503) 690-2320. Todd Brunhoff <toddb@nvr.com>
+
+Visionetics MPEG MasterTM for 386 PC. phone (310) 316-7940,
+         fax (310) 316-7457, e-mail 72622.2112@compuserve.com.
+    MPEG Video compliant with ISO-11172 
+    Up to 16 million colors regardless of VGA card or VGA mode 
+    704 x 480 NTSC, 704x576 PAL resolution 
+    Full motion video NTSC ( 30 fps), Pal (25 fps) 
+    VIGABUSTM high speed digital video bus 
+
+    MPEG audio  Layer I and II 
+    16 bit stereo digital audio playback 
+    20 Hz - 20 KHz frequency response 
+    Stereo headphone/preamp output 
+
+RealMagic board. Sigma Designs, 510-770-0100
+        - MPEG Audio and Video playback board (ISA bus). Full compliance with
+          ISO CD 11172. Supports 30 fps (NTSC), and 25 fps (PAL).
+        - MPEG sound standards - Layer I and II.
+        - On-board CD ROM interface (not on RealMagic Lite board)
+
+RealMagic Producer. Sigma Designs, 510-770-0100
+        - Video/Audio Capture and MPEG encoding controller (PCI bus). 
+        - Compressed Data Format: MPEG-1, 352x240 (NTSC), 352x288 (PAL).
+        - Audio Capture - MPEG-1, Layer I and II. 44.1 kHz sampling frequency.
+        - Require Pentium system, 16 MB RAM, fast SCSI hard drive.
+
+
+ Boards Under Development
+ ------------------------
+
+Matrox - Matrox Studio line of PC boards will include a 64-bit MOVIE bus and
+         JPEG compression.
+
+
+------------------------------------------------------------------------------
+
+Subject: [99] Acknowledgments
+
+
+There are too many people to cite. Thanks to all people who directly
+or indirectly contributed to this FAQ.

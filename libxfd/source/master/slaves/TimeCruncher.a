@@ -1,0 +1,756 @@
+*****************************************************************************
+*   $Id: TimeCruncher.a,v 1.2 2005/06/23 14:39:16 stoecker Exp $
+*   Time Cruncher and related types decrunching slave
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+**************************************************
+
+S_Time17	dc.l	S_TFA154
+		dc.w	2
+		dc.w	39
+		dc.l	N_Time17
+		dc.w	XFDPFF_ADDR
+		dc.w	0
+		dc.l	RB_Time17
+		dc.l	DB_Time17
+		dc.l	0
+		dc.l	0
+		dc.w	XFDID_TimeCruncher17
+		dc.w	0
+		dc.l	$15c+12+24
+
+N_Time17	dc.b	'Time Cruncher 1.7',0
+		even
+
+;-------------------------------------------------
+
+RB_Time17	MOVEQ	#0,D0
+		cmp.l	#$41fa0134,$24(a0)
+		bne.s	.Exit
+		cmp.l	#$202044fc,$130(a0)
+		bne.s	.Exit
+		cmp.l	#$53414282,$13a(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+.Exit		rts
+
+;-------------------------------------------------
+
+DB_Time17	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+
+		move.l	xfdbi_SourceBuffer(a5),a0
+		move.l	$30(a0),xfdbi_DecrAddress(a5)
+		move.l	$12c(a0),xfdbi_JmpAddress(a5)
+
+DB_TFA1541	lea	$15a(a0),a2
+		add.l	$2a(a0),a2
+		
+		move.l	-4(a2),d0
+		move.l	d0,xfdbi_TargetBufSaveLen(a5)		
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit
+
+		move.l	d0,a1
+		move.l	a2,a0
+		move.l	-(a0),a2
+		add.l	a1,a2
+		bsr	D_Time17
+
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+**************************************************
+
+S_TFA154	dc.l	S_Turtle13
+		dc.w	2
+		dc.w	39
+		dc.l	N_TFA154
+		dc.w	XFDPFF_ADDR
+		dc.w	0
+		dc.l	RB_TFA154
+		dc.l	DB_TFA154
+		dc.l	0
+		dc.l	0
+		dc.w	XFDID_TFACruncher154
+		dc.w	0
+		dc.l	$15c+12+24
+
+N_TFA154	dc.b	'TFA Cruncher 1.54',0
+		even
+
+;-------------------------------------------------
+
+RB_TFA154	MOVEQ	#0,D0
+		cmp.l	#$41fa0134,$24(a0)
+		bne.s	.Exit
+		cmp.l	#$202044fc,$122(a0)
+		bne.s	.Exit
+		cmp.l	#$53414282,$12c(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+.Exit		rts
+
+;-------------------------------------------------
+
+DB_TFA154	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+
+		move.l	xfdbi_SourceBuffer(a5),a0
+		move.l	$30(a0),xfdbi_DecrAddress(a5)
+		move.l	$11e(a0),xfdbi_JmpAddress(a5)
+		bra	DB_TFA1541
+
+**************************************************
+
+S_Turtle13	dc.l	S_Mega10
+		dc.w	2
+		dc.w	39
+		dc.l	N_Turtle13
+		dc.w	XFDPFF_ADDR
+		dc.w	0
+		dc.l	RB_Turtle13
+		dc.l	DB_Turtle13
+		dc.l	0
+		dc.l	0
+		dc.w	XFDID_TurtleSmasher13
+		dc.w	0
+		dc.l	$16a+20+4
+
+N_Turtle13	dc.b	'TurtleSmasher 1.3',0
+		even
+
+;-------------------------------------------------
+
+RB_Turtle13	MOVEQ	#0,D0
+		cmp.l	#$41fa0148,$20(a0)
+		bne.s	.Exit
+		cmp.l	#$202044fc,$140(a0)
+		bne.s	.Exit
+		cmp.l	#$42825341,$14a(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+.Exit		rts
+
+;-------------------------------------------------
+
+DB_Turtle13	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+
+		move.l	xfdbi_SourceBuffer(a5),a0
+		lea	$16a(a0),a2
+		move.l	(a2)+,xfdbi_DecrAddress(a5)
+		move.l	(a2)+,xfdbi_JmpAddress(a5)
+
+		move.l	(a2),d0
+		move.l	d0,xfdbi_TargetBufSaveLen(a5)
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit
+
+		move.l	d0,a1
+		move.l	a2,a0
+		move.l	a1,a2
+		add.l	(a0)+,a2
+		add.l	(a0),a0
+		sub.w	#12,a0
+		bsr	D_Time17
+
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+**************************************************
+
+S_Mega10	dc.l	S_Mega12
+		dc.w	2
+		dc.w	39
+		dc.l	N_Mega10
+		dc.w	XFDPFF_ADDR
+		dc.w	0
+		dc.l	RB_Mega10
+		dc.l	DB_Mega10
+		dc.l	0
+		dc.l	0
+		dc.w	XFDID_MegaCruncher10
+		dc.w	0
+		dc.l	$154+20+24
+
+N_Mega10	dc.b	'Mega Cruncher 1.0',0
+		even
+
+;-------------------------------------------------
+
+RB_Mega10	MOVEQ	#0,D0
+		cmp.l	#$47fa012e,$24(a0)
+		bne.s	.Exit
+		cmp.l	#$202044fc,$134(a0)
+		bne.s	.Exit
+		cmp.l	#$53414282,$144(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+.Exit		rts
+
+;-------------------------------------------------
+
+DB_Mega10	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+
+		move.l	xfdbi_SourceBuffer(a5),a3
+		move.l	$126(a3),xfdbi_JmpAddress(a5)
+		move.l	$158(a3),xfdbi_DecrAddress(a5)
+		lea	$160(a3),a2
+		bra.b	DB_Mega
+
+**************************************************
+
+S_Mega12	dc.l	S_MegaObject
+		dc.w	2
+		dc.w	39
+		dc.l	N_Mega12
+		dc.w	XFDPFF_ADDR
+		dc.w	0
+		dc.l	RB_Mega12
+		dc.l	DB_Mega12
+		dc.l	0
+		dc.l	0
+		dc.w	XFDID_MegaCruncher12
+		dc.w	0
+		dc.l	$158+20+24
+
+N_Mega12	dc.b	'Mega Cruncher 1.2',0
+		even
+
+;-------------------------------------------------
+
+RB_Mega12	MOVEQ	#0,D0
+		cmp.l	#$47fa0132,$24(a0)
+		bne.s	.Exit
+		cmp.l	#$202044fc,$138(a0)
+		bne.s	.Exit
+		cmp.l	#$53414282,$148(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+.Exit		rts
+
+;-------------------------------------------------
+
+DB_Mega12	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+
+		move.l	xfdbi_SourceBuffer(a5),a3
+		move.l	$12a(a3),xfdbi_JmpAddress(a5)
+		move.l	$15c(a3),xfdbi_DecrAddress(a5)
+		lea	$164(a3),a2
+
+DB_Mega		add.l	-4(a2),a2
+		move.l	-4(a2),d0
+		move.l	d0,xfdbi_TargetBufSaveLen(a5)
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit
+
+		move.l	d0,a1
+                move.l	a2,a0
+		move.l	-(a0),a2
+		add.l	a1,a2
+		bsr.w	D_Time17
+
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+**************************************************
+
+S_MegaObject	
+		IFND	XFD_LASTSLAVE
+		dc.l	S_Time_END
+		ELSE
+		dc.l	0
+		ENDIF
+		DC.W	2		;version
+		DC.W	39		;master version
+		DC.L	N_MegaObject	;name
+		DC.W	XFDPFF_RELOC|XFDPFF_RELMODE	;flags
+		DC.W	0
+		DC.L	RB_MegaObject	;recog buffer
+		DC.L	DB_MegaObject	;decrunch buffer
+		DC.L	RS_MegaObject	;recog segment
+		DC.L	DS_MegaObject	;decrunch segment
+		DC.W	XFDID_MegaCruncherObj
+		DC.W	0
+		DC.L	$CC		;MinBufSize
+N_MegaObject	DC.B	'Mega Cruncher Obj',0
+		EVEN
+
+*************************************************************************
+*	Recog buffer function: receives buffer + length in A0/D0	*
+*************************************************************************
+
+RB_MegaObject	MOVEQ	#0,D0			; False
+
+		CMP.L	#$F0F0F0F0,$4C(A0)
+		BNE.B	.No
+		CMP.L	#$66FA4EAE,$8C(A0)
+		BNE.B	.No
+		CMP.L	#'dos.',$94(A0)
+		BNE.B	.No
+		CMP.L	#': Ca',$B4(A0)
+		BNE.B	.No
+		CMP.L	#'ory.',$C8(A0)
+		BNE.B	.No
+		MOVEQ	#1,D0			; True
+.No		RTS
+
+RS_MegaObject	ADD.L	A0,A0
+		ADD.L	A0,A0
+		LEA	-$20(A0),A0
+		BRA.B	RB_MegaObject
+
+MCO_WORKSIZE	EQU	1024	* security buffer
+
+MCO1_DESTLEN	EQU	$1EE	* offsets in source file
+MCO1_MEMFLAGS	EQU	$1F2
+MCO1_SOURCELEN	EQU	$1F6
+MCO1_SOURCE	EQU	$1FA
+
+MCO2_ALLSIZE	EQU	$0EC	* offsets in decrunched file
+MCO2_NUMHUNKS	EQU	$104
+MCO2_HUNKSIZE	EQU	$10C
+MCO2_HUNKSIZE0	EQU	$108
+
+*************************************************************************
+*	Decrunch buffer function: receives xfdbiBufferInfo in A0	*
+*************************************************************************
+
+DB_MegaObject	MOVEM.L	D2-D7/A2-A6,-(A7)
+		MOVE.L	A0,A5
+		MOVE.L	xfdm_ExecBase(A6),A6
+
+		MOVEA.L	xfdbi_SourceBuffer(A5),A4
+		MOVE.L	MCO1_DESTLEN(A4),D0	* get destination length
+		ADD.L	#MCO_WORKSIZE,D0
+		MOVE.L	D0,xfdbi_TargetBufLen(A5)
+
+		MOVEQ	#0,D1
+		JSR	_LVOAllocMem(A6)
+		MOVE.W	#XFDERR_NOMEMORY,xfdbi_Error(A5)
+		MOVEA.L	D0,A3
+		TST.L	D0
+		BEQ.W	.NoMem
+
+		LEA	MCO1_SOURCE(A4),A0	* source
+		ADDA.L	MCO1_SOURCELEN(A4),A0	* source length
+		MOVEA.L	A3,A1			* destination buffer
+		MOVEA.L	-(A0),A2
+		ADDA.L	A1,A2
+		BSR.W	D_Time17
+
+		MOVEQ	#0,D7
+		MOVE.L	MCO1_MEMFLAGS(A4),D1	* memory flags
+		BTST	#MEMB_CHIP,D1
+		BEQ.B	.fast
+		BSET	#HUNKB_CHIP,D7		* chip mem
+.fast		BTST	#MEMB_FAST,D1
+		BEQ.B	.start
+		BSET	#HUNKB_FAST,D7		* fast mem
+
+.start		MOVE.L	xfdbi_TargetBufMemType(A5),D1
+		MOVE.L	xfdbi_TargetBufLen(A5),D0
+		JSR	_LVOAllocMem(A6)
+		MOVE.W	#XFDERR_NOMEMORY,xfdbi_Error(A5)
+		MOVE.L	D0,xfdbi_TargetBuffer(A5)
+		BEQ.W	.NoMem2
+
+		CLR.W	xfdbi_Error(A5)
+		MOVEA.L	D0,A4			* A4 is write buffer
+		MOVE.L	#HUNK_HEADER,(A4)+
+		CLR.L	(A4)+			* lib open feature
+		MOVE.L	MCO2_NUMHUNKS(A3),D6		* D6 contains numhunks
+		MOVE.L	D6,(A4)			* number of hunks
+		ADDQ.L	#1,(A4)+
+		CLR.L	(A4)+			* first hunk num
+		MOVE.L	D6,(A4)+		* last hunk num
+		LEA.L	MCO2_HUNKSIZE(A3),A0
+		LSL.L	#2,D6			* mul num with long size
+
+		MOVEQ	#0,D0
+.WriteLens	CMP.L	D0,D6			* reached the end ?
+		BEQ.B	.OneHunk		* yes
+		MOVE.L	(A0,D0),D1		* get hunk len
+		SUB.L	-4(A0,D0),D1		* sub last hunk size (0 is stored for first hunk)
+		LSR.L	#2,D1			* make BCPL number
+		ADD.L	D7,D1			* add mem flags
+		MOVE.L	D1,(A4)+		* store
+		ADDQ.L	#4,D0			* get new address
+		BRA.B	.WriteLens
+
+.OneHunk	MOVE.L	MCO2_ALLSIZE(A3),D1
+		SUB.L	D6,D1			* subtract hunks size space (may be 0)
+		SUB.L	-4(A0,D0),D1		* subtract last hunk size (may be 0)
+		SUBQ.L	#8,D1			* subtract 2 data long
+		LSR.L	#2,D1			* make BCPL number
+		ADD.L	D7,D1			* add mem flags
+		MOVE.L	D1,(A4)+		* store
+
+		* header hunk is complete now
+
+		LEA.L	(A0,D6),A2	* start address of first hunk
+		MOVE.L	MCO2_ALLSIZE(A3),D5
+		LEA.L	-8(A0,D5.L),A1
+		MOVE.L	A1,D4		* store address of reloc
+
+		MOVEQ	#0,D5
+.CodeLoop	MOVEA.L	xfdbi_TargetBuffer(A5),A0
+		MOVE.L	20(A0,D5),D0		* get hunk size
+		ANDI.L	#$1FFFFFFF,D0		* remove mem type
+		MOVE.L	D0,D1
+		LSL.L	#2,D1
+		ADDQ.L	#4,D1
+.TestBSS	SUBQ.L	#4,D1
+		TST.L	D1
+		BEQ.B	.MakeBSS
+		TST.L	-4(A2,D1.L)
+		BEQ.B	.TestBSS
+		MOVE.L	#HUNK_CODE,(A4)+
+		MOVEA.L	A2,A0			* CopyMem parameter
+		LSL.L	#2,D0			* get correct number
+		ADDA.L	D0,A2			* new source position
+		MOVE.L	D1,D0			* CopyMem parameter
+		LSR.L	#2,D1			* get BCPL number
+		MOVE.L	D1,(A4)+		* store size
+		MOVEA.L	A4,A1			* CopyMem parameter
+		ADDA.L	D0,A4			* new destination position
+		JSR	_LVOCopyMem(A6)		* copy it and increase ptrs
+		BRA.B	.next
+.MakeBSS	MOVE.L	#HUNK_BSS,(A4)+
+		MOVE.L	D0,(A4)+
+.next		MOVE.L	A5,-(A7)		* store A5
+		MOVEA.L	D4,A5
+		CMP.L	(A5),D5			* correct hunker number ?
+		BNE.B	.EndReloc
+		ADDQ.L	#4,A5
+		CMPI.L	#HUNK_RELOC32,(A5)+	* is there a reloc hunk
+		BNE.B	.EndReloc
+		MOVE.L	#HUNK_RELOC32,(A4)+	* yes there is
+.RelocLoop	MOVE.L	(A5)+,D0		* are there reloc entries
+		MOVE.L	D0,(A4)+
+		BEQ.B	.EndReloc		* no more
+		MOVE.L	(A5)+,(A4)+		* copy related hunk number
+		LSL.L	#2,D0
+		MOVEA.L	A5,A0
+		MOVEA.L	A4,A1
+		ADDA.L	D0,A5
+		ADDA.L	D0,A4
+		JSR	_LVOCopyMem(A6)		* copy it and increase ptrs
+		BRA.B	.RelocLoop
+
+.EndReloc	MOVE.L	#HUNK_END,(A4)+
+		MOVE.L	A5,D4
+		MOVEA.L	(A7)+,A5		* restore A5
+
+		ADDQ.L	#4,D5
+		CMP.L	D6,D5
+		BLE.W	.CodeLoop
+
+		MOVE.L	xfdbi_TargetBuffer(A5),D0
+		SUBA.L	D0,A4
+		MOVE.L	A4,xfdbi_TargetBufSaveLen(A5)
+
+.NoMem2		MOVE.L	xfdbi_TargetBufLen(A5),D0
+		MOVEA.L	A3,A1
+		JSR	_LVOFreeMem(A6)
+.NoMem		MOVEQ	#1,D0				* set true
+		MOVE.W	xfdbi_Error(A5),D1		* was error
+		BEQ.B	.End
+		MOVEQ	#0,D0				* set false
+.End		MOVEM.L	(A7)+,D2-D7/A2-A6
+		RTS
+
+DS_MegaObject	MOVEM.L	D2-D7/A2-A6,-(A7)
+		MOVEA.L	A0,A5
+		MOVEA.L	A6,A4			* xfdMasterBase
+
+		MOVEA.L	xfdsi_SegList(A5),A2
+		ADD.L	A2,A2
+		ADD.L	A2,A2
+
+		MOVE.W	xfdsi_RelMode(A5),D5
+		MOVE.L	MCO1_MEMFLAGS-$20(A2),D6	* memory flags
+		BSET	#MEMB_PUBLIC,D6
+		CMP.W	#XFDREL_DEFAULT,D5
+		BEQ.B	.DoIt
+		MOVEQ.L	#MEMF_PUBLIC|MEMF_CHIP,D6
+		CMP.W	#XFDREL_FORCECHIP,D5
+		BEQ.B	.DoIt
+		MOVEQ.L	#MEMF_PUBLIC|MEMF_FAST,D6
+		CMP.W	#XFDREL_FORCEFAST,D5
+		BEQ.B	.DoIt
+		MOVE.W	#XFDERR_BADRELMODE,xfdsi_Error(A5)
+		BRA.W	.FreeSeg
+
+.DoIt		MOVE.L	MCO1_DESTLEN-$20(A2),D0	* get destination length
+		MOVE.L	D0,D7
+		MOVEQ	#0,D1
+		MOVE.L	xfdm_ExecBase(A4),A6
+		JSR	_LVOAllocMem(A6)
+		MOVE.L	D0,A3
+		TST.L	D0
+		BEQ.W	.FreeSeg
+
+		LEA	MCO1_SOURCE-$20(A2),A0		* source
+		ADDA.L	MCO1_SOURCELEN-$20(A2),A0	* source length
+		MOVEA.L	A3,A1				* destination buffer
+		MOVEA.L	-(A0),A2
+		ADDA.L	A1,A2
+
+		MOVEM.L	D6-D7,-(A7)
+		BSR.W	D_Time17
+		MOVEM.L	(A7)+,D6-D7
+
+		BSR.W	.FreeSegments
+		MOVE.L	xfdm_ExecBase(A4),A6
+		LEA	MCO2_HUNKSIZE0(A3),A3
+
+		MOVE.L	-4(A3),D5		* D5 contains numhunks
+		ADDQ.L	#1,D5
+		LSL.L	#2,D5
+		MOVEQ	#0,D4
+		LEA	(A3,D5.L),A2 	* data buffer
+.DoHunk		MOVE.L	D4,D0
+		ADDQ.L	#4,D0
+		CMP.L	D5,D0
+		BNE.B	.getsize	* allsize is last needed value
+		MOVE.L	-7*4(A3),D0
+		SUB.L	D5,D0
+		SUBQ.L	#4,D0	
+		BRA.B	.subsize
+.getsize	MOVE.L	(A3,D0.L),D0
+.subsize	SUB.L	(A3,D4.L),D0
+		MOVE.L	D0,D3
+		ADDQ.L	#8,D0
+		MOVE.L	D0,D2
+		MOVE.L	D6,D1
+		JSR	_LVOAllocMem(A6)
+		TST.L	D0
+		BNE.B	.ok
+		MOVE.W	#XFDERR_NOMEMORY,xfdbi_Error(A5)
+		BRA.B	.Free
+.ok		MOVE.L	D0,A1
+		MOVE.L	D2,(A1)+	* store size
+		MOVE.L	A1,D0
+		CLR.L	(A1)+		* clear pointer
+		MOVE.L	D0,(A3,D4.L)	* store
+		LSR.L	#2,D0		* get BCPL ptr
+		TST.L	D4		* for empty test
+		BEQ.B	.first
+		MOVE.L	-4(A3,D4.L),A0
+		MOVE.L	D0,(A0)		* store as next ptr
+		BRA.B	.goon
+.first		MOVE.L	D0,xfdsi_SegList(A5)
+.goon		TST.L	D3
+		BEQ.B	.copied
+		MOVE.L	(A2)+,(A1)+
+		SUBQ.L	#4,D3
+		BRA.B	.goon
+.copied		ADDQ.L	#4,D4
+		CMP.L	D4,D5
+		BNE.B	.DoHunk
+
+		MOVEQ	#0,D4
+.RelLoop	MOVE.L	(A3,D4.L),A1
+		CMP.L	(A2),D4
+		BNE.B	.next
+		ADDQ.L	#4,A2
+		CMP.L	#HUNK_RELOC32,(A2)
+		BNE.B	.next
+		ADDQ.L	#4,A2
+.DoRelHunk	MOVE.L	(A2)+,D0
+		BEQ.B	.next
+		MOVE.L	(A2)+,D1
+		LSL.L	#2,D1
+		MOVE.L	(A3,D1.L),D1
+		ADDQ.L	#4,D1
+.DoRelLoop	MOVE.L	(A2)+,D2
+		ADD.L	D1,4(A1,D2.L)
+		SUBQ.L	#1,D0
+		BNE.B	.DoRelLoop	
+		BRA.B	.DoRelHunk
+.next		ADDQ.L	#4,D4
+		CMP.L	D4,D5
+		BNE.B	.RelLoop
+
+.Free		LEA	-MCO2_HUNKSIZE0(A3),A3
+		MOVEA.L	A3,A1
+		MOVE.L	D7,D0
+		JSR	_LVOFreeMem(A6)
+
+		MOVEQ	#1,D0				* set true
+		TST.W	xfdbi_Error(A5)
+		BEQ.B	.End
+
+.FreeSeg	BSR.B	.FreeSegments
+		MOVE.W	#XFDERR_NOMEMORY,xfdbi_Error(A5)
+		MOVEQ	#0,D0
+.End		MOVEM.L	(A7)+,D2-D7/A2-A6
+		RTS
+
+.FreeSegments	MOVE.L	xfdm_DosBase(A4),A6
+		MOVE.L	xfdsi_SegList(A5),D1
+		JSR	_LVOUnLoadSeg(A6)
+		CLR.L	xfdsi_SegList(A5)
+		RTS
+
+;=================================================
+
+D_Time17	moveq	#-1,d7
+		moveq	#1,d6
+		moveq	#2,d5
+		moveq	#7,d4
+		move.l	-(a0),d0
+.Decr1		moveq	#3,d1
+		bsr.s	.Decr11
+		tst.b	d2
+		beq.s	.Decr9
+		cmp.w	d4,d2
+		bne.s	.Decr4
+		lsr.l	d6,d0
+		bne.s	.Decr2
+		bsr.s	.Decr10
+.Decr2		bcc.s	.Decr3
+		moveq	#10,d1
+		bsr.s	.Decr11
+		tst.w	d2
+		bne.s	.Decr4
+		moveq	#$12,d1
+		bsr.s	.Decr11
+		bra.s	.Decr4
+
+.Decr3		moveq	#4,d1
+		bsr.s	.Decr11
+		addq.w	#7,d2
+.Decr4		subq.w	#1,d2
+.Decr5		moveq	#7,d1
+.Decr6		lsr.l	d6,d0
+		bne.s	.Decr8
+		bsr.s	.Decr10
+.Decr8		roxl.l	d6,d3
+		dbra	d1,.Decr6
+		move.b	d3,-(a2)
+		cmp.l	a1,a2
+		dbeq	d2,.Decr5
+		cmp.w	d7,d2
+		beq.s	.Decr9
+		rts
+
+.Decr9		moveq	#2,d1
+		bsr.s	.Decr11
+		moveq	#2,d3
+		moveq	#8,d1
+		tst.w	d2
+		beq.s	.Decr21
+		moveq	#4,d3
+		cmp.w	d5,d2
+		beq.s	.Decr18
+		moveq	#3,d3
+		cmp.w	d6,d2
+		beq.s	.Decr16
+		moveq	#2,d1
+		bsr.s	.Decr11
+		cmp.w	#3,d2
+		beq.s	.Decr15
+		cmp.w	d5,d2
+		beq.s	.Decr14
+		addq.w	#5,d2
+		move.w	d2,d3
+		bra.s	.Decr18
+
+.Decr10		move.l	-(a0),d0
+		move.b	#$10,ccr
+		roxr.l	d6,d0
+		rts
+
+.Decr11		subq.w	#1,d1
+		moveq	#0,d2
+.Decr12		lsr.l	d6,d0
+		bne.s	.Decr13
+		bsr.s	.Decr10
+.Decr13		roxl.l	d6,d2
+		dbra	d1,.Decr12
+		rts
+
+.Decr14		moveq	#2,d1
+		bsr.s	.Decr11
+		addq.w	#7,d2
+		move.w	d2,d3
+		bra.s	.Decr18
+
+.Decr15		moveq	#8,d1
+		bsr.s	.Decr11
+		move.w	d2,d3
+		bra.s	.Decr18
+
+.Decr16		moveq	#8,d1
+		lsr.l	d6,d0
+		bne.s	.Decr17
+		bsr.s	.Decr10
+.Decr17		bcs.s	.Decr21
+		moveq	#14,d1
+		bra.s	.Decr21
+
+.Decr18		moveq	#$10,d1
+		lsr.l	d6,d0
+		bne.s	.Decr19
+		bsr.s	.Decr10
+.Decr19		bcc.s	.Decr21
+		moveq	#8,d1
+		lsr.l	d6,d0
+		bne.s	.Decr20
+		bsr.s	.Decr10
+.Decr20		bcs.s	.Decr21
+		moveq	#12,d1
+.Decr21		bsr.s	.Decr11
+		subq.w	#1,d3
+.Decr22		move.b	-1(a2,d2.l),-(a2)
+		cmp.l	a1,a2
+		dbeq	d3,.Decr22
+		cmp.w	d7,d3
+		beq	.Decr1
+		rts
+
+S_Time_END
+

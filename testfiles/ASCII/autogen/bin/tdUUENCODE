@@ -1,0 +1,6 @@
+: This is a shell script
+: Remove or modify the sed script if line numbers are not present in
+: the archive
+: Beware of data the sort sorts into the encoding.
+: Some dumb uudecode programs will use this data.
+sort -u $* | sed -e '/^......closeblock=/d' -e '/^......startblock=/d' -e 's/^....//' | uudecode

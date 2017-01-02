@@ -1,0 +1,439 @@
+<!doctype html public "-//ietf//dtd html 2.0//en">
+<html>
+
+	<head>
+		<title>MacBinary III</title>
+		<meta http-equiv="GENERATOR" content="Globetrotter 2.0.0b1">
+		<meta http-equiv="UPDATED" content="Wednesday, June 4, 1997 10:14 PM">
+		<meta http-equiv="X-GLOBETROTTERDATA" content="FD1F89B0">
+	</head>
+
+	<body>
+		<a name="_top"></a>
+		<p><font face="Garamond" size="4"><b>Macintosh Binary Transfer Format (&quot;MacBinary III&quot;) Standard Proposal
+		<br>
+		</b></font><font face="Garamond"><i>These are the new changes to the MacBinary Standard, as generally
+		agreed upon in December of 1996. This document includes all necessary
+		information needed from the original <a href="macbinary.html">MacBinary</a> and <a href="macbinary_ii.html">MacBinary II</a> standard documents to implement MacBinary III.</i></font></p>
+		<br>
+		<p><font face="Garamond">&nbsp;&nbsp; The new standard will be very similar to the MacBinary II standard
+		as described in [<a href="macbinary_ii.html">MacBinary II Standard</a>]. (Reading the original <a href="macbinary.html">MacBinary</a> and <a href="macbinary_ii.html">MacBinary II</a> standard documents are recommended for a full understanding of
+		implementation and philosophy behind the MacBinary I, II and III
+		formats.) </font></p>
+		<p><font face="Garamond">&nbsp;&nbsp; The binary format consists of a 128-byte header containing
+		all the information necessary to reproduce the document's directory
+		entry on the receiving Macintosh; followed by the document's Data
+		Fork (if it has one), padded with nulls to a multiple of 128 bytes
+		(if necessary); followed by the document's Resource Fork (again,
+		padded if necessary). The lengths of these forks (either or both
+		of which may be zero) are contained in the header.</font></p>
+		<br>
+		<p><font face="Garamond">The format of the header for MacBinary III is as follows:</font> <table width='100"%"' cellpadding="1">
+			<col width='12"%"'>
+				<col width='19"%"'>
+					<col width='69"%"'>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond"><b>Offset</b></font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond"><b>Length</b></font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond"><b>Contents</b></font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">000</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Byte</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">old version number, must be kept at zero for compatibility</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">001</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Byte</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">Length of filename (must be in the range 1-31)</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">002</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">1 to 63 Bytes</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">filename (only &quot;length&quot; bytes are significant).</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">065</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Long Word</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">file type (normally expressed as four characters)</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">069</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Long Word</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">file creator (normally expressed as four characters)</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">073</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Byte</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">original Finder flags <br>
+								Bit 7 - isAlias. <br>
+								Bit 6 - isInvisible. <br>
+								Bit 5 - hasBundle. <br>
+								Bit 4 - nameLocked. <br>
+								Bit 3 - isStationery. <br>
+								Bit 2 - hasCustomIcon. <br>
+								Bit 1 - reserved. <br>
+								Bit 0 - hasBeenInited.</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">074</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Byte</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">zero fill, must be zero for compatibility</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">075</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Word</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">file's vertical position within its window.</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">077</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Word</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">file's horizontal position within its window.</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">079</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Word</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">file's window or folder ID.</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">081</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Byte</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">&quot;Protected&quot; flag (in low order bit).</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">082</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Byte</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">zero fill, must be zero for compatibility</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">083</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Long Word</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">Data Fork length (bytes, zero if no Data Fork).</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">087</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Long Word</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">Resource Fork length (bytes, zero if no R.F.).</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">091</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Long Word</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">File's creation date</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">095</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Long Word</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">File's &quot;last modified&quot; date.</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">099</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Word</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">length of Get Info comment to be sent after the resource fork
+								(if implemented, see below).</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">101</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Byte</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">Finder Flags, bits 0-7. (Bits 8-15 are already in byte 73) <br>
+								Bit 7 - hasNoInits <br>
+								Bit 6 - isShared <br>
+								Bit 5 - requiresSwitchLaunch <br>
+								Bit 4 - ColorReserved <br>
+								Bits 1-3 - color <br>
+								Bit 0 - isOnDesk</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">*102</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Long Word</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">signature for indentification purposes ('mBIN')</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">*106</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Byte</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">script of file name (from the fdScript field of an fxInfo record)</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">*107</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Byte</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">extended Finder flags (from the fdXFlags field of an fxInfo record)</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">108-115</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">Unused (must be zeroed by creators, must be ignored by readers)</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">116</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Long Word</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">Length of total files when packed files are unpacked. As of the
+								writing of this document, this field has never been used.</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">120</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Word</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">Length of a secondary header. If this is non-zero, skip this many
+								bytes (rounded up to the next multiple of 128). This is for future
+								expansion only, when sending files with MacBinary, this word should
+								be zero.</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">*122</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Byte</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">Version number of MacBinary III that the uploading program is
+								written for (the version is 130 for MacBinary III)</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">123</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Byte</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">Minimum MacBinary version needed to read this file (set this value
+								at 129 for backwards compatibility with MacBinary II)</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">124</font><br>
+							</td>
+							<td width='19"%"' valign="TOP"><font face="Garamond">Word</font><br>
+							</td>
+							<td width='69"%"' valign="TOP"><font face="Garamond">CRC of previous 124 bytes</font></td>
+						</tr>
+					</table><br>
+					<font face="Garamond">*These fields have changed for MacBinary III.</font></p>
+					<br>
+					<p><font face="Garamond">&nbsp;&nbsp; All values are stored in normal 68000 order, with Most Significant
+					Byte appearing first then the file. Any bytes in the header not
+					defined above should be set to zero.</font></p>
+					<p><font face="Garamond">&nbsp;&nbsp; The original MacBinary format was ammended (in <a href="macbinary_ii.html">MacBinary II</a>) to include the sending of the &quot;Get Info comment&quot; after the resource
+					fork was sent, if the length for such comment, given in offset
+					99, is not zero. Prior to the release of System 7, there was no
+					approved API for access to this information and so most existing
+					implemenations of MacBinary II will not include this. However
+					you may find some modern implemenations of MacBinary II which
+					do include it now that it is possible to do so. Although not required,
+					it is recommend that MacBinary III supporting applications read
+					and write this information.</font></p>
+					<p><font face="Garamond">&nbsp;&nbsp; To determine if a header is a valid MacBinary header, first
+					take advantage of the new MacBinary III signature located at offset
+					102. If it matches, then you know that this is a valid MacBinary
+					III header and can continue as such including the restoration
+					of the new extended Finder info. </font></p>
+					<p><font face="Garamond">&nbsp;&nbsp; If it is not a MacBinary III header, start by checking bytes
+					0 and 74 - they should both be zero. If they are both zero, either
+					(a) the CRC should match, which means it is a MacBinary II file,
+					or (b) byte 82 is zero, which means it may be a MacBinary I file.
+					(Note that, at the current version level, byte 82 is kept zero
+					to maintain compatibility with MacBinary I. If at some point the
+					MacBinary versions change sufficiently that it is necessary to
+					keep MacBinary I programs from downloading these files, we can
+					change byte 82 to non-zero.)</font></p>
+					<p><font face="Garamond">&nbsp;&nbsp; If the header is a MacBinary II header, the program will check
+					the minimum version byte (offset 123), to see if it knows enough
+					to decode the file. If the minimum version in the header is greater
+					than the version that the program was written for, it will download
+					the file as raw binary. The program may also choose to notify
+					the user that conversion is needed because the MacBinary version
+					was too high.</font></p>
+					<p><font face="Garamond">&nbsp;&nbsp; If the header does NOT represent a valid MacBinary II header,
+					the program must at minimum check byte 82 to be zero--if it is
+					not zero, the file is not a MacBinary I file. It is possible to
+					write a much more robust routine, by checking the following: <br>
+					&nbsp;&nbsp; Offsets 101-125, Byte, should all be 0. <br>
+					&nbsp;&nbsp; Offset 2, Byte, (the length of the file name) should be in
+					the range of 1-63. <br>
+					&nbsp;&nbsp; Offsets 83 and 87, Long Word, (the length of the forks) should
+					be in the range of 0-$007F FFFF.</font></p>
+					<p><font face="Garamond">&nbsp;&nbsp; If any of these tests fail, the file is not a valid MacBinary
+					file. It may still be desirable to distinguish between text files
+					and foreign binary files (for stripping line feeds or similar
+					helpful acts). Some tests that would prove useful include: <br>
+					&nbsp;&nbsp; A quantity of bytes in the first block with the high bit set
+					would point to a binary file (though this could be fooled by files
+					with many extended ascii characters, such as generated by the
+					option key on a Mac). <br>
+					&nbsp;&nbsp; A large quantity of zero bytes (nulls) would also point to
+					a binary file. <br>
+					</font></p>
+					<hr>
+					<p><font face="Garamond">&nbsp; In November of 1996, Apple made it known to developers that
+					a version of Finder due out in 1997 would begin using the extended
+					Finder information (FXInfo - additional Finder related information
+					originally introduced with the Hierarchical File System (HFS)
+					in System 3.0/Finder 5.0 but not actually used to any extent until
+					now). These changes are indeed present in Finder 8.0, which is
+					part of Mac OS 8 (code named &quot;Tempo&quot;).</font></p>
+					<p><font face="Garamond">&nbsp;&nbsp; This proposal was drafted by as a result of a series of EMail
+					discussions concerning the need for a Macintosh binary transfer
+					format that stores the extended Finder information. The group
+					decided that rather than creating a new format, or adopting another
+					exsting format that users were unfamiliar with and that wasn't
+					as well supported by application developers (such as AppleSingle),
+					that a simple (backwards compatible) change to the existing MacBinary
+					II specification would suffice.</font></p>
+					<br>
+					<p><font face="Garamond">Those participating in the discussions included:</font> <table width='100"%"' cellpadding="1">
+						<col width='25"%"'>
+							<col width='31"%"'>
+								<col width='44"%"'>
+									<tr>
+										<td width='25"%"' valign="TOP"><font face="Garamond">Leonard Rosenthol</font></td>
+										<td width='31"%"' valign="TOP"><font face="Garamond">Aladdin Systems</font></td>
+										<td width='44"%"' valign="TOP"><font face="Garamond"><a href="mailto:leonardr@aladdinsys.com">leonardr@aladdinsys.com</a></font><br>
+										</td>
+									</tr>
+									<tr>
+										<td width='25"%"' valign="TOP"><font face="Garamond">Victor Tan</font></td>
+										<td width='31"%"' valign="TOP"><font face="Garamond">Aladdin Systems</font></td>
+										<td width='44"%"' valign="TOP"><font face="Garamond"><a href="mailto:victor@aladdinsys.com">victor@aladdinsys.com</a></font><br>
+										</td>
+									</tr>
+									<tr>
+										<td width='25"%"' valign="TOP"><font face="Garamond">Ed Tecot</font></td>
+										<td width='31"%"' valign="TOP"><font face="Garamond">Apple Computer/Microsoft</font></td>
+										<td width='44"%"' valign="TOP"><font face="Garamond"><a href="mailto:tecot@cs.stanford.edu">tecot@cs.stanford.edu</a></font><br>
+										</td>
+									</tr>
+									<tr>
+										<td width='25"%"' valign="TOP"><font face="Garamond">Patrick McClaughry</font></td>
+										<td width='31"%"' valign="TOP"><font face="Garamond">Apple Computer</font></td>
+										<td width='44"%"' valign="TOP"><font face="Garamond"><a href="mailto:patmc@apple.com">patmc@apple.com</a></font><br>
+										</td>
+									</tr>
+									<tr>
+										<td width='25"%"' valign="TOP"><font face="Garamond">Quinn</font></td>
+										<td width='31"%"' valign="TOP"><font face="Garamond">Apple Computer</font></td>
+										<td width='44"%"' valign="TOP"><font face="Garamond"><a href="mailto:quinn@quinn.echidna.id.au">quinn@quinn.echidna.id.au</a></font><br>
+										</td>
+									</tr>
+									<tr>
+										<td width='25"%"' valign="TOP"><font face="Garamond">James W. Matthews</font></td>
+										<td width='31"%"' valign="TOP"><font face="Garamond">Dartmouth University</font></td>
+										<td width='44"%"' valign="TOP"><font face="Garamond"><a href="mailto:James.W.Matthews@Dartmouth.EDU">James.W.Matthews@Dartmouth.EDU</a></font><br>
+										</td>
+									</tr>
+									<tr>
+										<td width='25"%"' valign="TOP"><font face="Garamond">Amanda Walker</font></td>
+										<td width='31"%"' valign="TOP"><font face="Garamond">Intercon Systems/Ascend</font></td>
+										<td width='44"%"' valign="TOP"><font face="Garamond"><a href="mailto:amanda_walker@ascend.com">amanda_walker@ascend.com</a></font><br>
+										</td>
+									</tr>
+									<tr>
+										<td width='25"%"' valign="TOP"><font face="Garamond">Alex Hopmann</font></td>
+										<td width='31"%"' valign="TOP"><font face="Garamond">Microsoft</font></td>
+										<td width='44"%"' valign="TOP"><font face="Garamond"><a href="mailto:hopmann@holonet.net">hopmann@holonet.net</a></font><br>
+										</td>
+									</tr>
+									<tr>
+										<td width='25"%"' valign="TOP"><font face="Garamond">John Norstad</font></td>
+										<td width='31"%"' valign="TOP"><font face="Garamond">Northwestern University</font></td>
+										<td width='44"%"' valign="TOP"><font face="Garamond"><a href="mailto:j-norstad@nwu.edu">j-norstad@nwu.edu</a></font><br>
+										</td>
+									</tr>
+									<tr>
+										<td width='25"%"' valign="TOP"><font face="Garamond">Pete Resnick</font></td>
+										<td width='31"%"' valign="TOP"><font face="Garamond">Qualcomm</font></td>
+										<td width='44"%"' valign="TOP"><font face="Garamond"><a href="mailto:presnick@qualcomm.com">presnick@qualcomm.com</a></font><br>
+										</td>
+									</tr>
+									<tr>
+										<td width='25"%"' valign="TOP"><font face="Garamond">Steve Dorner</font></td>
+										<td width='31"%"' valign="TOP"><font face="Garamond">Qualcomm</font></td>
+										<td width='44"%"' valign="TOP"><font face="Garamond"><a href="mailto:sdorner@qualcomm.com">sdorner@qualcomm.com</a></font><br>
+										</td>
+									</tr>
+									<tr>
+										<td width='25"%"' valign="TOP"><font face="Garamond">Chuck Shotton</font></td>
+										<td width='31"%"' valign="TOP"><font face="Garamond">Quarterdeck</font></td>
+										<td width='44"%"' valign="TOP"><font face="Garamond"><a href="mailto:chuck@starnine.com">chuck@starnine.com</a></font><br>
+										</td>
+									</tr>
+									<tr>
+										<td width='25"%"' valign="TOP"><font face="Garamond">Peter N Lewis</font></td>
+										<td width='31"%"' valign="TOP"><font face="Garamond">Stairways Software</font></td>
+										<td width='44"%"' valign="TOP"><font face="Garamond"><a href="mailto:peter@stairways.com.au">peter@stairways.com.au</a></font><br>
+										</td>
+									</tr>
+								</table></p>
+								<br clear="ALL">
+							</body>
+
+						</html>

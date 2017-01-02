@@ -1,0 +1,429 @@
+*****************************************************************************
+*   $Id: SyncroPacker.a,v 1.2 2005/06/23 14:39:16 stoecker Exp $
+*   Syncro Packer and related types decrunching slave
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+
+S_Syncro46	dc.l	S_Syncro46Pro
+		dc.w	2
+		dc.w	39
+		dc.l	N_Syncro46
+		dc.w	XFDPFF_ADDR
+		dc.w	0
+		dc.l	RB_Syncro46
+		dc.l	DB_Syncro46
+		dc.l	0
+		dc.l	0
+		dc.w	XFDID_SyncroPacker46
+		dc.w	0
+		dc.l	$188+4+4
+
+N_Syncro46	dc.b	'Syncro Packer 4.6',0
+		even
+
+;-------------------------------------------------
+
+RB_Syncro46	cmp.l	#$41fa0166,$20(a0)
+		bne.s	.Exit
+		cmp.l	#$1e201c20,$2c(a0)
+		bne.s	.Exit
+		cmp.l	#$49fa00b8,$9e(a0)	;orig
+		beq.s	.Ok
+		cmp.l	#$49fa00be,$98(a0)	;patched
+		bne.s	.Exit
+.Ok		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+Tab1		SET	0
+Tab2		SET	8		
+Tab3		SET	16		
+Tab4		SET	32
+Comp		SET	48
+Count		SET	49
+Len		SET	50
+Buf		SET	54
+Comp2		SET	58
+Size		SET	60	
+
+DB_Syncro46	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a6
+		lea	-Size(a7),a7
+		move.l	a7,a4
+
+		move.l	$154(a6),xfdbi_JmpAddress(a5)
+
+		lea	$158(a6),a1
+		move.l	a4,a2
+		moveq	#(48/4)-1,d0
+.Copy		move.l	(a1)+,(a2)+
+		dbf	d0,.Copy
+		move.b	$127(a6),Comp(a4)
+		
+		lea	$18c(a6),a0
+		move.l	(a0)+,d0
+		move.l	a0,d2		;end of data
+		add.l	d0,a0
+		move.b	-(a0),d7
+		move.b	-(a0),d6
+		move.b	-(a0),Tab2+7(a4)
+
+		moveq	#0,d3		;length of bitcrunched data
+		st	Count(a4)
+		bsr	D_Syncro
+		move.l	d3,Len(a4)
+
+		move.l	d3,d0
+		moveq	#1,d1
+		move.l	4.w,a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,Buf(a4)
+		beq	.Exit
+
+		move.l	xfdbi_SourceBuffer(a5),a0
+		lea	$18c(a0),a0
+		move.l	d0,a1
+		add.l	d3,a1		;end of bitbuf
+		move.l	(a0)+,d0
+		move.l	a0,d2		;end of data
+		add.l	d0,a0
+		move.b	-(a0),d7
+		move.b	-(a0),d6
+		move.b	-(a0),Tab2+7(a4)
+
+		clr.b	Count(a4)
+		bsr	D_Syncro
+
+		move.l	Buf(a4),a0
+		move.l	(a0),xfdbi_DecrAddress(a5)
+		move.b	8(a0),d3		
+		add.l	Len(a4),a0
+		st	Count(a4)
+		bsr	D_SyncroByte
+
+		move.l	d4,xfdbi_TargetBufSaveLen(a5)
+		move.l	d4,xfdbi_TargetBufLen(a5)
+
+		sub.l	d4,xfdbi_DecrAddress(a5)
+		
+		move.l	d4,d0
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	4.w,a6
+		jsr	-198(a6)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit2
+
+		move.l	d0,a1
+		add.l	d4,a1
+		move.l	Buf(a4),a0
+		move.b	8(a0),d3		
+		add.l	Len(a4),a0
+		clr.b	Count(a4)
+		bsr	D_SyncroByte
+
+		moveq	#1,d0
+
+.Exit2		move.l	d0,-(a7)
+		move.l	Buf(a4),a1
+		move.l	Len(a4),d0
+		jsr	-210(a6)
+		move.l	(a7)+,d0
+
+.Exit		lea	Size(a7),a7
+		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+**************************************************
+
+S_Syncro46Pro
+		IFND	XFD_LASTSLAVE
+		dc.l	S_Syncro_END
+		ELSE
+		dc.l	0
+		ENDIF
+		dc.w	2
+		dc.w	39
+		dc.l	N_Syncro46Pro
+		dc.w	XFDPFF_ADDR
+		dc.w	0
+		dc.l	RB_Syncro46Pro
+		dc.l	DB_Syncro46Pro
+		dc.l	0
+		dc.l	0
+		dc.w	XFDID_SyncroPacker46Pro
+		dc.w	0
+		dc.l	$1c8+4+4
+
+N_Syncro46Pro	dc.b	'Syncro Packer 4.6 Pro',0
+		even
+
+;-------------------------------------------------
+
+RB_Syncro46Pro	cmp.l	#$45fa0166,$60(a0)
+		bne.s	.Exit
+		cmp.l	#$1e201c20,$7a(a0)
+		bne.s	.Exit
+		cmp.l	#$49fa00b2,$e4(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_Syncro46Pro	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a6
+		lea	-Size(a7),a7
+		move.l	a7,a4
+
+		move.l	$194(a6),xfdbi_JmpAddress(a5)
+
+		lea	$198(a6),a1
+		move.l	a4,a2
+		moveq	#(48/4)-1,d0
+.Copy		move.l	(a1)+,(a2)+
+		dbf	d0,.Copy
+
+		move.b	$167(a6),Comp(a4)
+		move.b	$169(a6),Comp2(a4)
+		
+		lea	$1cc(a6),a0
+		move.l	$72(a6),d0
+		sub.l	$68(a6),d0
+		subq.l	#4,d0
+		move.l	a0,d2		;end of data
+		add.l	d0,a0
+		move.b	-(a0),d7
+		move.b	-(a0),d6
+
+		moveq	#0,d3		;length of bitcrunched data
+		st	Count(a4)
+		bsr	D_Syncro
+		move.l	d3,Len(a4)
+
+		move.l	d3,d0
+		moveq	#1,d1
+		move.l	4.w,a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,Buf(a4)
+		beq	.Exit
+
+		move.l	d0,a1
+		add.l	d3,a1		;end of bitbuf
+		move.l	xfdbi_SourceBuffer(a5),a6
+		lea	$1cc(a6),a0
+		move.l	$72(a6),d0
+		sub.l	$68(a6),d0
+		subq.l	#4,d0
+		move.l	a0,d2		;end of data
+		add.l	d0,a0
+		move.b	-(a0),d7
+		move.b	-(a0),d6
+
+		clr.b	Count(a4)
+		bsr.b	D_Syncro
+
+		move.l	Buf(a4),a0
+		move.l	(a0),xfdbi_DecrAddress(a5)
+		move.b	Comp2(a4),d3		
+		add.l	Len(a4),a0
+		st	Count(a4)
+		bsr	D_SyncroByte
+
+		move.l	d4,xfdbi_TargetBufSaveLen(a5)
+		move.l	d4,xfdbi_TargetBufLen(a5)
+		sub.l	d4,xfdbi_DecrAddress(a5)
+		
+		move.l	d4,d0
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	4.w,a6
+		jsr	-198(a6)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit2
+
+		move.l	d0,a1
+		add.l	d4,a1
+		move.l	Buf(a4),a0
+		move.b	Comp2(a4),d3		
+		add.l	Len(a4),a0
+		clr.b	Count(a4)
+		bsr	D_SyncroByte
+
+		moveq	#1,d0
+
+.Exit2		move.l	d0,-(a7)
+		move.l	Buf(a4),a1
+		move.l	Len(a4),d0
+		jsr	-210(a6)
+		move.l	(a7)+,d0
+
+.Exit		lea	Size(a7),a7
+		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;=================================================
+
+D_Syncro	bsr.s	.Decr4
+		beq.s	.Decr3
+		bsr.s	.Decr4
+		bne.s	.Decr1
+		moveq	#1,d0
+		bsr.s	.Decr5
+		addq.b	#2,d5
+		cmp.b	#5,d5
+		bne.s	.Decr1
+		moveq	#1,d0
+		bsr.s	.Decr5
+		addq.b	#5,d5
+		cmp.b	#8,d5
+		bne.s	.Decr1
+		moveq	#2,d0
+		bsr.s	.Decr5
+		addq.b	#8,d5
+		cmp.b	#15,d5
+		bne.s	.Decr1
+		moveq	#8,d0
+		bsr.s	.Decr5
+.Decr1		subq.w	#1,d5
+.Decr2		tst.b	Count(a4)
+		bne.s	.Decr16
+		move.b	-(a0),-(a1)
+		bra.s	.Decr17
+.Decr16		subq.w	#1,a0		
+		addq.l	#1,d3
+.Decr17		dbra	d5,.Decr2
+.Decr3		cmp.l	a0,d2
+		blt.s	.Decr8
+		rts
+
+.Decr4		clr.w	d0
+.Decr5		moveq	#0,d5
+.Decr6		tst.b	d7
+		bne.s	.Decr7
+		moveq	#8,d7
+		move.b	-(a0),d6
+.Decr7		lsl.b	#1,d6
+		roxl.l	#1,d5
+		subq.b	#1,d7
+		dbra	d0,.Decr6
+		clr.w	d0
+		tst.l	d5
+		rts
+
+.Decr8		bsr.s	.Decr4
+		beq.s	.Decr11
+		moveq	#2,d4
+		lea	Tab1(a4),a3
+		lea	Tab3(a4),a6
+.Decr9		moveq	#2,d0
+		bsr.s	.Decr5
+		move.b	(a3,d5.w),d0
+		asl.b	#1,d5
+		move.w	(a6,d5.w),d1
+		bsr.s	.Decr5
+		add.w	d1,d5
+		move.l	a1,a2
+		add.l	d5,a2
+		subq.w	#1,d4
+.Decr10		tst.b	Count(a4)
+		bne.s	.Decr18
+		move.b	-(a2),-(a1)
+		bra.s	.Decr19
+.Decr18		subq.w	#1,a2
+		addq.l	#1,d3
+.Decr19		dbra	d4,.Decr10
+		bra	D_Syncro
+
+.Decr11		lea	Tab2(a4),a3
+		lea	Tab4(a4),a6
+		bsr.s	.Decr4
+		bne.s	.Decr12
+		moveq	#3,d4
+		bra.s	.Decr9
+
+.Decr12		moveq	#1,d0
+		bsr.s	.Decr5
+		addq.b	#4,d5
+		cmp.b	#6,d5
+		blt.s	.Decr15
+		bne.s	.Decr13
+		moveq	#1,d0
+		bsr.s	.Decr5
+		addq.b	#6,d5
+		bra.s	.Decr15
+
+.Decr13		moveq	#4,d0
+		bsr.s	.Decr5
+		addq.b	#8,d5
+		cmp.b	#9,d5
+		beq.s	.Decr14
+		cmp.b	#8,d5
+		bne.s	.Decr15
+		moveq	#4,d0
+		bsr	.Decr5
+		add.b	#$28,d5
+		bra.s	.Decr15
+
+.Decr14		moveq	#8,d0
+		bsr	.Decr5
+		add.w	#$48,d5
+.Decr15		move.w	d5,d4
+		bra.s	.Decr9
+
+D_SyncroByte	move.b	Comp(a4),d2
+		moveq	#0,d4
+.Decr1		moveq	#0,d0
+.Decr2		move.b	-(a0),d0
+		cmp.b	d2,d0
+		beq.s	.Decr4
+		cmp.b	d3,d0
+		beq.s	.Decr3
+		addq.l	#1,d4
+		tst.b	Count(a4)
+		bne.s	.Decr2
+		move.b	d0,-(a1)
+		bra.s	.Decr2
+.Decr3		move.b	-(a0),d0
+		clr.b	d1
+		bra.s	.Decr5
+.Decr4		move.b	-(a0),d0
+		cmp.b	#1,d0
+		beq.s	.Decr6
+		move.b	-(a0),d1
+.Decr5		addq.l	#1,d4
+		tst.b	Count(a4)
+		bne.s	.Decr7
+		move.b	d1,-(a1)
+.Decr7		dbra	d0,.Decr5
+		bra.s	.Decr1
+.Decr6		rts
+
+S_Syncro_END
+

@@ -1,0 +1,265 @@
+*****************************************************************************
+*   $Id: MaxPacker.a,v 1.2 2005/06/23 14:39:16 stoecker Exp $
+*   Max Packer decrunching slave
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+
+S_MaxPack12
+		IFND	XFD_LASTSLAVE
+		dc.l	S_MaxPack_END
+		ELSE
+		dc.l	0
+		ENDIF
+		dc.w	2
+		dc.w	39
+		dc.l	N_MaxPack12
+		dc.w	XFDPFF_ADDR
+		dc.w	0
+		dc.l	RB_MaxPack12
+		dc.l	DB_MaxPack12
+		dc.l	0
+		dc.l	0
+		dc.w	XFDID_MaxPacker12
+		dc.w	0
+		dc.l	$1a8+4+4
+
+N_MaxPack12	dc.b	'MaxPacker 1.2',0
+		even
+
+;-------------------------------------------------
+
+RB_MaxPack12	cmp.l	#$4ed15d89,$7e(a0)
+		bne.s	.Exit
+		cmp.l	#$1c3b7006,$da(a0)
+		bne.s	.Exit
+		cmp.l	#$1e3b70e8,$fc(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+MaxCount1	SET	0
+MaxCount2	SET	4
+MaxTab1		SET	8
+MaxTab2		SET	12
+MaxTab3		SET	20
+MaxTab4		SET	28
+MaxTab5		SET	36
+MaxSize		SET	48
+
+DB_MaxPack12	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a2
+
+		move.l	$1a4(a2),d0
+		move.l	d0,xfdbi_TargetBufSaveLen(a5)
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	$190(a2),xfdbi_JmpAddress(a5)
+		move.l	$194(a2),xfdbi_DecrAddress(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit
+
+		lea	$1a8(a2),a0
+		add.l	$1a0(a2),a0	;data end				
+
+		move.l	d0,a3
+		add.l	$1a4(a2),a3	;dest end
+
+		move.l	$22(a2),d4
+		move.w	$198(a2),d2
+		move.b	$19a(a2),d1
+		move.b	$19b(a2),d0
+
+		lea	-MaxSize(a7),a7
+		move.l	a7,a4
+		move.l	$19c(a2),MaxCount1(a4)
+		move.l	$44(a2),MaxCount2(a4)
+		move.l	$e2(a2),MaxTab1(a4)
+		move.l	$e6(a2),MaxTab2(a4)
+		move.l	$ea(a2),MaxTab2+4(a4)
+		move.l	$13c(a2),MaxTab3(a4)
+		move.l	$140(a2),MaxTab3+4(a4)
+		move.l	$134(a2),MaxTab4(a4)
+		move.l	$138(a2),MaxTab4+4(a4)
+		move.l	$144(a2),MaxTab5(a4)
+		move.l	$148(a2),MaxTab5+4(a4)
+		move.l	$14c(a2),MaxTab5+8(a4)
+
+		move.l	a5,-(a7)
+		bsr.b	D_MaxPack12
+		move.l	(a7)+,a5
+		lea	MaxSize(a7),a7
+
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;=================================================
+
+D_MaxPack12	move.l	a3,a6
+		sub.l	MaxCount2(a4),a6
+.Decr1		move.l	d4,d5
+		move.l	a3,a2
+		move.b	d0,d0
+		bne	.Decr32
+.Decr2		tst.w	d2
+		beq.s	.Decr4
+.Decr3		subq.w	#1,d5
+		bmi.s	D_MaxPack12
+		move.b	-(a0),-(a3)
+		subq.w	#1,d2
+		bne.s	.Decr3
+.Decr4		subq.l	#1,MaxCount1(a4)
+		beq.s	.Decr7
+		moveq	#3,d7
+		lea	.Decr13(pc),a1
+.Decr5		add.b	d1,d1
+		bne.s	.Decr6
+		move.b	-(a0),d1
+		addx.b	d1,d1
+.Decr6		bcs.s	.Decr8
+		jmp	(a1)
+.Decr7		rts
+.Decr8		subq.w	#6,a1
+		dbra	d7,.Decr5
+		add.b	d1,d1
+		bne.s	.Decr9
+		move.b	-(a0),d1
+		addx.b	d1,d1
+.Decr9		bcc.s	.Decr10
+		move.b	-(a0),d0
+		moveq	#3,d7
+		bra.s	.Decr14
+
+.Decr10		moveq	#2,d7
+.Decr11		add.b	d1,d1
+		bne.s	.Decr12
+		move.b	-(a0),d1
+		addx.b	d1,d1
+.Decr12		addx.b	d0,d0
+		dbra	d7,.Decr11
+		addq.b	#6,d0
+		moveq	#3,d7
+		bra.s	.Decr14
+
+		moveq	#5,d0
+		moveq	#3,d7
+		bra.s	.Decr14
+
+		moveq	#4,d0
+		moveq	#2,d7
+		bra.s	.Decr14
+
+		moveq	#3,d0
+		moveq	#1,d7
+		bra.s	.Decr14
+
+.Decr13		moveq	#2,d0
+		moveq	#0,d7
+.Decr14		move.w	d7,d3
+		add.b	d1,d1
+		bne.s	.Decr15
+		move.b	-(a0),d1
+		addx.b	d1,d1
+.Decr15		bcc.s	.Decr17
+		add.b	d1,d1
+		bne.s	.Decr16
+		move.b	-(a0),d1
+		addx.b	d1,d1
+.Decr16		bcc.s	.Decr19
+		moveq	#0,d6
+		move.b	MaxTab1(a4,d7.w),d6
+		addq.b	#4,d7
+		bra.s	.Decr20
+
+.Decr17		add.b	d1,d1
+		bne.s	.Decr18
+		move.b	-(a0),d1
+		addx.b	d1,d1
+.Decr18		addx.w	d2,d2
+		bra.s	.Decr23
+
+.Decr19		moveq	#2,d6
+.Decr20		move.b	MaxTab2(a4,d7.w),d7
+.Decr21		add.b	d1,d1
+		bne.s	.Decr22
+		move.b	-(a0),d1
+		addx.b	d1,d1
+.Decr22		addx.w	d2,d2
+		subq.b	#1,d7
+		bne.s	.Decr21
+		add.w	d6,d2
+.Decr23		moveq	#0,d6
+		move.w	d6,a5
+		move.w	d3,d7
+		add.b	d1,d1
+		bne.s	.Decr24
+		move.b	-(a0),d1
+		addx.b	d1,d1
+.Decr24		bcc.s	.Decr27
+		add.w	d3,d3
+		add.b	d1,d1
+		bne.s	.Decr25
+		move.b	-(a0),d1
+		addx.b	d1,d1
+.Decr25		bcc.s	.Decr26
+		move.w	MaxTab3(a4,d3.w),a5
+		addq.b	#8,d7
+		bra.s	.Decr27
+
+.Decr26		move.w	MaxTab4(a4,d3.w),a5
+		addq.b	#4,d7
+.Decr27		move.b	MaxTab5(a4,d7.w),d7
+		bpl.s	.Decr28
+		move.b	-(a0),d6
+		and.b	#15,d7
+		beq.s	.Decr30
+.Decr28		add.b	d1,d1
+		bne.s	.Decr29
+		move.b	-(a0),d1
+		addx.b	d1,d1
+.Decr29		addx.w	d6,d6
+		subq.b	#1,d7
+		bne.s	.Decr28
+.Decr30		addq.w	#1,d6
+		add.w	d6,a5
+		add.l	a3,a5
+.Decr31		cmp.l	a5,a6
+		bne.s	.Decr32
+		move.l	a2,a5
+.Decr32		subq.w	#1,d5
+		bmi	.Decr1
+		move.b	-(a5),-(a3)
+		subq.b	#1,d0
+		bne.s	.Decr31
+		bra	.Decr2
+
+S_MaxPack_END
+

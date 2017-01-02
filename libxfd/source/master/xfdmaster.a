@@ -1,0 +1,2996 @@
+*****************************************************************************
+*   $Id: xfdmaster.a,v 1.2 2005/06/23 14:38:55 stoecker Exp $
+*   the xfd decrunching library main part
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+
+XFDM_REVISION	EQU	16
+
+XFDDATE		MACRO
+		DC.B	"31.12.2003"
+		ENDM
+
+*****************************************************************
+
+		SECTION	xfdmaster,CODE
+
+		INCLUDE	"AINCLUDE:IncDirs.i"
+		INCLUDE	"exec/resident.i"
+		INCLUDE "exec/memory.i"
+		INCLUDE "exec/initializers.i"
+		INCLUDE	"libraries/xfdmaster.i"
+		INCLUDE "dos/dos.i"
+		INCLUDE	"dos/doshunks.i"
+		INCLUDE	"lvo/dos_lib.i"
+		INCLUDE	"lvo/exec_lib.i"
+		INCLUDE	"lvo/xfdmaster_lib.i"
+		INCLUDE	"lvo/xpkmaster_lib.i"
+
+		moveq	#-1,d0
+		rts
+
+XfdModule	DC.W	RTC_MATCHWORD
+		DC.L	XfdModule
+		DC.L	XfdEndskip
+		DC.B	RTF_AUTOINIT,XFDM_VERSION,NT_LIBRARY,0
+		DC.L	XfdName
+		DC.L	XfdID
+		DC.L	XfdInit
+
+XfdName		XFDM_NAME
+XfdID		DC.B	"xfdmaster "
+		DC.B	XFDM_VERSION/10+"0"
+		DC.B	XFDM_VERSION-(XFDM_VERSION/10*10)+"0"
+		DC.B	"."
+		IFNE	XFDM_REVISION/100
+		DC.B	XFDM_REVISION/100+"0"
+		DC.B	XFDM_REVISION/10-(XFDM_REVISION/100*10)+"0"
+		ELSE
+		IFNE	XFDM_REVISION/10-(XFDM_REVISION/100*10)
+		DC.B	XFDM_REVISION/10-(XFDM_REVISION/100*10)+"0"
+		ENDIF
+		ENDIF
+		DC.B	XFDM_REVISION-(XFDM_REVISION/10*10)+"0"
+		DC.B	" ("
+		XFDDATE
+		DC.B	") © 1994-2003 Georg Hörmann, Dirk Stöcker",13,10,0
+DosName		DC.B	"dos.library",0
+ExternalPath	DC.B	"LIBS:xfd",0
+		even
+
+XfdInit		DC.L	xfdMasterBase_SIZE
+		DC.L	XfdFuncTab
+		DC.L	XfdDataTab
+		DC.L	XfdInitCode
+
+XfdDataTab	INITBYTE	LN_TYPE,NT_LIBRARY
+		INITLONG	LN_NAME,XfdName
+		INITBYTE	LIB_FLAGS,LIBF_SUMUSED!LIBF_CHANGED
+		INITWORD	LIB_VERSION,XFDM_VERSION
+		INITWORD	LIB_REVISION,XFDM_REVISION
+		INITLONG	LIB_IDSTRING,XfdID
+		DC.L		0
+
+XfdFuncTab	DC.W	-1
+		DC.W	Open-XfdFuncTab
+		DC.W	Close-XfdFuncTab
+		DC.W	Expunge-XfdFuncTab
+		DC.W	ExtFunc-XfdFuncTab
+		DC.W	AllocBufferInfo-XfdFuncTab  ;obsolete
+		DC.W	FreeObject-XfdFuncTab	    ;obsolete: FreeBufferInfo
+		DC.W	AllocSegmentInfo-XfdFuncTab ;obsolete
+		DC.W	FreeObject-XfdFuncTab	    ;obsolete: FreeSegmentInfo
+		DC.W	RecogBuffer-XfdFuncTab
+		DC.W	DecrunchBuffer-XfdFuncTab
+		DC.W	RecogSegment-XfdFuncTab
+		DC.W	DecrunchSegment-XfdFuncTab
+		DC.W	GetErrorText-XfdFuncTab
+		DC.W	TestHunkStructure-XfdFuncTab	;obsolete
+		DC.W	TestHunkStructureNew-XfdFuncTab	;obsolete
+		DC.W	Relocate-XfdFuncTab
+		DC.W	TestHunkStructureFlags-XfdFuncTab
+		DC.W	StripHunks-XfdFuncTab
+		DC.W	AllocObject-XfdFuncTab
+		DC.W	FreeObject-XfdFuncTab
+		DC.W	RecogLinker-XfdFuncTab
+		DC.W	Unlink-XfdFuncTab
+		DC.W	ScanData-XfdFuncTab
+		DC.W	FreeScanList-XfdFuncTab
+		DC.W	ObjectType-XfdFuncTab
+		DC.W	InitScanHook-XfdFuncTab
+		DC.W	-1
+
+XfdInitCode	move.l	a5,-(a7)
+		move.l	d0,a5
+		move.l	a0,xfdm_SegList(a5)
+		move.l	a6,xfdm_ExecBase(a5)
+
+		lea	DosName(pc),a1
+		moveq	#33,d0
+		jsr	_LVOOpenLibrary(a6)
+		move.l	d0,xfdm_DosBase(a5)
+		beq.b	.Error
+
+		lea	XfdFirstSlave(pc),a0
+		move.l	a0,xfdm_FirstSlave(a5)
+
+		bsr.b	LoadExternal
+
+		move.l	xfdm_FirstSlave(a5),a0
+		moveq	#0,d1
+.GetMinBufSize	cmp.w	#2,xfds_Version(a0)
+		blt.b	.NextMinBufSize
+		move.l	xfds_MinBufferSize(a0),d0
+		beq.b	.NextMinBufSize
+		cmp.l	d1,d0
+		ble.b	.NextMinBufSize
+		move.l	d0,d1
+.NextMinBufSize	move.l	xfds_Next(a0),d0
+		beq.b	.EndMinBufSize
+		move.l	d0,a0
+		bra.b	.GetMinBufSize
+.EndMinBufSize	move.l	d1,xfdm_MinBufferSize(a5)
+
+		move.l	#XfdMinLinkSize,xfdm_MinLinkerSize(a5)
+		move.l	a5,d0
+.Error		move.l	(a7)+,a5
+		rts
+
+** Load external decrunchers from "LIBS:xfd/" **
+
+LoadExternal	movem.l	d2-d7/a2-a4/a6,-(a7)
+
+		pea	ExternalPath(pc)
+		move.l	(a7)+,d1
+		moveq	#-2,d2
+		move.l	xfdm_DosBase(a5),a6
+		jsr	_LVOLock(a6)
+		move.l	d0,d7
+		beq.b	.ErrorLock
+		move.l	d7,d1
+		jsr	_LVOCurrentDir(a6)
+		move.l	d0,d6
+
+		move.l	#fib_SIZEOF,d0
+		move.l	#MEMF_CLEAR|MEMF_PUBLIC,d1
+		move.l	xfdm_ExecBase(a5),a6
+		jsr	_LVOAllocMem(a6)
+		tst.l	d0
+		beq.b	.ErrorMem
+		move.l	d0,a4
+
+		MOVEA.L	a4,a2
+		move.l	d7,d1
+		move.l	a2,d2
+		move.l	xfdm_DosBase(a5),a6
+		jsr	_LVOExamine(a6)
+		tst.l	d0
+		beq.b	.ErrorExamine
+		tst.l	fib_DirEntryType(a4)
+		bmi.b	.ErrorExamine
+
+.LoadNext	move.l	d7,d1
+		move.l	a2,d2
+		jsr	_LVOExNext(a6)
+		tst.l	d0
+		beq.b	.ErrorExamine	;ende oder fehler
+		tst.l	fib_DirEntryType(a4)
+		bge.b	.LoadNext
+
+		lea	8(a2),a0
+		bsr.b	AddExternal
+		bra.b	.LoadNext
+
+.ErrorExamine	move.l	a4,a1
+		move.l	#fib_SIZEOF,d0
+		move.l	xfdm_ExecBase(a5),a6
+		jsr	_LVOFreeMem(a6)
+
+.ErrorMem	move.l	d6,d1
+		move.l	xfdm_DosBase(a5),a6	
+		jsr	_LVOCurrentDir(a6)
+		move.l	d7,d1
+		jsr	_LVOUnLock(a6)
+
+.ErrorLock	movem.l	(a7)+,d2-d7/a2-a4/a6
+		rts
+
+** a0: filename
+
+AddExternal	move.l	a0,d1
+		jsr	_LVOLoadSeg(a6)
+		move.l	d0,d5
+		beq.b	.Exit
+		lsl.l	#2,d0
+		addq.l	#4,d0
+		move.l	d0,a0
+
+		cmp.l	#XFDF_ID,xfdf_ID(a0)
+		beq.b	.Valid
+		move.l	d5,d1
+		jsr	_LVOUnLoadSeg(a6)
+.Exit		rts
+
+.Valid		move.l	d5,xfdf_SegList(a0)
+		clr.l	xfdf_Next(a0)
+
+		move.l	xfdm_FirstForeMan(a5),d0
+		bne.b	.SearchLastF
+		move.l	a0,xfdm_FirstForeMan(a5)
+		bra.b	.SearchLastS
+.SearchLastF	move.l	d0,a1
+		move.l	xfdf_Next(a1),d0
+		bne.b	.SearchLastF
+		move.l	a0,xfdf_Next(a1)
+
+.SearchLastS	move.l	xfdm_FirstSlave(a5),a1
+.GetLastS	move.l	xfds_Next(a1),d0
+		beq.b	.AddSlaves
+		move.l	d0,a1
+		bra.b	.GetLastS
+.AddSlaves	move.l	xfdf_FirstSlave(a0),a0
+		move.l	a0,xfds_Next(a1)
+
+** test for replace ID
+
+.ID_Next	or.w	#XFDPFF_EXTERN,xfds_PackerFlags(a0)
+
+		cmp.w	#2,xfds_Version(a0)
+		blt.b	.ID_GetNext
+		move.w	xfds_ReplaceID(a0),d1
+		beq.b	.ID_GetNext
+
+		lea	xfdm_FirstSlave(a5),a1
+		move.l	a1,d2
+		move.l	(a1),a1
+.ID_CheckID	cmp.w	#2,xfds_Version(a1)
+		blt.b	.ID_CheckIDNext
+		cmp.w	xfds_SlaveID(a1),d1
+		bne.b	.ID_CheckIDNext
+		move.l	xfds_Next(a1),d0
+		move.l	d2,a1
+		move.l	d0,(a1)
+		bra.b	.ID_GetNext
+
+.ID_CheckIDNext	lea	xfds_Next(a1),a1
+		move.l	(a1),d0
+		beq.b	.ID_GetNext
+		move.l	a1,d2
+		move.l	d0,a1
+		bra.b	.ID_CheckID
+
+.ID_GetNext	move.l	xfds_Next(a0),d0
+		beq.b	.ID_End
+		move.l	d0,a0
+		bra.b	.ID_Next
+
+.ID_End		rts
+
+*****************************************************************
+* Open ()                                                       *
+*****************************************************************
+
+Open		addq.w	#1,LIB_OPENCNT(a6)
+		bclr	#LIBB_DELEXP,LIB_FLAGS(a6)
+		move.l	a6,d0
+		rts
+
+*****************************************************************
+* Close ()                                                      *
+*****************************************************************
+
+Close		moveq	#0,d0
+		subq.w	#1,LIB_OPENCNT(a6)
+		bne.b	.Exit
+		btst	#LIBB_DELEXP,LIB_FLAGS(a6)
+		bne.b	Expunge
+.Exit		rts
+
+*****************************************************************
+* Expunge ()                                                    *
+*****************************************************************
+
+Expunge		movem.l	a2/a5/a6,-(a7)
+		move.l	a6,a5
+		move.l	xfdm_ExecBase(a5),a6
+		tst.w	LIB_OPENCNT(a5)
+		beq.b	.DoIt
+		bset	#LIBB_DELEXP,LIB_FLAGS(a5)
+		moveq	#0,d0
+		bra.b	.Exit
+
+.DoIt		move.l	a5,a1
+		jsr	_LVORemove(a6)
+
+		move.l	xfdm_DosBase(a5),a6
+		move.l	xfdm_FirstForeMan(a5),a2
+.FreeNext	move.l	a2,d0
+		beq.b	.FreeOk
+		move.l	xfdf_SegList(a2),d1
+		move.l	xfdf_Next(a2),a2
+		jsr	_LVOUnLoadSeg(a6)
+		bra.b	.FreeNext
+
+.FreeOk		move.l	a6,a1
+		move.l	xfdm_ExecBase(a5),a6
+		jsr	_LVOCloseLibrary(a6)
+
+		moveq	#0,d0
+		move.l	a5,a1
+		move.w	LIB_NEGSIZE(a5),d0
+		sub.l	d0,a1
+		add.w	LIB_POSSIZE(a5),d0
+		move.l	xfdm_SegList(a5),-(a7)
+		jsr	_LVOFreeMem(A6)
+		move.l	(a7)+,d0
+
+.Exit		movem.l	(a7)+,a2/a5/a6
+		rts
+
+*****************************************************************
+* ExtFunc ()                                                    *
+*****************************************************************
+
+ExtFunc		moveq	#0,d0
+		rts
+
+*****************************************************************
+* bufferinfo = AllocBufferInfo ()                               *
+*     d0                                                        *
+*****************************************************************
+
+AllocBufferInfo	moveq	#XFDOBJ_BUFFERINFO,d0
+		bra.b	AllocObject
+
+*****************************************************************
+* segmentinfo = AllocSegmentInfo ()                             *
+*      d0                                                       *
+*****************************************************************
+
+AllocSegmentInfo
+		moveq	#XFDOBJ_SEGMENTINFO,d0
+		bra.b	AllocObject
+
+*****************************************************************
+* scanhook = InitScanHook (entry, data)                         *
+*    d0                     a0     a1                           *
+*****************************************************************
+
+InitScanHook	movem.l	a0/a1,-(a7)
+		moveq	#XFDOBJ_SCANHOOK,d0
+		bsr.b	AllocObject
+		tst.l	d0
+		beq.b	.Exit
+		move.l	d0,a0
+		move.l	(a7),xfdsh_Entry(a0)
+		move.l	4(a7),xfdsh_Data(a0)
+.Exit		addq.w	#8,a7
+		rts
+
+*****************************************************************
+* object = AllocObject (objecttype)                             *
+*   d0                      d0                                  *
+*****************************************************************
+
+AllocObject	movem.l	d2/a6,-(a7)
+		move.w	d0,d2
+		beq.b	.Exit
+		bmi.b	.Exit
+		cmp.w	#XFDOBJ_MAX,d0
+		bgt.b	.Exit
+		lsl.w	#2,d0
+		move.l	.Objects-4(pc,d0.w),d0
+		move.l	#$10001,d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	_LVOAllocMem(A6)
+		tst.l	d0
+		beq.b	.Exit
+		move.l	d0,a0
+		move.w	#$fd0b,(a0)+
+		move.w	d2,(a0)+
+		move.l	a0,d0
+.Exit		movem.l	(a7)+,d2/a6
+		rts
+
+.Objects	DC.L	xfdBufferInfo_SIZE+4
+		DC.L	xfdSegmentInfo_SIZE+4
+		DC.L	xfdLinkerInfo_SIZE+4
+		DC.L	xfdScanNode_SIZE+4
+		DC.L	xfdScanHook_SIZE+4
+
+*****************************************************************
+* FreeObject (object)                                           *
+*               a1                                              *
+*****************************************************************
+
+FreeObject	move.l	a6,-(a7)
+		move.l	a1,d0
+		beq.b	.Exit
+		subq.w	#4,a1
+		cmp.w	#$fd0b,(a1)
+		bne.b	.Exit
+		move.w	2(a1),d0
+		beq.b	.Exit
+		bmi.b	.Exit
+		cmp.w	#XFDOBJ_MAX,d0
+		bgt.b	.Exit
+		lsl.w	#2,d0
+		move.l	.Objects-4(pc,d0.w),d0
+		clr.l	(a1)
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	_LVOFreeMem(A6)
+.Exit		move.l	(a7)+,a6
+		rts
+
+.Objects	DC.L	xfdBufferInfo_SIZE+4
+		DC.L	xfdSegmentInfo_SIZE+4
+		DC.L	xfdLinkerInfo_SIZE+4
+		DC.L	xfdScanNode_SIZE+4
+		DC.L	xfdScanHook_SIZE+4
+
+*****************************************************************
+* objecttype = ObjectType (object)                              *
+*     d0                     a1                                 *
+*****************************************************************
+
+ObjectType	move.l	a1,d0
+		beq.b	.Exit
+		cmp.w	#$fd0b,-4(a1)
+		bne.b	.Exit
+		moveq	#0,d0
+		move.w	-(a1),d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+*****************************************************************
+* success = RecogBuffer (bufferinfo)                            *
+*   d0                       a0                                 *
+*****************************************************************
+
+RecogBuffer	movem.l	a2-a5,-(a7)
+		LEA	-12(A7),A7
+		move.l	a7,a5
+
+		move.l	a0,a2
+		move.w	#XFDERR_NOSOURCE,xfdbi_Error(a2)
+		tst.l	xfdbi_SourceBuffer(a2)
+		beq	.NoSource
+		tst.l	xfdbi_SourceBufLen(a2)
+		beq	.NoSource
+
+		move.l	xfdm_FirstSlave(a6),d1
+.Next		move.l	d1,a3
+		cmp.w	#XFDS_VERSION,xfds_Version(a3)
+		bgt.b	.GetNext
+		move.w	xfds_MasterVersion(a3),d0
+		cmp.w	20(a6),d0
+		bgt.b	.GetNext
+
+		move.l	xfds_RecogBuffer(a3),d0
+		beq.b	.GetNext
+		move.l	d0,a4
+
+		move.w	xfds_PackerFlags(a3),d1
+		move.w	d1,d0
+		and.w	#XFDPFF_EXTERN,d0
+		beq.b	.NotExtern
+		move.w	xfdbi_Flags(a2),d0
+		and.w	#XFDFF_RECOGEXTERN,d0
+		beq.b	.GetNext
+
+.NotExtern	move.w	d1,d0
+		and.w	#XFDPFF_USERTARGET,d0
+		bne.b	.UserTarget
+		move.w	xfdbi_Flags(a2),d0
+		and.w	#XFDFF_RECOGUSERTARGET,d0
+		bne.b	.GetNext
+
+.UserTarget	move.w	d1,d0
+		and.w	#XFDPFF_RECOGLEN,d0
+		bne.b	.RecogLen
+		move.w	xfdbi_Flags(a2),d0
+		and.w	#XFDFF_RECOGTARGETLEN,d0
+		bne.b	.GetNext
+
+.RecogLen	move.l	xfdbi_SourceBuffer(a2),a0
+		move.l	xfdbi_SourceBufLen(a2),d0
+		cmp.w	#2,xfds_Version(a3)
+		blt.b	.NoMinSize
+		cmp.l	xfds_MinBufferSize(a3),d0
+		blt.b	.GetNext
+
+.NoMinSize	move.l	a5,a1
+		clr.l	xfdrr_MinTargetLen(a1)
+		clr.l	xfdrr_FinalTargetLen(a1)
+		CLR.L	xfdrr_MinSourceLen(A1)
+
+		jsr	(a4)
+		tst.l	d0
+		bne.b	.Found
+
+.GetNext	move.l	xfds_Next(a3),d1
+		bne.b	.Next
+
+.NotFound	clr.l	xfdbi_Slave(a2)
+		clr.l	xfdbi_PackerName(a2)
+		clr.w	xfdbi_PackerFlags(a2)
+		move.w	#XFDERR_UNKNOWN,xfdbi_Error(a2)
+.NoSource	moveq	#0,d0
+		bra.b	.Exit
+
+.Found		move.l	a3,xfdbi_Slave(a2)
+		move.l	xfds_PackerName(a3),xfdbi_PackerName(a2)
+		move.w	xfds_PackerFlags(a3),d0
+		bclr	#XFDPFB_EXTERN,d0
+		move.w	d0,xfdbi_PackerFlags(a2)
+		move.w	xfds_MaxSpecialLen(a3),xfdbi_MaxSpecialLen(a2)
+		move.l	xfdrr_MinTargetLen(a5),xfdbi_MinTargetLen(a2)
+		move.l	xfdrr_FinalTargetLen(a5),xfdbi_FinalTargetLen(a2)
+		MOVE.L	xfdrr_MinSourceLen(A5),xfdbi_MinSourceLen(A2)
+		moveq	#1,d0
+
+.Exit		LEA	12(A7),A7
+		movem.l	(a7)+,a2-a5
+		rts
+
+*****************************************************************
+* success = DecrunchBuffer (bufferinfo)                         *
+*   d0                          a0                              *
+*****************************************************************
+
+DecrunchBuffer	move.w	xfdbi_PackerFlags(a0),d0
+		btst	#XFDPFB_DATA,d0
+		bne.b	.NoHunkTest
+
+		BTST	#XFDPFB_ADDR,D0
+		BNE.B	.NoHunkTest
+
+		move.l	a0,-(a7)
+		move.l	xfdbi_SourceBufLen(a0),d0
+		move.l	xfdbi_SourceBuffer(a0),a0
+		jsr	_LVOxfdTestHunkStructureNew(a6)
+		move.l	(a7)+,a0
+		move.w	d0,xfdbi_Error(a0)
+		bne.w	.Exit
+
+.NoHunkTest	MOVE.W	#XFDERR_BUFFERTRUNCATED,xfdbi_Error(A0)
+		MOVE.L	xfdbi_MinSourceLen(A0),D0
+		CMP.L	xfdbi_SourceBufLen(A0),D0
+		BGT.W	.Exit
+
+		move.w	#XFDERR_NOSLAVE,xfdbi_Error(a0)
+		move.l	xfdbi_Slave(a0),d0
+		beq.w	.Exit
+		move.l	d0,a1
+
+		move.w	xfdbi_Flags(a0),d0
+		and.w	#XFDFF_USERTARGET,d0
+		beq.b	.NoUserTarget
+
+		move.w	#XFDERR_TARGETNOTSUPPORTED,xfdbi_Error(a0)
+		move.w	xfds_PackerFlags(a1),d0
+		and.w	#XFDPFF_USERTARGET,d0
+		beq.w	.Exit
+		move.w	#XFDERR_NOTARGET,xfdbi_Error(a0)
+		tst.l	xfdbi_UserTargetBuf(a0)
+		beq.w	.Exit
+		move.w	#XFDERR_TARGETTOOSMALL,xfdbi_Error(a0)
+		move.l	xfdbi_UserTargetBufLen(a0),d0
+		cmp.l	xfdbi_MinTargetLen(a0),d0
+		blt.w	.Exit
+		MOVE.L	xfdbi_UserTargetBuf(A0),xfdbi_TargetBuffer(A0)
+		MOVE.L	xfdbi_UserTargetBufLen(A0),xfdbi_TargetBufLen(A0)
+		MOVE.L	xfdbi_FinalTargetLen(A0),xfdbi_TargetBufSaveLen(A0)
+		bra.b	.CallDecr
+
+.NoUserTarget	MOVE.W	xfds_PackerFlags(A1),D0
+		AND.W	#XFDPFF_USERTARGET,D0
+		BEQ.B	.CallDecr
+
+		MOVEQ	#-1,D0				* no allocation possible
+		CMP.L	xfdbi_MinTargetLen(A0),D0
+		BEQ.B	.CallDecr
+
+		MOVE.W	#XFDERR_NOMEMORY,xfdbi_Error(A0)
+		MOVEM.L	A0/A1/A6,-(A7)
+		MOVE.L	xfdbi_MinTargetLen(A0),D0
+		MOVE.L	xfdbi_TargetBufMemType(A0),D1
+		MOVE.L	xfdm_ExecBase(A6),A6
+		JSR	_LVOAllocMem(A6)
+		MOVEM.L	(A7)+,A0/A1/A6
+		TST.L	D0
+		BEQ.B	.Error
+		MOVE.L	D0,xfdbi_UserTargetBuf(A0)
+		MOVE.L	D0,xfdbi_TargetBuffer(A0)
+		MOVE.W	#XFDFF_USERTARGET|XFDFF_MASTERALLOC,D0
+		OR.W	D0,xfdbi_Flags(A0)
+		MOVE.L	xfdbi_MinTargetLen(A0),D0
+		MOVE.L	D0,xfdbi_UserTargetBufLen(A0)
+		MOVE.L	D0,xfdbi_TargetBufLen(A0)
+		MOVE.L	xfdbi_FinalTargetLen(A0),xfdbi_TargetBufSaveLen(A0)
+
+.CallDecr	move.w	#XFDERR_NOTSUPPORTED,xfdbi_Error(a0)
+		move.l	xfds_DecrunchBuffer(a1),d0
+		beq.b	.Exit
+		move.l	d0,a1
+
+		move.l	a0,-(a7)
+		jsr	(a1)
+		move.l	(a7)+,a0
+	*	bsr	ClearCache
+		tst.l	d0
+		beq.b	.Error
+		clr.w	xfdbi_Error(a0)
+		rts
+
+.Error		MOVE.W	xfdbi_Flags(A0),D0
+		BTST	#XFDFB_MASTERALLOC,D0
+		BEQ.B	.noalloc
+		MOVEM.L	A0/A1/A6,-(A7)
+		MOVE.L	xfdbi_UserTargetBufLen(A0),D0
+		MOVE.L	xfdbi_UserTargetBuf(A0),A1
+		MOVE.L	xfdm_ExecBase(A6),A6
+		JSR	_LVOFreeMem(A6)
+		MOVEM.L	(A7)+,A0/A1/A6
+		MOVE.W	#XFDFF_USERTARGET|XFDFF_MASTERALLOC,D0
+		EOR.W	D0,xfdbi_Flags(A0)
+		CLR.L	xfdbi_UserTargetBufLen(A0)
+		CLR.L	xfdbi_UserTargetBuf(A0)
+		
+.noalloc	clr.l	xfdbi_TargetBuffer(a0)
+		clr.l	xfdbi_TargetBufLen(a0)
+		clr.l	xfdbi_TargetBufSaveLen(a0)
+		clr.l	xfdbi_DecrAddress(a0)
+		clr.l	xfdbi_JmpAddress(a0)
+.Exit		moveq	#0,d0
+		rts
+
+*****************************************************************
+* success = RecogSegment (segmentinfo)                          *
+*   d0                         a0                               *
+*****************************************************************
+
+RecogSegment	movem.l	a2/a3,-(a7)
+		move.l	a0,a2
+		move.w	#XFDERR_NOSOURCE,xfdsi_Error(a2)
+		tst.l	xfdsi_SegList(a2)
+		beq.b	.NoSource
+
+		move.l	xfdm_FirstSlave(a6),d1
+.Next		move.l	d1,a3
+		cmp.w	#XFDS_VERSION,xfds_Version(a3)
+		bgt.b	.GetNext
+		move.w	xfds_MasterVersion(a3),d0
+		cmp.w	20(a6),d0
+		bgt.b	.GetNext
+
+		move.w	xfds_PackerFlags(a3),d1
+		and.w	#XFDPFF_RELOC,d1
+		beq.b	.GetNext
+		move.l	xfds_RecogSegment(a3),d1
+		beq.b	.GetNext
+		move.l	d1,a1
+
+		move.w	xfds_PackerFlags(a3),d0
+		and.w	#XFDPFF_EXTERN,d0
+		beq.b	.NotExtern
+		move.w	xfdsi_Flags(a2),d0
+		and.w	#XFDFF_RECOGEXTERN,d0
+		beq.b	.GetNext
+
+.NotExtern	move.l	xfdsi_SegList(a2),a0
+		jsr	(a1)
+		tst.l	d0
+		bne.b	.Found
+
+.GetNext	move.l	xfds_Next(a3),d1
+		bne.b	.Next
+
+.NotFound	clr.l	xfdsi_Slave(a2)
+		clr.l	xfdsi_PackerName(a2)
+		clr.w	xfdsi_PackerFlags(a2)
+		move.w	#XFDERR_UNKNOWN,xfdsi_Error(a2)
+.NoSource	moveq	#0,d0
+		bra.b	.Exit
+
+.Found		move.l	a3,xfdsi_Slave(a2)
+		move.l	xfds_PackerName(a3),xfdsi_PackerName(a2)
+		move.w	xfds_PackerFlags(a3),d0
+		bclr	#XFDPFB_EXTERN,d0
+		move.w	d0,xfdsi_PackerFlags(a2)
+		move.w	xfds_MaxSpecialLen(a3),xfdsi_MaxSpecialLen(a2)
+		moveq	#1,d0
+
+.Exit		movem.l	(a7)+,a2/a3
+		rts
+
+*****************************************************************
+* success = DecrunchSegment (segmentinfo)                       *
+*   d0                           a0                             *
+*****************************************************************
+
+DecrunchSegment	move.w	#XFDERR_NOSLAVE,xfdsi_Error(a0)
+		move.l	xfdsi_Slave(a0),d0
+		beq.b	.Exit
+		move.l	d0,a1
+		move.w	#XFDERR_NOTSUPPORTED,xfdsi_Error(a0)
+		move.l	xfds_DecrunchSegment(a1),d0
+		beq.b	.Exit
+		move.l	d0,a1
+		move.l	a0,-(a7)
+		jsr	(a1)
+		move.l	(a7)+,a0
+		bsr	ClearCache
+		tst.l	d0
+		beq.b	.Exit
+		clr.w	xfdsi_Error(a0)
+.Exit		rts
+
+*****************************************************************
+* success = RecogLinker (linkerinfo)                            *
+*   D0                       A0                                 *
+*****************************************************************
+
+RecogLinker	movem.l	d2/a2/a3/a5,-(a7)
+		move.l	a0,a5
+
+		move.w	#XFDERR_NOSOURCE,xfdli_Error(a5)
+		tst.l	xfdli_Buffer(a5)
+		beq	.Error
+		tst.l	xfdli_BufLen(a5)
+		beq	.Error
+
+		BSR.W	LB_AnalyseDiz		* Diz linkers need not
+		TST.L	D0
+		BEQ.B	.goon			* to be programs
+		LEA	LB_NameDiz(PC),A0
+		MOVE.L	A0,xfdli_LinkerName(A5)
+		LEA	LB_UnlinkDiz(PC),A0
+		MOVE.L	A0,xfdli_Unlink(A5)
+		CLR.W	xfdli_Error(A5)
+		BRA.W	.Exit
+
+.goon		movea.l	xfdli_Buffer(a5),a0
+		move.w	#XFDERR_NOHUNKHEADER,xfdli_Error(a5)
+		MOVE.L	xfdli_BufLen(A5),D0
+		MOVEQ	#0,D1
+		BSR.W	xfdGetHunk
+		TST.L	D0
+		beq.b	.Error
+
+		MOVEA.L	D0,A0
+		move.l	#$deadbeef,d2
+
+		lea	LinkerBrain(pc),a2
+.Next		move.w	(a2)+,d0
+		bmi.b	.Unknown
+		beq.b	.Linker
+		move.l	a0,a1
+.Cmp		move.l	(a2)+,d1
+		cmp.l	d2,d1
+		bne.b	.DoIt
+		move.l	(a1),d1
+.DoIt		cmp.l	(a1)+,d1
+		dbne	d0,.Cmp
+		tst.w	d0
+		bmi.b	.Linker
+		addq.w	#2,d0
+.Skip		addq.w	#4,a2
+		dbf	d0,.Skip
+		bra.b	.Next
+
+.Linker		move.l	(a2)+,a3
+		move.l	(a2)+,xfdli_Unlink(a5)
+		move.l	(a2)+,xfdli_LinkerName(a5)
+		move.l	a0,-(a7)
+		jsr	(a3)
+		move.l	(a7)+,a0
+		tst.l	d0
+		beq.b	.Next
+
+		move.l	xfdli_Buffer(a5),a1
+		moveq	#1,d0
+		add.l	16(a1),d0
+		sub.l	12(a1),d0
+		sub.l	xfdli_Hunk2(a5),d0
+		bmi.b	.Next
+		beq.b	.Next
+		move.l	d0,xfdli_Amount2(a5)
+		clr.w	xfdli_Error(a5)
+		moveq	#1,d0
+		bra.b	.Exit
+
+.Unknown	clr.l	xfdli_Unlink(a5)
+		clr.l	xfdli_LinkerName(a5)
+		move.w	#XFDERR_UNKNOWN,xfdli_Error(a5)
+.Error		moveq	#0,d0
+.Exit		movem.l	(a7)+,d2/a2/a3/a5
+		rts
+
+*****************************************************************
+* success = Unlink (linkerinfo)                                 *
+*   d0                  a0                                      *
+*****************************************************************
+
+Unlink		LEA	LB_NameDiz(PC),A1		* special
+		CMP.L	xfdli_LinkerName(A0),A1		* diz linker
+		BEQ.B	.calllinker			* handling
+
+		move.l	a0,-(a7)
+		move.l	xfdli_BufLen(a0),d0
+		move.l	xfdli_Buffer(a0),a0
+
+		moveq	#XFDTHF_NOOVERLAYS,d1
+		jsr	_LVOxfdTestHunkStructureFlags(a6)
+		move.l	(a7)+,a0
+		move.w	d0,xfdli_Error(a0)
+		bne.b	.Exit
+
+.calllinker	move.w	#XFDERR_NOTSUPPORTED,xfdli_Error(a0)
+		move.l	xfdli_Unlink(a0),d0
+		beq.b	.Exit
+		move.l	d0,a1
+
+		move.l	a0,-(a7)
+		jsr	(a1)
+		move.l	(a7)+,a0
+	*	bsr	ClearCache
+		tst.l	d0
+		beq.b	.Error
+		clr.w	xfdli_Error(a0)
+		rts
+
+.Error		clr.l	xfdli_Save1(a0)
+		clr.l	xfdli_Save2(a0)
+		clr.l	xfdli_SaveLen1(a0)
+		clr.l	xfdli_SaveLen2(a0)
+.Exit		moveq	#0,d0
+		rts
+
+*****************************************************************
+* errorcode = ScanData (buffer, length, result, flags, scanhook)*
+*   D0.w                  A0      D0      A1     D1.w     A2    *
+*****************************************************************
+
+ScanData	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a2,d6	;hook
+		move.w	d1,d5
+		move.l	a1,a4	;result
+		clr.l	(a4)
+
+		moveq	#XFDERR_NOSOURCE,d7
+		move.l	a0,d1
+		beq	.Exit
+		move.l	d0,d2	;buflen
+		beq	.Exit
+		move.l	d1,a2	;buffer
+
+		btst	#XFDSDB_SCANODD,d5
+		beq.b	.OddOk
+		moveq	#XFDERR_BETTERCPU,d7
+		move.l	xfdm_ExecBase(a6),a0
+		move.w	$128(a0),d0
+		btst	#1,d0
+		beq	.Exit
+
+.OddOk		moveq	#0,d0			;count data entries
+		move.l	xfdm_FirstSlave(a6),d1
+.CountNext	move.l	d1,a1
+		cmp.w	#XFDS_VERSION,xfds_Version(a1)
+		bgt.b	.CountGetNext
+		move.w	xfds_MasterVersion(a1),d1
+		cmp.w	20(a6),d1
+		bgt.b	.CountGetNext
+		move.w	xfds_PackerFlags(a1),d1
+		and.w	#XFDPFF_DATA,d1
+		beq.b	.CountGetNext
+		move.l	xfds_ScanData(a1),d1
+		beq.b	.CountGetNext
+		move.l	xfds_VerifyData(a1),d1
+		beq.b	.CountGetNext
+		move.w	xfds_PackerFlags(a1),d1
+		and.w	#XFDPFF_EXTERN,d1
+		beq.b	.NotExtern
+		btst	#XFDSDB_USEEXTERN,d5
+		beq.b	.CountGetNext
+.NotExtern	addq.l	#1,d0
+.CountGetNext	move.l	xfds_Next(a1),d1
+		bne.b	.CountNext
+
+		moveq	#XFDERR_OK,d7
+		tst.l	d0
+		beq	.Exit		;no data scan
+
+		addq.l	#2,d0
+		lsl.l	#2,d0
+		move.l	d0,d3
+		move.l	#$10001,d1
+		exg	a5,a6
+		move.l	xfdm_ExecBase(a5),a6
+		jsr	_LVOAllocMem(A6)
+		exg	a5,a6
+		moveq	#XFDERR_NOMEMORY,d7
+		tst.l	d0
+		beq	.Exit
+		move.l	d0,a3
+		move.l	d3,(a3)+
+
+		move.l	a3,a0
+		move.l	xfdm_FirstSlave(a6),d1
+.EnterNext	move.l	d1,a1
+		cmp.w	#XFDS_VERSION,xfds_Version(a1)
+		bgt.b	.EnterGetNext
+		move.w	xfds_MasterVersion(a1),d1
+		cmp.w	20(a6),d1
+		bgt.b	.EnterGetNext
+		move.w	xfds_PackerFlags(a1),d1
+		and.w	#XFDPFF_DATA,d1
+		beq.b	.EnterGetNext
+		move.l	xfds_ScanData(a1),d1
+		beq.b	.EnterGetNext
+		move.l	xfds_VerifyData(a1),d1
+		beq.b	.EnterGetNext
+		move.w	xfds_PackerFlags(a1),d1
+		and.w	#XFDPFF_EXTERN,d1
+		beq.b	.Intern
+		btst	#XFDSDB_USEEXTERN,d5
+		beq.b	.EnterGetNext
+.Intern		move.l	a1,(a0)+
+.EnterGetNext	move.l	xfds_Next(a1),d1
+		bne.b	.EnterNext
+
+		move.l	a3,d3
+		moveq	#XFDERR_NOMEMORY,d7
+
+.ScanNext	move.l	(a3)+,d0
+		beq.b	.GetNextWord
+		move.l	d0,a1
+		move.l	xfds_ScanData(a1),a1
+		move.l	a2,a0
+		move.l	d2,d0
+		jsr	(a1)
+		tst.l	d0
+		beq.b	.ScanNext
+		move.l	-4(a3),a1
+		move.l	xfds_VerifyData(a1),a1
+		move.l	a2,a0
+		move.l	d2,d0
+		jsr	(a1)
+		tst.l	d0
+		beq.b	.ScanNext
+		CMP.L	D2,D0
+		BHI.B	.ScanNext
+
+		move.l	d0,d4
+		moveq	#XFDOBJ_SCANNODE,d0
+		jsr	_LVOxfdAllocObject(a6)
+		tst.l	d0
+		beq.b	.FreeList
+
+		move.l	a4,a1
+.Next		move.l	(a1),d1
+		beq.b	.Last
+		move.l	d1,a1
+		bra.b	.Next
+.Last		move.l	d0,(a1)
+		move.l	d0,a1
+		move.l	a2,xfdsn_Save(a1)
+		move.l	d4,xfdsn_SaveLen(a1)
+		move.l	-4(a3),a0
+		move.l	xfds_PackerName(a0),xfdsn_PackerName(a1)
+		move.w	xfds_PackerFlags(a0),d0
+		bclr	#XFDPFB_EXTERN,d0
+		move.w	d0,xfdsn_PackerFlags(a1)
+		btst	#XFDSDB_SCANODD,d5
+		bne.b	.Odd
+		addq.l	#1,d4
+		and.w	#$fffe,d4
+.Odd		add.l	d4,a2
+		sub.l	d4,d2
+		bra.b	.TestHook
+
+.GetNextWord	addq.w	#1,a2
+		subq.l	#1,d2
+		btst	#XFDSDB_SCANODD,d5
+		bne.b	.Odd2
+		addq.w	#1,a2
+		subq.l	#1,d2
+.Odd2		sub.l	a1,a1
+
+.TestHook	tst.l	d6
+		beq.b	.NoHook
+		move.l	d6,a0
+		move.l	d2,xfdsh_ToDo(a0)
+		bpl.b	.NotNeg
+		clr.l	xfdsh_ToDo(a0)
+.NotNeg		move.l	a1,xfdsh_ScanNode(a0)
+		pea	.DidHook(pc)
+		move.l	xfdsh_Entry(a0),-(a7)
+		rts
+.DidHook	tst.l	d0
+		bne.b	.NoHook
+		moveq	#XFDERR_HOOKBREAK,d7
+		bra.b	.FreeBuffer
+
+.NoHook		move.l	d3,a3
+		tst.l	d2
+		bgt	.ScanNext
+
+.Ok		moveq	#XFDERR_OK,d7
+		bra.b	.FreeBuffer
+
+.FreeList	move.l	(a4),d0
+		beq.b	.FreeBuffer
+		clr.l	(a4)
+.FreeNode	move.l	d0,a1
+		move.l	xfdsn_Next(a1),d2
+		jsr	_LVOxfdFreeObject(a6)
+		move.l	d2,d0
+		bne.b	.FreeNode
+
+.FreeBuffer	move.l	d3,a1
+		move.l	-(a1),d0
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	_LVOFreeMem(A6)
+
+.Exit		moveq	#0,d0
+		move.w	d7,d0
+		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+*****************************************************************
+* FreeScanList (scannode)                                       *
+*                  a1                                           *
+*****************************************************************
+
+FreeScanList	move.l	a1,-(a7)
+		bsr	ObjectType
+		move.l	(a7)+,a1
+		tst.w	d0
+		beq.b	.Exit
+		cmp.w	#XFDOBJ_SCANNODE,d0
+		bne.b	.Exit
+		move.l	a1,d0
+.FreeNode	move.l	d0,a1
+		move.l	xfdsn_Next(a1),-(a7)
+		bsr	FreeObject
+		move.l	(a7)+,d0
+		bne.b	.FreeNode
+.Exit		rts
+
+*****************************************************************
+* string = GetErrorText (error)                                 *
+*   D0                    D0.w                                  *
+*****************************************************************
+
+GetErrorText	move.l	d2,-(a7)
+		lea	.Table(pc),a0
+		moveq	#-1,d2
+
+.Next		move.w	(a0)+,d1
+		cmp.w	d2,d1
+		beq.b	.Ok
+		cmp.w	d0,d1
+		beq.b	.Ok
+		addq.w	#2,a0
+		bra.b	.Next
+
+.Ok		move.w	(a0)+,d0
+		lea	.Table(pc,d0.w),a0
+		move.l	a0,d0
+		move.l	(a7)+,d2
+		rts
+
+.Table		DC.W	XFDERR_OK,.OkMsg-.Table
+		DC.W	XFDERR_NOMEMORY,.NoMemoryMsg-.Table
+		DC.W	XFDERR_NOSLAVE,.NoSlaveMsg-.Table
+		DC.W	XFDERR_NOTSUPPORTED,.NotSupportedMsg-.Table
+		DC.W	XFDERR_UNKNOWN,.UnknownMsg-.Table
+		DC.W	XFDERR_NOSOURCE,.NoSourceMsg-.Table
+		DC.W	XFDERR_WRONGPASSWORD,.WrongPWMsg-.Table
+		DC.W	XFDERR_BADHUNK,.BadHunkMsg-.Table
+		DC.W	XFDERR_CORRUPTEDDATA,.CorrDataMsg-.Table
+		DC.W	XFDERR_MISSINGRESOURCE,.MissResMsg-.Table
+		DC.W	XFDERR_WRONGKEY,.WrongKeyMsg-.Table
+		DC.W	XFDERR_BETTERCPU,.BetterCpuMsg-.Table
+		DC.W	XFDERR_HOOKBREAK,.HookBreakMsg-.Table
+		DC.W	XFDERR_DOSERROR,.DosErrorMsg-.Table
+		DC.W	XFDERR_NOTARGET,.NoTargetMsg-.Table
+		DC.W	XFDERR_TARGETTOOSMALL,.Tar2SmallMsg-.Table
+		DC.W	XFDERR_TARGETNOTSUPPORTED,.TarNotSuppMsg-.Table
+
+		DC.W	XFDERR_UNDEFINEDHUNK,.UndefHunkMsg-.Table
+		DC.W	XFDERR_NOHUNKHEADER,.NoHunkHeadMsg-.Table
+		DC.W	XFDERR_BADEXTTYPE,.BadExtTypeMsg-.Table
+		DC.W	XFDERR_BUFFERTRUNCATED,.BufTruncMsg-.Table
+		DC.W	XFDERR_WRONGHUNKAMOUNT,.WrongHAmMsg-.Table
+		DC.W	XFDERR_NOOVERLAYS,.NoOvlMsg-.Table
+
+		DC.W	XFDERR_UNSUPPORTEDHUNK,.UnsuppHunkMsg-.Table
+		DC.W	XFDERR_BADRELMODE,.BadRelModeMsg-.Table
+
+		DC.W	-1,.UndefinedMsg-.Table
+
+.OkMsg		DC.B	"no errors",0
+.NoMemoryMsg	DC.B	"out of memory",0
+.NoSlaveMsg	DC.B	"missing slave entry",0
+.NotSupportedMsg DC.B	"not supported",0
+.UnknownMsg	DC.B	"unknown file",0
+.NoSourceMsg	DC.B	"no source specified",0
+.WrongPWMsg	DC.B	"wrong password",0
+.BadHunkMsg	DC.B	"bad hunk structure",0
+.CorrDataMsg	DC.B	"corrupted data",0
+.MissResMsg	DC.B	"missing resource",0
+.WrongKeyMsg	DC.B	"wrong 16/32 bit key",0
+.BetterCpuMsg	DC.B	"better cpu required",0
+.HookBreakMsg	DC.B	"hook caused break",0
+.DosErrorMsg	DC.B	"dos error",0
+.NoTargetMsg	DC.B	"no user target",0
+.Tar2SmallMsg	DC.B	"user target too small",0
+.TarNotSuppMsg	DC.B	"user target not supported",0
+
+.UndefHunkMsg	DC.B	"undefined hunk type",0
+.NoHunkHeadMsg	DC.B	"file is not executable",0
+.BadExtTypeMsg	DC.B	"bad hunk_ext type",0
+.BufTruncMsg	DC.B	"buffer truncated",0
+.WrongHAmMsg	DC.B	"wrong amount of hunks",0
+.NoOvlMsg	DC.B	"overlays not allowed",0
+
+.UnsuppHunkMsg	DC.B	"unsupported hunk type",0
+.BadRelModeMsg	DC.B	"unknown relocation mode",0
+
+.UndefinedMsg	DC.B	"undefined error",0
+		even
+
+*****************************************************************
+* success = TestHunkStructure (buffer, length)                  *
+*   D0                           A0      D0                     *
+*****************************************************************
+
+TestHunkStructure
+		bsr.b	TestHunkStructureNew
+		tst.l	d0
+		beq.b	.Ok
+		moveq	#0,d0
+		rts
+.Ok		moveq	#1,d0
+		rts
+
+*****************************************************************
+* errorcode = TestHunkStructureNew (buffer, length)             *
+*   D0.w                              A0      D0                *
+*****************************************************************
+
+TestHunkStructureNew
+		moveq	#0,d1
+		;bra.b	TestHunkStructureFlags
+
+*****************************************************************
+* errorcode = TestHunkStructureFlags (buffer, length, flags)    *
+*   D0.w                                A0      D0     D1.w     *
+*****************************************************************
+
+TestHunkStructureFlags
+		movem.l	d2/d6/d7/a2,-(a7)
+		move.w	d1,d6
+		move.w	#XFDERR_NOHUNKHEADER,d7
+		cmp.l	#HUNK_HEADER,(a0)
+		bne.b	.Error
+		move.w	#XFDERR_NOSOURCE,d7
+		tst.l	d0
+		beq.b	.Error
+		lea	(a0,d0.l),a1	;buffer end
+		MOVE.L	A0,A2		;buffer begin
+		moveq	#0,d2		;hunk count
+
+.Next		move.l	(a0)+,d0	;kennung
+		and.l	#$3fffffff,d0
+		move.w	#XFDERR_UNSUPPORTEDHUNK,d7
+		sub.l	#$3e8,d0
+		bmi.b	.Error
+		cmp.l	#$3fc-$3e8,d0
+		bgt.b	.Error
+		add.w	d0,d0
+		move.w	.Table(pc,d0.w),d0
+		jsr	.Table(pc,d0.w)
+		tst.l	d0
+		beq.b	.Error
+		CMP.L	A2,A0
+		BLO.B	.Trunc
+		cmp.l	a1,a0
+		BLO.B	.Next
+		beq.b	.EOF
+.Trunc		move.w	#XFDERR_BUFFERTRUNCATED,d7
+		bra.b	.Error
+
+.EOF		move.w	#XFDERR_WRONGHUNKAMOUNT,d7
+		tst.l	d2
+		bne.b	.Error
+		move.w	#XFDERR_OK,d7
+
+.Error		moveq	#0,d0
+		move.w	d7,d0
+		movem.l	(a7)+,d2/d6/d7/a2
+		rts
+
+.Table		DC.W	Hunk_Debug-.Table	;name
+		DC.W	Hunk_Code-.Table	;code
+		DC.W	Hunk_Code-.Table	;data
+		DC.W	Hunk_BSS-.Table		;bss
+		DC.W	Hunk_Reloc-.Table	;reloc32
+		DC.W	Hunk_Undefined-.Table	;reloc16
+		DC.W	Hunk_Undefined-.Table	;reloc8
+		DC.W	Hunk_Undefined-.Table	;ext
+		DC.W	Hunk_Reloc-.Table	;symbol
+		DC.W	Hunk_Debug-.Table	;debug
+		DC.W	Hunk_End-.Table		;end
+		DC.W	Hunk_Header-.Table	;header
+		DC.W	Hunk_Undefined-.Table	;not defined
+		DC.W	Hunk_Overlay-.Table	;overlay
+		DC.W	Hunk_End-.Table		;break
+		DC.W	Hunk_RelocShort-.Table	;reloc32short
+		DC.W	Hunk_Undefined-.Table	;dreloc16
+		DC.W	Hunk_Undefined-.Table	;dreloc8
+		DC.W	Hunk_Undefined-.Table	;lib
+		DC.W	Hunk_Undefined-.Table	;index
+		DC.W	Hunk_RelocShort-.Table	;reloc32short
+
+Hunk_Truncated	move.w	#XFDERR_BUFFERTRUNCATED,d7
+		moveq	#0,d0
+		rts
+
+Hunk_Undefined	move.w	#XFDERR_UNSUPPORTEDHUNK,d7
+		moveq	#0,d0
+		rts
+
+Hunk_Code	subq.l	#1,d2
+Hunk_Debug	move.l	(a0)+,d0
+		lsl.l	#2,d0
+		add.l	d0,a0
+		moveq	#1,d0
+		rts
+
+Hunk_BSS	addq.w	#4,a0
+		subq.l	#1,d2
+Hunk_End	moveq	#1,d0
+		rts
+
+Hunk_Reloc	cmp.l	a1,a0
+		bhs.b	Hunk_Truncated
+		CMP.L	A2,A0
+		BLO.B	Hunk_Truncated
+		move.l	(a0)+,d0
+		beq.b	.Exit
+		lsl.l	#2,d0
+		lea	4(a0,d0.l),a0
+		bra.b	Hunk_Reloc
+.Exit		moveq	#1,d0
+		rts
+
+Hunk_RelocShort	moveq	#0,d0
+		move.w	(a0)+,d0
+		beq.b	.Exit
+		add.l	d0,d0
+		lea	2(a0,d0.l),a0
+		bra.b	Hunk_RelocShort
+.Exit		move.l	a1,d0
+		sub.l	a0,d0
+		and.w	#$2,d0
+		beq.b	.NoOdd
+		addq.w	#2,a0
+.NoOdd		moveq	#1,d0
+		rts
+
+Hunk_Header	tst.l	(a0)			; only use 16 bit hunk numbers 21.08.2001
+		bne.b	Hunk_Undefined
+		moveq	#1,d0
+		add.w	12+2(a0),d0
+		cmp.w	8+2(a0),d0
+		BLS.B	Hunk_Truncated
+		sub.w	8+2(a0),d0
+		add.l	d0,d2
+		lsl.l	#2,d0
+		lea	16(a0,d0.l),a0
+		moveq	#1,d0
+		rts
+
+Hunk_Overlay	btst	#XFDTHB_NOOVERLAYS,d6
+		bne.b	.Abort
+		move.l	(a0)+,d0
+		beq.b	.CheckBreak
+		lsl.l	#2,d0
+		lea	4(a0,d0.l),a0
+		moveq	#1,d0
+		rts
+.CheckBreak	cmp.l	#$3f6,(a0)+
+		bne.b	.Ok
+		moveq	#0,d2
+		move.l	a1,a0
+.Ok		moveq	#1,d0
+		rts
+
+.Abort		move.w	#XFDERR_NOOVERLAYS,d7
+		moveq	#0,d0
+		rts
+
+*****************************************************************
+* errorcode = Relocate (buffer, length, result, mode)           *
+*   D0.w                  A0      D0      A1    D1.w            *
+*****************************************************************
+
+Relocate	movem.l	d2-d7/a2-a6,-(a7)
+
+		clr.l	(a1)
+		movem.l	d0/d1/a0/a1,-(a7)
+		move.w	#XFDTHF_NOOVERLAYS,d1
+		jsr	_LVOxfdTestHunkStructureFlags(a6)
+		move.w	d0,d7
+		movem.l	(a7)+,d0/d6/a2/a4
+		tst.w	d7
+		bne	.Error
+
+		lea	(a2,d0.l),a5
+		moveq	#1,d2
+		add.l	16(a2),d2
+		sub.l	12(a2),d2
+		add.w	#20,a2
+
+		move.l	xfdm_ExecBase(a6),a6
+		move.l	a4,a3
+
+.AllocNext	cmp.w	#XFDREL_DEFAULT,d6
+		beq.b	.AllocDefault
+		move.l	#$10003,d1
+		cmp.w	#XFDREL_FORCECHIP,d6
+		beq.b	.AllocChipFast
+		move.l	#$10005,d1
+		cmp.w	#XFDREL_FORCEFAST,d6
+		beq.b	.AllocChipFast
+		move.w	#XFDERR_BADRELMODE,d7
+		bra	.MemError
+.AllocDefault	moveq	#1,d1
+		swap	d1
+		move.w	(a2),d1
+		rol.w	#3,d1
+		and.w	#$0006,d1
+		or.w	#$0001,d1
+.AllocChipFast	move.l	(a2)+,d0
+		addq.l	#2,d0
+		lsl.l	#2,d0
+		move.l	d0,-(a7)
+		jsr	_LVOAllocMem(A6)
+		move.l	(a7)+,d1
+		moveq	#XFDERR_NOMEMORY,d7
+		tst.l	d0
+		beq	.MemError
+		move.l	d0,a0
+		move.l	d1,(a0)+
+		move.l	a0,d0
+		lsr.l	#2,d0
+		move.l	d0,(a3)
+		move.l	a0,a3
+		subq.l	#1,d2
+		bne.b	.AllocNext
+
+		moveq	#-1,d2	;hunk num
+
+.ReloNext	cmp.l	a5,a2
+		beq	.Exit
+		move.l	(a2)+,d0
+		cmp.w	#$3e8,d0	;name
+		beq.b	.JumpDebug
+		cmp.w	#$3ea,d0	;code,data
+		ble.b	.ReloCode
+		cmp.w	#$3eb,d0	;bss
+		beq.b	.ReloBSS
+		cmp.w	#$3ec,d0	;reloc32
+		beq.b	.ReloReloc
+		cmp.w	#$3f0,d0	;symbol
+		beq.b	.JumpSymbol
+		cmp.w	#$3f1,d0	;debug
+		beq.b	.JumpDebug
+		cmp.w	#$3f2,d0	;end
+		beq.b	.ReloNext
+		cmp.w	#$3f7,d0	;reloc32short
+		beq.b	.ReloRelocShort
+		cmp.w	#$3fc,d0	;reloc32short
+		beq.b	.ReloRelocShort
+		move.w	#XFDERR_UNSUPPORTEDHUNK,d7
+		bra	.MemError
+
+.JumpDebug	move.l	(a2)+,d0
+		lsl.l	#2,d0
+		add.l	d0,a2
+		bra.b	.ReloNext
+
+.JumpSymbol	move.l	(a2)+,d0
+		beq.b	.ReloNext
+		lsl.l	#2,d0
+		lea	4(a2,d0.l),a2
+		bra.b	.JumpSymbol
+
+.ReloCode	addq.l	#1,d2
+		move.l	d2,d1
+		bsr.b	.GetHunk
+		move.l	(a2)+,d0
+		beq.b	.ReloNext
+.ReloCodeCopy	move.l	(a2)+,(a1)+
+		subq.l	#1,d0
+		bne.b	.ReloCodeCopy
+		bra.b	.ReloNext
+
+.ReloBSS	addq.l	#1,d2
+		addq.w	#4,a2
+		bra.b	.ReloNext
+
+.ReloReloc	move.l	d2,d1
+		bsr.b	.GetHunk
+		move.l	a1,a3
+.ReloRelocHunk	move.l	(a2)+,d0	;amount
+		beq.b	.ReloNext
+		move.l	(a2)+,d1	;hunk
+		bsr.b	.GetHunk
+		move.l	a1,d4
+.ReloRelocNext	move.l	(a2)+,d3
+		add.l	d4,(a3,d3.l)
+		subq.l	#1,d0
+		bne.b	.ReloRelocNext
+		bra.b	.ReloRelocHunk
+
+.ReloRelocShort	move.l	d2,d1
+		bsr.b	.GetHunk
+		move.l	a1,a3
+.ReloRelocSHunk	moveq	#0,d0
+		move.w	(a2)+,d0	;amount
+		beq.b	.ReloRelocSPad
+		moveq	#0,d1
+		move.w	(a2)+,d1	;hunk
+		bsr.b	.GetHunk
+		move.l	a1,d4
+		moveq	#0,d3
+.ReloRelocSNext	move.w	(a2)+,d3
+		add.l	d4,(a3,d3.l)
+		subq.l	#1,d0
+		bne.b	.ReloRelocSNext
+		bra.b	.ReloRelocSHunk
+.ReloRelocSPad	move.l	a5,d0
+		sub.l	a2,d0
+		and.w	#$2,d0
+		beq.b	.ReloRelocSEven
+		addq.w	#2,a2
+.ReloRelocSEven	bra	.ReloNext
+
+.GetHunk	move.l	a4,a1
+.GetHunkNext	move.l	(a1),a1
+		add.l	a1,a1
+		add.l	a1,a1
+		subq.l	#1,d1
+		bge.b	.GetHunkNext
+		addq.w	#4,a1
+		rts
+
+.MemError	move.l	(a4),d2
+		clr.l	(a4)
+.FreeNext	lsl.l	#2,d2
+		beq.b	.Error
+		move.l	d2,a1
+		move.l	(a1),d2
+		move.l	-(a1),d0
+		jsr	_LVOFreeMem(A6)
+		bra.b	.FreeNext
+
+.Exit		moveq	#XFDERR_OK,d7
+
+.Error		bsr	ClearCache
+		moveq	#0,d0
+		move.w	d7,d0
+		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+*****************************************************************
+* errorcode = StripHunks (buffer, length, result, flags)        *
+*   D0.w                    A0      D0      A1     D1.w         *
+*****************************************************************
+
+StripHunks	movem.l	d2-d7/a2-a6,-(a7)
+
+		movem.l	d0/d1/a0/a1,-(a7)
+		move.w	#XFDTHF_NOOVERLAYS,d1
+		jsr	_LVOxfdTestHunkStructureFlags(a6)
+		move.w	d0,d7
+		movem.l	(a7),d0/d6/a2
+		tst.w	d7
+		bne	.Error
+
+		lea	(a2,d0.l),a5			; only use 16 bit hunk numbers 21.08.2001
+		moveq	#1,d0
+		add.w	16+2(a2),d0
+		sub.w	12+2(a2),d0
+		lsl.l	#2,d0
+		lea	20(a2,d0.l),a2
+
+.StripNext	cmp.l	a5,a2
+		beq	.Exit
+		move.l	(a2)+,d0
+		cmp.w	#$3e8,d0	;name
+		beq.b	.StripName
+		cmp.w	#$3ea,d0	;code,data
+		ble.b	.JumpCode
+		cmp.w	#$3eb,d0	;bss
+		beq.b	.JumpBSS
+		cmp.w	#$3ec,d0	;reloc32
+		beq.b	.JumpReloc
+		cmp.w	#$3f0,d0	;symbol
+		beq.b	.StripSymbol
+		cmp.w	#$3f1,d0	;debug
+		beq.b	.StripDebug
+		cmp.w	#$3f2,d0	;end
+		beq.b	.StripNext
+		cmp.w	#$3f7,d0	;reloc32short
+		beq.b	.JumpRelocShort
+		cmp.w	#$3fc,d0	;reloc32short
+		beq.b	.JumpRelocShort
+		move.w	#XFDERR_UNSUPPORTEDHUNK,d7
+		bra	.Error
+
+.JumpCode	move.l	(a2)+,d0
+		lsl.l	#2,d0
+		add.l	d0,a2
+		bra.b	.StripNext
+
+.JumpBSS	addq.w	#4,a2
+		bra.b	.StripNext
+
+.JumpReloc	move.l	(a2)+,d0
+		beq.b	.StripNext
+		lsl.l	#2,d0
+		lea	4(a2,d0.l),a2
+		bra.b	.JumpReloc
+
+.JumpRelocShort	moveq	#0,d0
+		move.w	(a2)+,d0
+		beq.b	.JumpRelocSPad
+		add.l	d0,d0
+		lea	2(a2,d0.l),a2
+		bra.b	.JumpRelocShort
+.JumpRelocSPad	move.l	a5,d0
+		sub.l	a2,d0
+		and.w	#$2,d0
+		beq.b	.NoOdd
+		addq.w	#2,a2
+.NoOdd		bra.b	.StripNext
+
+.StripName	btst	#XFDSHB_NAME,d6
+		bra.b	.StripName1
+
+.StripSymbol	btst	#XFDSHB_SYMBOL,d6
+		beq.b	.JumpReloc
+		move.l	a2,a1
+		subq.w	#4,a2
+		move.l	a2,a0
+.CountSymbol	move.l	(a1)+,d0
+		beq.b	.StripHunk
+		lsl.l	#2,d0
+		lea	4(a1,d0.l),a1
+		bra.b	.CountSymbol
+
+.StripDebug	btst	#XFDSHB_DEBUG,d6
+.StripName1	beq.b	.JumpCode
+		move.l	a2,a1
+		subq.w	#4,a2
+		move.l	a2,a0
+		move.l	(a1)+,d0
+		lsl.l	#2,d0
+		add.l	d0,a1
+.StripHunk	cmp.l	a5,a1
+		beq.b	.StripEnd
+		move.l	(a1)+,(a0)+
+		bra.b	.StripHunk
+.StripEnd	move.l	a0,a5
+		bra	.StripNext
+
+.Exit		movem.l	8(a7),d0/a0	;buffer/result
+		sub.l	d0,a5
+		move.l	a5,(a0)
+		moveq	#XFDERR_OK,d7
+
+.Error		add.w	#16,a7
+	*	bsr	ClearCache
+		moveq	#0,d0
+		move.w	d7,d0
+		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+*****************************************************************
+
+XfdMinLinkSize	equ	20+20+$144+16+44+16	;ufo
+
+LinkerBrain	;4ef9 Linker  20+12+64+16+16
+		;hunk0 = linker
+
+		DC.W	16-1
+		DC.L	$000003e9,$00000005,$48e7fffe,$4eb90000
+		DC.L	$00004cdf,$7fff4ef9,$00000000,$000003ec
+		DC.L	$00000001,$deadbeef,$00000006,$00000001
+		DC.L	$deadbeef,$00000010,$00000000,$000003f2
+		DC.L	LB_Analyse4EF9
+		DC.L	LB_Unlink4EF9
+		DC.L	LB_Name4EF9
+
+		;4eb9 Linker Type A  20+12+60+16+16
+		;hunk0 = linker
+
+		DC.W	15-1
+		DC.L	$000003e9,$00000004,$4eb90000,$00004eb9
+		DC.L	$00000000,$70004e75,$000003ec,$00000001
+		DC.L	$deadbeef,$00000002,$00000001,$deadbeef
+		DC.L	$00000008,$00000000,$000003f2
+		DC.L	LB_Analyse4EF9	;same
+		DC.L	LB_Unlink4EF9	;same
+		DC.L	LB_Name4EB9
+
+		;4eb9 Linker Type B  20+12+60+16+16
+		;hunk0 = linker
+
+		DC.W	15-1
+		DC.L	$000003e9,$00000004,$4eb90000,$00004eb9
+		DC.L	$00000000,$70004e75,$000003ec,$00000001
+		DC.L	$deadbeef,$00000008,$00000001,$deadbeef
+		DC.L	$00000002,$00000000,$000003f2
+		DC.L	LB_Analyse4EF9	;same
+		DC.L	LB_Unlink4EF9	;same
+		DC.L	LB_Name4EB9
+
+		;4eb9 Linker Type B  20+12+68+16+16
+		;hunk0 = linker
+
+		DC.W	17-1
+		DC.L	$000003e9,$00000006,$4eb90000,$00004eb9
+		DC.L	$00000000,$70004e75,$deadbeef,$deadbeef
+		DC.L	$000003ec,$00000001,$deadbeef,$00000002
+		DC.L	$00000001,$deadbeef,$00000008,$00000000
+		DC.L	$000003f2
+		DC.L	LB_Analyse4EF9	;same
+		DC.L	LB_Unlink4EF9	;same
+		DC.L	LB_Name4EB9
+
+		; $4EB9 with register save  20+12+72+16+16
+		DC.W	18-1
+		DC.L	$000003E9,$00000007,$48E7FFFE,$4EB90000
+		DC.L	$00004CD7,$7FFF4EB9,$00000000,$4CDF7FFF
+		DC.L	$70004E75,$000003EC,$00000001,$deadbeef
+		DC.L	$00000006,$00000001,$deadbeef,$00000010
+		DC.L	$00000000,$000003F2
+		DC.L	LB_Analyse4EF9
+		DC.L	LB_Unlink4EF9
+		DC.L	LB_Name4EB9
+
+		;UFO Linker  20+20+$144+16+44+16
+		;1. link immer nur 1 hunk, hunk0/1/3 = linker
+		;pic link hat hunk3 weiter hinten, deshalb suchen
+
+		DC.W	9-1
+		DC.L	$000003e9,$0000002b,$4feffe08,$48e7fffe
+		DC.L	$227afff2,$d3c9d3c9,$58892f49,$003c4cdf
+		DC.L	$7fff4e75
+		DC.L	LB_AnalyseUFO
+		DC.L	LB_UnlinkUFO
+		DC.L	LB_NameUFO
+
+		;XLink 3.0 Linker  20+12+$c4+16+16
+		;hunk0 = linker
+
+		DC.W	16-1
+		DC.L	$000003e9,$00000026,$487a006a,$48e7ffff
+		DC.L	$207cffff,$fffc7200,$615c23c0,$0000008e
+		DC.L	$323a0072,$615023c0,$00000092,$74024a02
+		DC.L	$660c2f7a,$0062003c,$41fa0060,$60240c02
+		DC.L	LB_AnalyseXLink
+		DC.L	LB_Unlink4EF9	;same
+		DC.L	LB_NameXLink
+
+		;Glue 2.3 Linker  20+8+$fc+4+4+16
+		;text typed before prg
+		;hunk0 = linker + text
+
+		DC.W	39-1
+		DC.L	$000003e9,$deadbeef,$48e7fffc,$2c780004
+		DC.L	$93c94eae,$feda2a40,$7a004aad,$00ac6612
+		DC.L	$41ed005c,$4eaefe80,$41ed005c,$4eaefe8c
+		DC.L	$2a0043fa,$006a7021,$4eaefdd8,$4a806740
+		DC.L	$2c4043fa,$00662209,$243c0000,$03ed4eae
+		DC.L	$ffe22c00,$67202206,$41fa009e,$26182408
+		DC.L	$4eaeffd0,$2206243c,$00989680,$4eaeff34
+		DC.L	$22064eae,$ffdc224e,$2c780004,$4eaefe62
+		DC.L	$4a85670a,$224541ed,$005c4eae,$fe924cdf
+		DC.L	$3fff2c7a,$ff70ddce,$ddce4eee
+		DC.L	LB_AnalyseGlue
+		DC.L	LB_UnlinkGlue
+		DC.L	LB_NameGlue23
+
+		;Glue 2.3 Linker  20+8+$c8+4+4+16
+		;text typed after prg
+		;hunk0 = linker + text
+
+		DC.W	27-1
+		DC.L	$000003e9,$deadbeef,$2c7afffa,$ddceddce
+		DC.L	$4eae0004,$2f002c78,$000443fa,$00507021
+		DC.L	$4eaefdd8,$4a806740,$2c4041fa,$004c2208
+		DC.L	$243c0000,$03ed4eae,$ffe22c00,$67202206
+		DC.L	$41fa0082,$26182408,$4eaeffd0,$2206243c
+		DC.L	$00989680,$4eaeff34,$22064eae,$ffdc224e
+		DC.L	$2c780004,$4eaefe62,$201f4e75
+		DC.L	LB_AnalyseGlue
+		DC.L	LB_UnlinkGlue
+		DC.L	LB_NameGlue23
+
+		;Glue 2.2 Linker  20+8+$ec+4+4+16
+		;text typed before prg
+		;hunk0 = linker + text
+
+		DC.W	39-1
+		DC.L	$000003e9,$deadbeef,$48e7fffc,$2c780004
+		DC.L	$93c94eae,$feda2a40,$7a004aad,$00ac6612
+		DC.L	$41ed005c,$4eaefe80,$41ed005c,$4eaefe8c
+		DC.L	$2a0043fa,$00687021,$4eaefdd8,$4a80673e
+		DC.L	$2c4043fa,$00642209,$243c0000,$03ed4eae
+		DC.L	$ffe22c00,$671e2206,$41fa008e,$26182408
+		DC.L	$4eaeffd0,$08390006,$00bfe001,$66f62206
+		DC.L	$4eaeffdc,$224e2c78,$00044eae,$fe624a85
+		DC.L	$670a2245,$41ed005c,$4eaefe92,$4cdf3fff
+		DC.L	$2c7aff72,$ddceddce,$4eee0004
+		DC.L	LB_AnalyseGlue
+		DC.L	LB_UnlinkGlue
+		DC.L	LB_NameGlue22
+
+		;Glue 2.2 Linker  20+8+$bc+4+4+16
+		;text typed after prg
+		;hunk0 = linker + text
+
+		DC.W	26-1
+		DC.L	$000003e9,$deadbeef,$2c7afffa,$ddceddce
+		DC.L	$4eae0004,$2f002c78,$000443fa,$004e7021
+		DC.L	$4eaefdd8,$4a80673e,$2c4041fa,$004a2208
+		DC.L	$243c0000,$03ed4eae,$ffe22c00,$671e2206
+		DC.L	$41fa0076,$26182408,$4eaeffd0,$08390006
+		DC.L	$00bfe001,$66f62206,$4eaeffdc,$224e2c78
+		DC.L	$00044eae,$fe62201f
+		DC.L	LB_AnalyseGlue
+		DC.L	LB_UnlinkGlue
+		DC.L	LB_NameGlue22
+
+		;EXP 1.1 Text Linker	20+8+92
+
+		DC.W	20-1
+		DC.L	$000003E9,$deadbeef,$48E7FFFE,$4E7143FA
+		DC.L	$00362C78,$00044EAE,$FE682C40,$4EAEFFC4
+		DC.L	$22006718,$41FA0038,$2408263A,$0026D6BA
+		DC.L	$00260683,$0000002C,$4EAEFFD0,$4CDF7FFF
+		DC.L	$4EF90000,$0000646F,$732E6C69,$62726172
+		DC.L	LB_AnalyseEXP11
+		DC.L	LB_UnlinkEXP11
+		DC.L	LB_NameEXP11
+
+		; ETA 0.91 Text Linker	20+8+132
+
+		DC.W	20-1
+		DC.L	$000003E9,$deadbeef,$48E7FFFE,$41FAFFFA
+		DC.L	$59882010,$E5885880,$43FA003A,$23400002
+		DC.L	$2C780004,$43FA0038,$70004EAE,$FE682C40
+		DC.L	$671E4EAE,$FFC42200,$41FA0049,$2408263A
+		DC.L	$001A4EAE,$FFD02C78,$0004224E,$4EAEFE62
+		DC.L	LB_AnalyseETA091
+		DC.L	LB_UnlinkETA091
+		DC.L	LB_NameETA091
+
+		; ETA 0.99 Text Linker	20+8+136
+
+		DC.W	20-1
+		DC.L	$000003E9,$deadbeef,$48E7FFFE,$41FAFFFA
+		DC.L	$59882010,$E5885880,$43FA003A,$23400002
+		DC.L	$2C780004,$43FA003A,$70004EAE,$FE682C40
+		DC.L	$671E4EAE,$FFC42200,$41FA004B,$2408263A
+		DC.L	$001C4EAE,$FFD02C78,$0004224E,$4EAEFE62
+		DC.L	LB_AnalyseETA099
+		DC.L	LB_UnlinkETA099
+		DC.L	LB_NameETA099
+
+		; ETA 1.00 Text Linker	20+8+156
+
+		DC.W	20-1
+		DC.L	$000003E9,$deadbeef,$48E7FFFE,$41FAFFFA
+		DC.L	$59882010,$E5885880,$43FA0056,$23400002
+		DC.L	$203A0056,$538043FA,$007341FA,$00504A10
+		DC.L	$67F81218,$D201B319,$51C8FFF4,$2C780004
+		DC.L	$43FA003A,$70004EAE,$FE682C40,$671E4EAE
+		DC.L	LB_AnalyseETA100
+		DC.L	LB_UnlinkETA100
+		DC.L	LB_NameETA100
+
+		; FileShield
+
+		DC.W	10-1
+		DC.L	$000003E9,$00000003,$48790000,$00004E75
+		DC.L	$4E754E75,$000003EC,$00000001,$00000001
+		DC.L	$00000002,$00000000
+		DC.L	LB_AnalyseFileShield
+		DC.L	LB_UnlinkFileShield
+		DC.L	LB_NameFileSh
+
+		;ExeDescript 1.0 Linker   muß ganz geladen sein
+		;last hunk = text
+
+		DC.W	0
+		DC.L	LB_AnalyseExeDes
+		DC.L	LB_UnlinkExeDes
+		DC.L	LB_NameExeDes
+
+		DC.W	-1
+
+LB_Name4EF9	DC.B	'4EF9 Linker',0
+LB_Name4EB9	DC.B	'4EB9 Linker',0
+LB_NameUFO	DC.B	'UFO Linker',0
+LB_NameXLink	DC.B	'XLink Linker',0
+LB_NameGlue23	DC.B	'Glue 2.3 Linker',0
+LB_NameGlue22	DC.B	'Glue 2.2 Linker',0
+LB_NameEXP11	DC.B	'EXP 1.1 Text Linker',0
+LB_NameETA091	DC.B	'ETA 0.91 Text Linker',0
+LB_NameETA099	DC.B	'ETA 0.99 Text Linker',0
+LB_NameETA100	DC.B	'ETA 1.00 Text Linker',0
+LB_NameExeDes	DC.B	'ExeDescript 1.0 Linker',0
+LB_NameDiz	DC.B	'FileDescript Linker',0
+LB_NameFileSh	DC.B	'FileShield Linker',0
+		EVEN
+
+LB_Analyse4EF9	move.l	-28(a1),d0
+		move.l	-16(a1),d1
+		cmp.l	d1,d0
+		blt.b	.Ok
+		exg	d1,d0
+.Ok		move.l	d0,xfdli_Hunk1(a5)
+		move.l	d1,xfdli_Hunk2(a5)
+		sub.l	d0,d1
+		beq.b	.Exit
+		move.l	d1,xfdli_Amount1(a5)
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+LB_AnalyseUFO	moveq	#1,d0
+		bsr	GetHunkX
+		tst.w	d0
+		beq.b	.Exit
+		cmp.w	#$6028,8(a0)
+		bne.b	.Exit
+		moveq	#2,d0
+		move.l	d0,xfdli_Hunk1(a5)
+		moveq	#4,d0
+		move.l	d0,xfdli_Hunk2(a5)
+		moveq	#1,d0
+		move.l	d0,xfdli_Amount1(a5)
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+LB_AnalyseXLink	moveq	#1,d0
+		move.l	d0,xfdli_Hunk1(a5)
+		moveq	#1,d1
+		add.w	$dc-$48(a0),d1
+		move.l	d1,xfdli_Amount1(a5)
+		add.l	d0,d1
+		move.l	d1,xfdli_Hunk2(a5)
+		rts
+
+LB_AnalyseETA091
+		MOVEQ	#0,D0
+		CMP.L	#'.91 ',112(A0)		* check version
+		BEQ.B	LB_AnalyseGlue
+		RTS
+
+LB_AnalyseETA099
+		MOVEQ	#0,D0
+		CMP.L	#'.99 ',114(A0)		* check version
+		BEQ.B	LB_AnalyseGlue
+		RTS
+
+LB_AnalyseETA100
+		MOVEQ	#0,D0
+		CMP.L	#'.00 ',142(A0)		* check version
+		BEQ.B	LB_AnalyseGlue
+		RTS
+
+LB_AnalyseFileShield
+LB_AnalyseEXP11
+LB_AnalyseGlue	moveq	#0,d0
+		move.l	d0,xfdli_Hunk1(a5)
+		moveq	#1,d0
+		move.l	d0,xfdli_Amount1(a5)
+		move.l	d0,xfdli_Hunk2(a5)
+		rts
+
+LB_AnalyseExeDes
+		move.l	xfdli_Buffer(a5),a0
+		move.l	16(a0),d0
+		sub.l	12(a0),d0
+		move.l	d0,-(a7)
+		bsr	GetHunkX		* this may cause enforcer hits!
+		move.l	(a7)+,d1
+		tst.w	d0
+		beq.b	.Exit
+		cmp.l	#$3eb,(a0)
+		beq.b	.Exit
+		cmp.l	#'FLID',8(a0)
+		bne.b	.Exit
+		clr.l	xfdli_Hunk1(a5)
+		move.l	d1,xfdli_Amount1(a5)
+		move.l	d1,xfdli_Hunk2(a5)
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+LB_AnalyseDiz	MOVE.L	A2,-(A7)
+		MOVEQ	#0,D0
+		MOVE.L	xfdli_Buffer(A5),A0
+		MOVE.L	A0,A2
+		ADD.L	xfdli_BufLen(A5),A2
+		LEA	-16(A2),A2
+
+		MOVE.L	#1,xfdli_Amount1(A5)	* the linker type
+		LEA	DizStartTxt(PC),A1
+.Loop1		TST.B	(A1)
+		BEQ.B	.Ok1			* found an start text
+		CMP.B	(A0)+,(A1)+
+		BEQ.B	.Loop1
+
+		MOVE.L	#2,xfdli_Amount1(A5)	* the linker type
+		LEA	DizEndTxt(PC),A1
+.Loop2		TST.B	(A1)
+		BEQ.B	.Ok			* found an end text
+		CMP.B	(A2)+,(A1)+
+		BEQ.B	.Loop2
+		BRA.B	.No
+		LEA	DizEndTxt(PC),A1
+.Ok1		CMP.B	#$0A,16(A2)	* check if file ends in end text
+		BNE.B	.skip
+		MOVE.B	-(A2),D1	* decrement A2
+.skip		LEA	DizEndTxt(PC),A1
+.Loop3		TST.B	(A1)
+		BEQ.B	.No			* found an end text
+		CMP.B	(A2)+,(A1)+
+		BEQ.B	.Loop3
+
+.Ok		MOVEQ	#1,D0
+.No		MOVE.L	(A7)+,A2
+		RTS
+
+DizStartTxt	DC.B	'@BEGIN_FILE_ID.DIZ',0
+DizEndTxt	DC.B	'@END_FILE_ID.DIZ',0
+		EVEN
+
+LB_UnlinkDiz	MOVEM.L	D2/A2-A4,-(A7)
+		MOVEQ	#0,D0			* FALSE result value
+		MOVE.W	#XFDERR_UNKNOWN,xfdli_Error(A0)
+		MOVE.L	xfdli_Buffer(A0),A1
+		MOVE.L	A1,A3
+		ADD.L	xfdli_BufLen(A0),A3
+		CMP.L	#1,xfdli_Amount1(A0)
+		BNE.B	.endfile
+
+		LEA	18(A1),A2
+		MOVE.L	A2,xfdli_Save1(A0)
+		LEA	DizEndTxt(PC),A4
+.Loop0		CLR.W	D1
+.Loop1		CMP.L	A3,A2
+		BGE.W	.end
+		MOVE.B	(A4,D1.W),D2
+		BEQ.B	.foundS
+		CMP.B	(A2)+,D2
+		BNE.B	.Loop0
+		ADDQ.W	#1,D1
+		BRA.B	.Loop1
+.foundS		MOVEQ	#18+16,D2	*strip a newline, when there is one
+		CMP.B	#$0A,(A2)
+		BNE.B	.skip
+		ADDQ.L	#1,A2
+		ADDQ.L	#1,D2
+.skip		MOVE.L	A2,xfdli_Save2(A0)
+		SUBA.L	A2,A3
+		MOVE.L	A3,xfdli_SaveLen2(A0)
+		BLE.W	.end
+		SUBA.L	A1,A2
+		SUBA.L	D2,A2
+		MOVE.L	A2,xfdli_SaveLen1(A0)
+		BRA.B	.ok
+
+.endfile	MOVE.L	A1,xfdli_Save1(A0)
+		MOVEA.L	A1,A2
+		LEA	DizStartTxt(PC),A4
+.Loop2		CLR.W	D1
+.Loop3		CMP.L	A3,A1
+		BGE.B	.end
+		MOVE.B	(A4,D1.W),D2
+		BEQ.B	.foundE
+		CMP.B	(A1)+,D2
+		BNE.B	.Loop2
+		ADDQ.W	#1,D1
+		BRA.B	.Loop3
+.foundE		MOVE.L	A1,xfdli_Save2(A0)
+		SUBA.L	A1,A3
+		LEA	-16(A3),A3
+		MOVE.L	A3,xfdli_SaveLen2(A0)
+		LEA	-18(A1),A1
+		SUBA.L	A2,A1
+		MOVE.L	A1,xfdli_SaveLen1(A0)
+		BEQ.B	.end
+.ok		MOVE.L	xfdli_Save1(A0),D0
+		BTST.B	#0,D0			* check for even address
+		BEQ.B	.Part2
+		MOVE.L	D0,A2
+		MOVE.L	xfdli_SaveLen1(A0),D0	* copy one byte forward
+		LEA	1(A2),A1
+		MOVE.L	A1,xfdli_Save1(A0)
+		ADD.L	D0,A2
+		ADD.L	D0,A1
+.Part1L		MOVE.B	-(A2),-(A1)
+		SUBQ.L	#1,D0
+		BNE.B	.Part1L
+.Part2		MOVE.L	xfdli_Save2(A0),D0	* copy one byte backwards
+		BTST.B	#0,D0
+		BEQ.B	.EndEven
+		MOVE.L	D0,A2
+		MOVE.L	xfdli_SaveLen2(A0),D0
+		LEA	-1(A2),A1
+		MOVE.L	A1,xfdli_Save2(A0)
+.Part2L		MOVE.B	(A2)+,(A1)+
+		SUBQ.L	#1,D0
+		BNE.B	.Part2L
+.EndEven	MOVEQ	#1,D0
+.end		MOVEM.L	(A7)+,D2/A2-A4
+		RTS
+
+LB_Unlink4EF9	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdli_Hunk1(a5),d0
+		bsr	GetHunkX
+		move.w	#XFDERR_BADHUNK,xfdli_Error(a5)
+		tst.w	d0
+		beq	.Exit
+		move.l	a0,a2		;link1
+
+		move.l	xfdli_Hunk2(a5),d0
+		bsr	GetHunkX
+		tst.w	d0
+		beq	.Exit
+		move.l	a0,a3		;link2
+
+		move.l	xfdli_Buffer(a5),a0
+		move.l	xfdli_Amount1(a5),d0
+		addq.w	#8,a0
+		move.l	d0,(a0)+
+		clr.l	(a0)+
+		move.l	d0,(a0)
+		subq.l	#1,(a0)+
+		addq.w	#4,a0		;skip #1
+
+.CopyLen1	move.l	(a0)+,-8(a0)	;lens of link1
+		subq.l	#1,d0
+		bne.b	.CopyLen1
+
+		move.l	xfdli_Amount2(a5),d7
+		lsl.l	#2,d7
+		sub.l	d7,a7		;save on stack
+
+		move.l	d7,d0
+.SaveLen2	move.l	-4(a0,d0.l),-4(a7,d0.l)
+		subq.l	#4,d0
+		bne.b	.SaveLen2
+
+		subq.w	#4,a0		;target of link1
+
+		move.l	a3,d0
+		sub.l	a2,d0		;len of link1
+.CopyHunks1	move.l	(a2)+,(a0)+
+		subq.l	#4,d0
+		bne.b	.CopyHunks1
+
+		sub.l	xfdli_Buffer(a5),a0
+		move.l	a0,xfdli_SaveLen1(a5)
+		move.l	xfdli_Buffer(a5),xfdli_Save1(a5)
+
+		move.l	a3,a0
+		sub.l	d7,a0
+		sub.w	#20,a0
+		move.l	a0,xfdli_Save2(a5)
+
+		move.l	xfdli_Buffer(a5),d0
+		sub.l	a0,d0
+		add.l	xfdli_BufLen(a5),d0
+		move.l	d0,xfdli_SaveLen2(a5)
+
+		move.l	#HUNK_HEADER,(a0)+
+		clr.l	(a0)+
+		move.l	xfdli_Amount2(a5),d0
+		move.l	d0,(a0)+
+		clr.l	(a0)+
+		move.l	d0,(a0)
+		subq.l	#1,(a0)+
+
+.CopyLen2	move.l	(a7)+,(a0)+
+		subq.l	#4,d7
+		bne.b	.CopyLen2
+
+		move.l	xfdli_Save1(a5),a0
+		move.l	xfdli_SaveLen1(a5),d0
+		move.l	xfdli_Hunk1(a5),d1
+		neg.l	d1
+		bsr	CorrectReloc
+		tst.w	d0
+		beq.b	.Exit
+
+		move.l	xfdli_Save2(a5),a0
+		move.l	xfdli_SaveLen2(a5),d0
+		move.l	xfdli_Hunk2(a5),d1
+		neg.l	d1
+		bsr	CorrectReloc
+
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+LB_UnlinkUFO	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+
+		move.w	#XFDERR_BADHUNK,xfdli_Error(a5)
+
+		move.l	xfdli_Buffer(a5),a0
+		move.l	16(a0),d3
+		moveq	#3,d2
+.LookHunk3	cmp.l	d3,d2
+		bgt	.Exit0
+		move.l	d2,d0
+		bsr	GetHunkX
+		tst.w	d0
+		beq	.Exit
+		cmp.l	#$4fef01f4,8(a0)
+		beq.b	.FoundHunk3
+		addq.l	#1,d2
+		bra.b	.LookHunk3
+
+.FoundHunk3	addq.l	#1,d2
+		cmp.l	d3,d2
+		bgt	.Exit0
+		move.l	xfdli_Hunk2(a5),d0
+		move.l	d2,xfdli_Hunk2(a5)
+		sub.l	d0,d2
+		sub.l	d2,xfdli_Amount2(a5)
+
+		move.l	xfdli_Hunk1(a5),d0
+		bsr	GetHunkX
+		tst.w	d0
+		beq	.Exit
+		move.l	a0,a2		;link1
+
+		move.l	xfdli_Hunk2(a5),d0
+		bsr	GetHunkX
+		tst.w	d0
+		beq	.Exit
+		move.l	a0,a3		;link2
+
+		move.l	xfdli_Hunk1(a5),d0
+		add.l	xfdli_Amount1(a5),d0
+		bsr	GetHunkX
+		tst.w	d0
+		beq	.Exit
+		move.l	a0,a4		;ufo hunk #3
+
+		move.l	xfdli_Buffer(a5),a0
+		move.l	xfdli_Amount1(a5),d0
+		addq.w	#8,a0
+		move.l	d0,(a0)+
+		clr.l	(a0)+
+		move.l	d0,(a0)
+		subq.l	#1,(a0)+
+		addq.w	#8,a0		;skip #0 + #1
+
+.CopyLen1	move.l	(a0)+,-12(a0)	;lens of link1
+		subq.l	#1,d0
+		bne.b	.CopyLen1
+
+		move.l	xfdli_Amount2(a5),d7
+		lsl.l	#2,d7
+		sub.l	d7,a7		;save on stack
+
+		move.l	d7,d0
+.SaveLen2	move.l	(a0,d0.l),-4(a7,d0.l)	;skip #3
+		subq.l	#4,d0
+		bne.b	.SaveLen2
+
+		subq.w	#8,a0		;target of link1
+
+		move.l	a4,d0
+		sub.l	a2,d0		;len of link1
+.CopyHunks1	move.l	(a2)+,(a0)+
+		subq.l	#4,d0
+		bne.b	.CopyHunks1
+
+		sub.l	xfdli_Buffer(a5),a0
+		move.l	a0,xfdli_SaveLen1(a5)
+		move.l	xfdli_Buffer(a5),xfdli_Save1(a5)
+
+		move.l	a3,a0
+		sub.l	d7,a0
+		sub.w	#20,a0
+		move.l	a0,xfdli_Save2(a5)
+
+		move.l	xfdli_Buffer(a5),d0
+		sub.l	a0,d0
+		add.l	xfdli_BufLen(a5),d0
+		move.l	d0,xfdli_SaveLen2(a5)
+
+		move.l	#HUNK_HEADER,(a0)+
+		clr.l	(a0)+
+		move.l	xfdli_Amount2(a5),d0
+		move.l	d0,(a0)+
+		clr.l	(a0)+
+		move.l	d0,(a0)
+		subq.l	#1,(a0)+
+
+.CopyLen2	move.l	(a7)+,(a0)+
+		subq.l	#4,d7
+		bne.b	.CopyLen2
+
+		move.l	xfdli_Save1(a5),a0
+		move.l	xfdli_SaveLen1(a5),d0
+		move.l	xfdli_Hunk1(a5),d1
+		neg.l	d1
+		bsr	CorrectReloc
+		tst.w	d0
+		beq.b	.Exit
+
+		move.l	xfdli_Save2(a5),a0
+		move.l	xfdli_SaveLen2(a5),d0
+		move.l	xfdli_Hunk2(a5),d1
+		neg.l	d1
+		bsr	CorrectReloc
+
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+.Exit0		moveq	#0,d0
+		bra.b	.Exit
+
+LB_UnlinkGlue	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdli_Hunk1(a5),d0
+		bsr	GetHunkX
+		move.w	#XFDERR_BADHUNK,xfdli_Error(a5)
+		tst.w	d0
+		beq	.Exit
+		move.l	a0,a2		;link1
+
+		move.l	xfdli_Hunk2(a5),d0
+		bsr	GetHunkX
+		tst.w	d0
+		beq	.Exit
+		move.l	a0,a3		;link2
+
+		move.l	xfdli_Buffer(a5),a0
+		add.w	#20+4,a0	;skip #1
+
+		move.l	xfdli_Amount2(a5),d7
+		lsl.l	#2,d7
+		sub.l	d7,a7		;save on stack
+
+		move.l	d7,d0
+.SaveLen2	move.l	-4(a0,d0.l),-4(a7,d0.l)
+		subq.l	#4,d0
+		bne.b	.SaveLen2
+
+		move.l	a2,a0
+		cmp.w	#$ddce,$c(a0)	;typed after prg?
+		bne.b	.Front
+		move.w	#$c4,d0		;2.3
+		cmp.w	#$0839,$4c(a0)
+		bne.b	.GetText
+		move.w	#$b8,d0		;2.2
+		bra.b	.GetText
+.Front		move.w	#$e8,d0		;2.2
+		cmp.w	#$ddce,$94(a0)
+		beq.b	.GetText
+		move.w	#$f8,d0		;2.3
+.GetText	add.w	d0,a0
+		move.l	(a0)+,d0
+		move.l	xfdli_Buffer(a5),a1
+
+		move.l	d0,xfdli_SaveLen1(a5)
+		move.l	a1,xfdli_Save1(a5)
+
+.CopyText	move.b	(a0)+,(a1)+
+		subq.l	#1,d0
+		bne.b	.CopyText
+
+		move.l	a3,a0
+		sub.l	d7,a0
+		sub.w	#20,a0
+		move.l	a0,xfdli_Save2(a5)
+
+		move.l	xfdli_Buffer(a5),d0
+		sub.l	a0,d0
+		add.l	xfdli_BufLen(a5),d0
+		move.l	d0,xfdli_SaveLen2(a5)
+
+		move.l	#HUNK_HEADER,(a0)+
+		clr.l	(a0)+
+		move.l	xfdli_Amount2(a5),d0
+		move.l	d0,(a0)+
+		clr.l	(a0)+
+		move.l	d0,(a0)
+		subq.l	#1,(a0)+
+
+.CopyLen2	move.l	(a7)+,(a0)+
+		subq.l	#4,d7
+		bne.b	.CopyLen2
+
+		move.l	xfdli_Save2(a5),a0
+		move.l	xfdli_SaveLen2(a5),d0
+		move.l	xfdli_Hunk2(a5),d1
+		neg.l	d1
+		bsr	CorrectReloc
+
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+LB_UnlinkFileShield
+		MOVEM.L	A2/A3/A5,-(A7)
+		MOVE.L	A0,A5
+		MOVE.L	xfdli_Buffer(A5),A2
+		MOVE.L	xfdli_Hunk2(A5),D0
+		BSR.W	GetHunkX
+		MOVE.W	#XFDERR_BADHUNK,xfdli_Error(a5)
+		TST.W	D0
+		BEQ.B	.Exit
+
+		LEA	-40(A0),A1
+		LEA	24(A2),A3
+		
+.Loop2		MOVE.L	-(A1),-(A0)
+		CMP.L	A3,A1
+		BGT.B	.Loop2
+
+		MOVE.L	-(A1),D0	* skip first size
+		MOVE.L	-(A1),D0
+		SUBQ	#1,D0
+		MOVE.L	D0,-(A0)
+		MOVE.L	-(A1),-(A0)
+		MOVE.L	-(A1),D0
+		SUBQ	#1,D0
+		MOVE.L	D0,-(A0)
+		MOVE.L	-(A1),-(A0)
+		MOVE.L	-(A1),-(A0)
+
+		MOVE.L	D0,8(A2)
+		LEA	16(A2),A1
+		CLR.L	(A1)+
+		MOVEQ	#2,D0
+		MOVE.L	D0,(A1)+
+		MOVE.L	#HUNK_CODE,(A1)+
+		MOVE.L	D0,(A1)+
+		MOVE.L	#$00004E75,(A1)+
+		MOVE.L	#$4E754E75,(A1)+
+		MOVE.L	#HUNK_END,(A1)+
+
+		MOVE.L	xfdli_BufLen(A5),D0
+		MOVEQ.L	#44,D1
+		SUB.L	D1,D0
+		MOVE.L	D0,xfdli_SaveLen2(A5)
+		MOVE.L	D1,xfdli_SaveLen1(A5)
+		MOVE.L	A2,xfdli_Save1(A5)
+		MOVE.L	A0,xfdli_Save2(A5)
+
+	*	MOVE.L	xfdli_Save2(A5),A0
+	*	MOVE.L	xfdli_SaveLen2(A5),D0
+		MOVE.L	xfdli_Hunk2(A5),D1
+		NEG.L	D1
+		BSR.W	CorrectReloc
+		
+.Exit		MOVEM.L	(A7)+,A2/A3/A5
+		RTS
+
+LB_UnlinkExeDes	move.l	a5,-(a7)
+		move.l	a0,a5
+		move.l	xfdli_Hunk2(a5),d0
+		BSR.W	GetHunkX
+		move.w	#XFDERR_BADHUNK,xfdli_Error(a5)
+		tst.w	d0
+		beq.b	.Exit
+		move.l	a0,a1
+
+		move.l	4(a0),d0
+		lsl.l	#2,d0
+		subq.l	#4,d0
+		add.w	#$c,a0
+		move.l	a0,xfdli_Save2(a5)
+		add.l	d0,a0
+.GetLen		tst.b	-(a0)
+		bne.b	.SetLen
+		subq.l	#1,d0
+		bra.b	.GetLen
+.SetLen		move.l	d0,xfdli_SaveLen2(a5)
+
+		move.l	xfdli_Buffer(a5),a0
+		moveq	#20,d1
+		move.l	16(a0),d0
+		sub.l	12(a0),d0
+		lsl.l	#2,d0
+		add.l	d0,d1
+		add.l	d1,a0
+.Copy		move.l	-(a0),4(a0)
+		subq.l	#4,d1
+		bne.b	.Copy
+
+		addq.w	#4,a0
+		subq.l	#1,8(a0)
+		subq.l	#1,16(a0)
+		move.l	a0,xfdli_Save1(a5)
+		sub.l	a0,a1
+		move.l	a1,xfdli_SaveLen1(a5)
+		moveq	#1,d0
+
+.Exit		move.l	(a7)+,a5
+		rts
+
+LB_UnlinkEXP11	MOVEM.L	D2-D3,-(A7)
+		MOVE.W	#82,D2
+		MOVE.W	#94,D3
+		BSR.B	UnlinkText
+		MOVEM.L	(A7)+,D2-D3
+		RTS
+
+LB_UnlinkETA091
+		MOVEM.L	D2-D3,-(A7)
+		MOVE.W	#90,D2
+		MOVE.W	#131,D3
+		BSR.B	UnlinkText
+		MOVEM.L	(A7)+,D2-D3
+		RTS
+
+LB_UnlinkETA099
+		MOVEM.L	D2-D3,-(A7)
+		MOVE.W	#92,D2
+		MOVE.W	#133,D3
+		BSR.B	UnlinkText
+		MOVEM.L	(A7)+,D2-D3
+		RTS
+
+LB_UnlinkETA100 MOVEM.L	D2-D3/A2/A5,-(A7)
+		MOVE.L	A0,A5
+		MOVE.L	xfdli_Hunk1(A5),D0
+		BSR.W	GetHunkX
+		MOVE.W	#XFDERR_BADHUNK,xfdli_Error(A5)
+		TST.W	D0
+		BEQ.B	.Exit
+		LEA	120(A0),A2	* get size pointer
+		LEA	155(A0),A1	* get data start
+		MOVE.L	(A2)+,D0	* get decode text
+		SUBQ.L	#1,D0
+.Loop1		MOVEA.L	A2,A0		* decode with
+.Loop2		TST.B	(A0)		* 'dos.library' text
+		BEQ.B	.Loop1
+		MOVE.B	(A0)+,D1
+		ADD.B	D1,D1
+		EOR.B	D1,(A1)+
+		DBRA	D0,.Loop2
+		MOVE.W	#120,D2
+		MOVE.W	#155,D3
+		MOVEA.L	A5,A0
+		BSR.B	UnlinkText
+.Exit		MOVEM.L	(A7)+,D2-D3/A2/A5
+		RTS
+
+		* destroys D2
+UnlinkText	MOVEM.L	A3-A6,-(A7)
+		MOVE.L	A0,A5
+		MOVE.L	xfdli_Hunk1(A5),D0
+		BSR.W	GetHunkX
+		MOVE.W	#XFDERR_BADHUNK,xfdli_Error(A5)
+		TST.W	D0
+		BEQ.W	.Exit
+		MOVEA.L	A0,A4				* start of Hunk0
+		MOVE.L	4(A4),D0			* get hunk size
+		ADDQ.L	#2,D0				* add the 2 header bytes
+		LSL.L	#2,D0				* in byte
+		SUB.L	D3,D0				* subtract start position
+		MOVE.L	(A0,D2.W),D2			* size of Text-Data
+		BNE.B	.IsNotZero			* fix zero length
+		MOVEQ	#-1,D2				* set high value
+.IsNotZero	CMP.L	D0,D2				* maximum size?
+		BLS.B	.IsOk
+		MOVE.L	D0,D2				* replace with maximum size
+.IsOk		MOVE.L	D2,xfdli_SaveLen1(A5)
+		LEA	(A0,D3.W),A6			* start of Text-Data
+		MOVE.L	xfdli_Hunk2(A5),D0
+		BSR.B	GetHunkX
+		TST.W	D0
+		BEQ.B	.Exit
+		MOVE.L	A0,A3		* start of Code-Hunk
+		MOVE.L	xfdli_Buffer(A5),A0
+		MOVE.L	8(A0),D0	* number of hunks
+		SUBQ.L	#1,D0		* we will remove first hunk
+		MOVE.L	D0,D1		* store number of hunks
+.CopyLoop	MOVE.L	-(A4),-(A7)	* copy hunk sizes to stack
+		SUBQ.L	#1,D0
+		BNE.B	.CopyLoop
+		MOVE.L	A0,xfdli_Save1(A5)	* text starts at file start
+		MOVE.L	A0,A1			* store buffer start
+.CopyText	MOVE.B	(A6)+,(A0)+
+		SUBQ.L	#1,D2
+		BNE.B	.CopyText
+		MOVE.L	D1,D0
+		LSL.L	#2,D0
+		NEG.L	D0
+		LEA	-20(A3,D0.W),A3
+		MOVEA.L	A3,A4			* store hunk start
+		MOVE.L	A3,xfdli_Save2(A5)
+		ADD.L	xfdli_BufLen(A5),A1
+		SUBA.L	A3,A1			* file size
+		MOVE.L	A1,D2			* store size
+		MOVE.L	D2,xfdli_SaveLen2(A5)
+		MOVE.L	#HUNK_HEADER,(A3)+	* header
+		CLR.L	(A3)+			* zero field
+		MOVE.L	D1,(A3)+		* numhunks
+		CLR.L	(A3)+			* first hunk
+		MOVE.L	D1,D0
+		SUBQ.L	#1,D0
+		MOVE.L	D0,(A3)+		* last hunk
+.CopyLoop2	MOVE.L	(A7)+,(A3)+		* copy hunk sizes
+		SUBQ.L	#1,D1
+		BNE.B	.CopyLoop2
+
+		MOVE.L	A4,A0
+		MOVE.L	D2,D0
+		MOVE.L	xfdli_Hunk1(A5),D1
+		SUB.L	xfdli_Hunk2(A5),D1
+		BSR.B	CorrectReloc
+		MOVEQ	#1,D0
+.Exit		MOVEM.L	(A7)+,A3-A6
+		RTS
+
+*************************************************************
+*              Get begin of hunk #n of a file               *
+*************************************************************
+* a5: xfdli	a0: new pos                                 *
+* d0: hunk #	d0: BOOL                                    *
+*************************************************************
+
+GetHunkX	MOVE.L	D1,-(A7)
+		MOVE.L	xfdli_Buffer(A5),A0
+		MOVE.L	D0,D1
+		MOVE.L	xfdli_BufLen(A5),D0
+		BSR	xfdGetHunk
+		TST.L	D0
+		BEQ.B	.End
+		MOVE.L	D0,A0
+		MOVEQ	#1,D0
+.End		MOVE.L	(A7)+,D1
+		RTS
+
+*************************************************************
+*                Correct reloc hunk numbers                 *
+*************************************************************
+* a0: buffer	d1: offset to add                           *
+* d0: buflen                                                *
+*************************************************************
+
+CorrectReloc	lea	(a0,d0.l),a1
+		move.l	8(a0),d0
+		lsl.l	#2,d0
+		lea	20(a0,d0.l),a0
+
+.NextCorrect	cmp.l	a1,a0
+		beq.b	.EndCorrect
+		move.l	(a0)+,d0
+
+		cmp.w	#$3ea,d0	;3e8,3e9,3ea
+		ble.b	.SkipCode
+		cmp.w	#$3eb,d0	;3eb
+		bne.b	.NoBSS
+		addq.w	#4,a0
+		bra.b	.NextCorrect
+.NoBSS		cmp.w	#$3ec,d0	;3ec
+		beq.b	.CorrectReloc
+		cmp.w	#$3f0,d0	;3f0
+		beq.b	.SkipSymbol
+		cmp.w	#$3f1,d0	;3f1
+		beq.b	.SkipCode
+		cmp.w	#$3f2,d0	;3f2
+		beq.b	.NextCorrect
+		moveq	#0,d0
+		rts
+
+.SkipCode	move.l	(a0)+,d0
+		lsl.l	#2,d0
+		add.l	d0,a0
+		bra.b	.NextCorrect
+
+.CorrectReloc	move.l	(a0)+,d0
+		beq.b	.NextCorrect
+		add.l	d1,(a0)
+		lsl.l	#2,d0
+		lea	4(a0,d0.l),a0
+		bra.b	.CorrectReloc
+
+.SkipSymbol	move.l	(a0)+,d0
+		beq.b	.NextCorrect
+		lsl.l	#2,d0
+		lea	4(a0,d0.l),a0
+		bra.b	.SkipSymbol
+
+.EndCorrect	moveq	#1,d0
+		rts
+
+*************************************************************
+*                 Change MemType of Hunks                   *
+*************************************************************
+* a0: first BPTR     d1: relmode                            *
+* d0: number hunks                                          *
+*************************************************************
+
+xfdChangeHunkMemType
+		movem.l	d2/d3/d7/a2/a3/a6,-(a7)
+		cmp.w	#XFDREL_DEFAULT,d1
+		beq.b	.Ok
+		moveq	#2,d2
+		cmp.w	#XFDREL_FORCECHIP,d1
+		beq.b	.ChipFast
+		moveq	#4,d2
+		move.w	#XFDERR_BADRELMODE,d7
+		cmp.w	#XFDREL_FORCEFAST,d1
+		bne.b	.Exit
+.ChipFast	move.l	4.w,a6
+		move.w	d0,d3
+		move.l	a0,a3
+		moveq	#XFDERR_NOMEMORY,d7
+
+.CheckNext	move.l	(a3),a2
+		add.l	a2,a2
+		add.l	a2,a2
+		move.l	a2,a1
+		jsr	_LVOTypeOfMem(a6)
+		and.w	d2,d0
+		bne.b	.GetNext
+
+		move.l	-(a2),d0
+		move.l	#$10001,d1
+		or.w	d2,d1
+		jsr	_LVOAllocMem(A6)
+		tst.l	d0
+		beq.b	.Exit
+		move.l	d0,a0
+
+		move.l	a2,a1
+		move.l	(a1),d0
+		move.l	d0,(a0)+
+		move.l	4(a1),(a0)
+		move.l	a0,a2
+		move.l	a0,d1
+		lsr.l	#2,d1
+		move.l	d1,(a3)
+		jsr	_LVOFreeMem(A6)
+
+.GetNext	move.l	a2,a3
+		subq.w	#1,d3
+		bne.b	.CheckNext
+
+.Ok		moveq	#XFDERR_OK,d7
+.Exit		bsr	ClearCache
+		moveq	#0,d0
+		move.w	d7,d0
+		movem.l	(a7)+,d2/d3/d7/a2/a3/a6
+		rts
+
+*************************************************************
+*     Change MemType of Hunks and copy old contents         *
+*************************************************************
+* a0: first BPTR     d1: relmode                            *
+* d0: number hunks                                          *
+*************************************************************
+
+xfdChangeHunkMemTypeCopy
+		movem.l	d2/d3/d7/a2/a3/a6,-(a7)
+		cmp.w	#XFDREL_DEFAULT,d1
+		beq.b	.Ok
+		moveq	#2,d2
+		cmp.w	#XFDREL_FORCECHIP,d1
+		beq.b	.ChipFast
+		moveq	#4,d2
+		move.w	#XFDERR_BADRELMODE,d7
+		cmp.w	#XFDREL_FORCEFAST,d1
+		bne.b	.Exit
+.ChipFast	move.l	4.w,a6
+		move.w	d0,d3
+		move.l	a0,a3
+		moveq	#XFDERR_NOMEMORY,d7
+
+.CheckNext	move.l	(a3),a2
+		add.l	a2,a2
+		add.l	a2,a2
+		move.l	a2,a1
+		jsr	_LVOTypeOfMem(a6)
+		and.w	d2,d0
+		bne.b	.GetNext
+
+		move.l	-(a2),d0
+		move.l	#$10001,d1
+		or.w	d2,d1
+		jsr	_LVOAllocMem(A6)
+		tst.l	d0
+		beq.b	.Exit
+		move.l	d0,a0
+
+		move.l	a2,a1
+		move.l	(a1),d0
+		movem.l	d0/a0/a1,-(a7)
+		exg	a0,a1
+		jsr	_LVOCopyMemQuick(a6)
+		movem.l	(a7)+,d0/a0/a1
+		addq.w	#4,a0
+		move.l	a0,a2
+		move.l	a0,d1
+		lsr.l	#2,d1
+		move.l	d1,(a3)
+		jsr	_LVOFreeMem(A6)
+
+.GetNext	move.l	a2,a3
+		subq.w	#1,d3
+		bne.b	.CheckNext
+
+.Ok		moveq	#XFDERR_OK,d7
+.Exit		bsr.b	ClearCache
+		moveq	#0,d0
+		move.w	d7,d0
+		movem.l	(a7)+,d2/d3/d7/a2/a3/a6
+		rts
+
+*************************************************************
+*             Clear CPU Caches (Kick 1.2 komp.)             *
+*************************************************************
+
+ClearCache	movem.l	d0/d1/a0/a1/a6,-(a7)
+		move.l	4.w,a6
+		cmp.w	#36,20(a6)
+		blt.b	.Kick13
+		jsr	_LVOCacheClearU(a6)
+.Kick13		movem.l	(a7)+,d0/d1/a0/a1/a6
+		rts
+
+*************************************************************************
+*		 checksum CRC-16 calculation routine 			*
+*									*
+* This is made of reassembled code from PCompress2 and P-Reader.	*
+* I optimized the code a lot and is real assembler now.	:-)		*
+*									*
+*	gets following parameters:					*
+*		A0	buffer						*
+*	        D0	buffersize					*
+*	returns D0:	checksum (WORD)					*
+*************************************************************************
+
+GetCRC_A001	MOVEM.L	D2/D3,-(A7)
+		LEA	-$200(A7),A7		* get work space
+
+		MOVEQ	#0,D1
+		ST	D1			* set $FF
+.Loop1		MOVE.W	D1,D3
+		MOVEQ	#7,D2
+.Loop2		LSR.W	#1,D3
+		BCC.B	.Loop2End		* is shifted bit 1 ?
+		EORI.W	#$A001,D3
+.Loop2End	DBRA	D2,.Loop2
+		MOVE.W	D1,D2
+		ASL.L	#1,D2
+		MOVE.W	D3,(A7,D2.W)
+		DBRA	D1,.Loop1
+
+		MOVEQ	#0,D3
+.SumLoop	MOVE.B	(A0)+,D1
+		EOR.B	D1,D3
+		MOVEQ	#0,D1
+		MOVE.B	D3,D1
+		ASL.W	#1,D1
+		LSR.W	#8,D3
+		MOVE.W	(A7,D1.W),D1
+		EOR.W	D1,D3
+		SUBQ.L	#1,D0
+		BNE.B	.SumLoop
+		LEA	$200(A7),A7		* free work space
+		MOVE.L	D3,D0
+		MOVEM.L	(A7)+,D2/D3
+		RTS	
+
+*************************************************************
+*              Get begin of hunk #n of a file               *
+*************************************************************
+* A0: buffer						    *
+* D0: buffer size					    *
+* D1: hunk number	D0: Hunk start or 0                 *
+*************************************************************
+
+xfdGetHunk	MOVEM.L	A0/D1-D3,-(A7)
+		SUB.L	#5*4,D0
+		BLO.W	.Exit			* at least 20 Bytes!
+		CMP.L	#HUNK_HEADER,(A0)+
+		BNE.W	.Exit			* HUNK_HEADER ?
+		TST.L	(A0)+
+		BNE.W	.Exit			* must be empty
+		MOVEQ	#1,D2
+		ADD.W	8+2(A0),D2		* last hunk num ; only use 16 bit hunk numbers 21.08.2001
+		SUB.W	4+2(a0),D2		* first hunk num --> number of real hunks
+		LEA	12(A0),A0		* start of size field
+		CMP.L	D1,D2			* not enough hunks
+		BLE.W	.Exit
+.NextSize	SUBQ.L	#4,D0			* enough size for entry
+		BLO.W	.Exit
+		MOVE.L	(A0)+,D3
+		AND.L	#(3<<30),D3		* first 2 bits mean mem type follows as long
+		CMP.L	#(3<<30),D3
+		BNE.B	.nomemspec
+		SUBQ.L	#4,D0			* enough size for mem entry
+		BLO.B	.Exit
+		ADDQ.L	#4,A0
+.nomemspec	SUBQ.L	#1,D2
+		BNE.B	.NextSize
+
+.NextHunk	SUBQ.L	#4,D0
+		BLO.B	.Exit
+		MOVE.L	(A0)+,D2
+
+		CMP.W	#HUNK_CODE,D2
+		BEQ.B	.Code
+		CMP.W	#HUNK_DATA,D2
+		BNE.B	.NoCode
+.Code		SUBQ.L	#1,D1			* test for hunk number
+		BMI.B	.Ok
+.Skip		SUBQ.L	#4,D0
+		BLO.B	.Exit
+		MOVE.L	(A0)+,D2
+		LSL.L	#2,D2
+		SUB.L	D2,D0
+		BLO.B	.Exit
+		ADD.L	D2,A0
+		BRA.B	.NextHunk
+
+.NoCode		CMP.W	#HUNK_BSS,D2
+		BNE.B	.NoBSS
+		SUBQ.L	#1,D1			* test for hunk number
+		BMI.B	.Ok
+		SUBQ.L	#4,D0
+		BLO.B	.Exit
+		ADDQ.W	#4,A0
+		BRA.B	.NextHunk
+
+.NoBSS		CMP.W	#HUNK_ABSRELOC32,D2
+		BEQ.B	.NextReloc
+		CMP.W	#HUNK_SYMBOL,D2
+		BNE.B	.NoReloc
+.NextReloc	SUBQ.L	#4,D0
+		BLO.B	.Exit
+		MOVE.L	(A0)+,D2
+		BEQ.B	.NextHunk
+		LSL.L	#2,D2
+		ADDQ.L	#4,D2
+		SUB.L	D2,D0
+		BLO.B	.Exit
+		LEA	(A0,D2.L),A0
+		BRA.B	.NextReloc
+
+.NoReloc	CMP.W	#HUNK_NAME,D2
+		BEQ.B	.Skip
+		CMP.W	#HUNK_DEBUG,D2
+		BEQ.B	.Skip
+		CMP.W	#HUNK_END,D2
+		BEQ.B	.NextHunk
+
+.Exit		MOVE.W	#4,A0	* results in A0 = 0
+.Ok		SUBQ.W	#4,A0
+		MOVE.L	A0,D0
+		MOVEM.L	(A7)+,A0/D1-D3
+		RTS
+
+*************************************************************
+*                 Get first hunk #n                         *
+*************************************************************
+* A0: buffer						    *
+*************************************************************
+
+xfdCodeBegin	moveq	#1,d0
+		add.w	16+2(a0),d0		; only use 16 bit hunk numbers 21.08.2001
+		sub.w	12+2(a0),d0
+		lsl.l	#2,d0
+		lea	28(a0,d0.l),a0
+		RTS
+
+*************************************************************
+*                 Get first hunk #n                         *
+*************************************************************
+* A0: buffer						    *
+* D0: buflen
+*************************************************************
+
+xfdCodeBeginRecog
+		moveq	#0,D1
+		BSR	xfdGetHunk
+		TST.L	D0
+		BEQ.B	.Exit
+		MOVE.L	D0,A0
+		ADDQ.L	#8,A0
+.Exit		RTS
+
+
+*****************************************************************
+
+		INCDIR	"PrA:Projekte/xfd_private/master/slaves/"
+XfdFirstSlave
+		INCLUDE	"ByteKiller.a"
+		INCLUDE	"PowerPacker.a"
+		INCLUDE	"Imploder.a"
+		INCLUDE	"XPK.a"
+		INCLUDE	"TetraPack.a"
+		INCLUDE	"DefJam.a"
+		INCLUDE	"MasterCruncher.a"
+		INCLUDE	"PackIt.a"
+		INCLUDE	"TimeCruncher.a"
+		INCLUDE	"DoubleAction.a"
+		INCLUDE	"FreewaY.a"
+		INCLUDE	"CrunchMania.a"
+		INCLUDE	"StoneCracker.a"
+		INCLUDE	"IAM.a"
+		INCLUDE	"DragPack.a"
+		INCLUDE	"TurtleSmasher.a"
+		INCLUDE	"Titanics.a"
+		INCLUDE	"Spike.a"
+		INCLUDE	"TryIt.a"
+		INCLUDE	"BytePacker.a"
+		INCLUDE	"MaxPacker.a"
+		INCLUDE	"FCG.a"
+		INCLUDE	"SyncroPacker.a"
+		INCLUDE	"TurboSqueezer.a"
+		INCLUDE	"ProPack.a"
+		INCLUDE	"SoundPacker.a"
+		INCLUDE	"Chryseis.a"
+		INCLUDE	"GNU.a"
+		INCLUDE	"Super.a"
+		INCLUDE	"Ultimate.a"
+		INCLUDE	"CFP.a"
+		INCLUDE	"PKProt.a"
+		INCLUDE	"ISC.a"
+		INCLUDE	"PCompress2.a"
+*		INCLUDE	"MagneticFields.a"
+XFD_LASTSLAVE	SET	1
+		INCLUDE "SMF.a"
+
+XfdEndskip
+		END

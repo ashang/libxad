@@ -1,0 +1,18 @@
+Das BlakHole-Format:
+
+Offset:		Inhalt
+HEADER:
+0000h		0x42 48 05 07 		4 Bytes ("BH" und 2 unbekannte)
+0004h					1 Byte unbenutzt (Es ist beim Beginn jeder neuen Datei gleich)
+0005h		0x00 25 		2 Bytes unbekannt
+0007h		0x00 00 00		3 Bytes mit 0
+000Ah					1 Byte Kompressionsart 0x00: cmStore, 0x01 cmFuse
+0011h		0x00 00			2 Bytes mit 0
+0013h					2 Bytes (unkomprimierte Länge 1. Datei)
+0015h		0x00 00			2 Bytes mit 0
+0017h					4 Bytes (CRC 1. Datei rückwärts)
+001Bh		0x20 00 00 00 00 00	6 Bytes
+0020h		0x00 
+0021h 					1 Byte unbekannt
+0022h		00 00 00
+0025h					Name der ersten Datei

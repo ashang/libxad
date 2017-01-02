@@ -1,0 +1,682 @@
+*****************************************************************************
+*   $Id: Super.a,v 1.2 2005/06/23 14:39:16 stoecker Exp $
+*   Super Cruncher decrunching slave
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+
+S_Super27
+		IFND	XFD_LASTSLAVE
+		dc.l	S_Super_END
+		ELSE
+		dc.l	0
+		ENDIF
+		dc.w	2
+		dc.w	39
+		dc.l	N_Super27
+		dc.w	XFDPFF_RELOC!XFDPFF_RELMODE
+		dc.w	0
+		dc.l	RB_Super27
+		dc.l	DB_Super27
+		dc.l	RS_Super27
+		dc.l	DS_Super27
+		dc.w	XFDID_SuperCruncher27
+		dc.w	0
+		dc.l	$2d0+8+$6e+4
+
+N_Super27	dc.b	'Super Cruncher 2.7',0
+		even
+
+;-------------------------------------------------
+
+RB_Super27	cmp.l	#$4eaeff28,$58(a0)
+		bne.s	.Exit
+		cmp.l	#$b0ba0126,$5c(a0)
+		bne.s	.Exit
+		cmp.l	#$dbfa00a2,$e0(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_Super27	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a4
+
+		move.l	$184(a4),d5
+		move.l	$18c(a4),d2	;hunks
+		lsl.l	#4,d2
+		add.l	d2,d5
+		move.l	d5,d0		;d5 = len decr buf + hunks
+		moveq	#0,d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,d6		;d6 = hunk info
+		beq	.Exit
+		add.l	d2,d0
+		move.l	d0,d7		;d7 = decr buf
+
+		move.l	d7,a2
+		lea	$2cc(a4),a0
+		move.l	(a0)+,d0
+.CopyData	move.l	(a0)+,(a2)+
+		subq.l	#1,d0
+		bne.s	.CopyData
+
+.DecrNext	move.l	d7,a0
+		tst.l	(a0)
+		bne.s	.DecrDone
+		add.l	$184(a4),a0	;decr buf len
+.Copy		move.b	-(a2),-(a0)
+		cmp.l	d7,a2
+		bne.s	.Copy
+		addq.w	#4,a0
+		subq.w	#4,a7
+		move.b	(a0)+,(a7)
+		move.b	(a0)+,1(a7)
+		move.b	(a0)+,2(a7)
+		move.b	(a0)+,3(a7)
+		move.l	(a7),d0
+		add.l	d0,a0
+		move.b	(a0)+,(a7)
+		move.b	(a0)+,1(a7)
+		move.b	(a0)+,2(a7)
+		move.b	(a0)+,3(a7)
+		move.l	a0,a1
+		add.l	(a7)+,a1
+		movem.l	d5-d7,-(a7)
+		bsr	D_Super
+		movem.l	(a7)+,d5-d7
+		bra.s	.DecrNext
+
+.DecrDone	move.l	a2,a0
+		move.l	$18c(a4),d2
+		move.l	d2,d0
+		lsl.l	#2,d0
+		moveq	#20,d3
+		add.l	d0,d3		;header len
+		moveq	#-1,d1
+.CountReloc	move.l	-(a0),d0
+		cmp.l	d1,d0
+		beq.s	.CountEnd
+		addq.l	#8,d3		;3ec,0
+		bra.s	.CountFirst
+.CountNext	move.l	-(a0),d0
+		cmp.l	d1,d0
+		beq.s	.CountEnd
+.CountFirst	addq.l	#8,d3		;hunk,amount
+.CountOffset	move.l	-(a0),d0
+		cmp.l	d1,d0
+		beq.s	.CountNext
+		addq.l	#4,d3
+		bra.s	.CountOffset
+.CountEnd	addq.l	#4,d3		;3f2
+		subq.l	#1,d2
+		bne.s	.CountReloc
+
+		move.l	d7,a0
+		move.l	d6,a1
+		move.l	$18c(a4),d4
+.CountHunk	move.l	(a0)+,d0
+		move.l	(a0)+,d1
+		addq.l	#8,d3		;3ex,len
+		move.l	d0,d2
+		and.l	#$c0000000,d2
+		and.l	#$00ffffff,d0
+		lsr.l	#2,d0
+		subq.l	#2,d0
+		or.l	d0,d2
+		move.l	d2,(a1)+	;header
+		move.l	d1,(a1)+	;type
+		move.l	a1,a6
+		move.l	d0,(a1)+	;len
+		move.l	a0,(a1)+	;addr
+		tst.l	d0
+		beq.s	.Empty
+		lsl.l	#2,d0
+		add.l	d0,a0
+		cmp.w	#$3eb,d1
+		beq.s	.Empty
+		cmp.w	#$3e9,d1
+		beq.s	.Code
+		move.l	a0,-(a7)
+.DoShorten	tst.l	-(a0)
+		bne.s	.EndShorten
+		subq.l	#1,(a6)
+		bne.s	.DoShorten
+.EndShorten	move.l	(a7)+,a0
+.Code		move.l	(a6),d0
+		lsl.l	#2,d0
+		add.l	d0,d3		;hunklen
+.Empty		tst.l	(a0)+
+		beq.s	.Empty
+		subq.w	#4,a0
+		subq.l	#1,d4
+		bne.s	.CountHunk
+
+		move.l	d3,d0
+		move.l	d0,xfdbi_TargetBufLen(a5)
+		move.l	d0,xfdbi_TargetBufSaveLen(a5)
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	4.w,a6
+		jsr	-198(a6)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.b	.ExitFree
+
+		move.l	d0,a1
+		move.l	#$3f3,(a1)+
+		clr.l	(a1)+
+		move.l	$18c(a4),d4
+		move.l	d4,(a1)+
+		clr.l	(a1)+
+		move.l	d4,(a1)
+		subq.l	#1,(a1)+
+		move.l	d6,a0
+		move.l	d4,d0
+.CopyHeader	move.l	(a0)+,(a1)+
+		add.w	#12,a0
+		subq.l	#1,d0
+		bne.s	.CopyHeader
+
+		move.l	d6,a3
+.NextHunk	addq.w	#4,a3
+		move.l	(a3)+,d1
+		move.l	d1,(a1)+	;type
+		move.l	(a3)+,d0
+		move.l	(a3)+,a0	;addr
+		move.l	d0,(a1)+	;len
+		beq.s	.EmptyHunk
+		cmp.w	#$3eb,d1
+		beq.s	.EmptyHunk
+.CopyHunk	move.l	(a0)+,(a1)+
+		subq.l	#1,d0
+		bne.s	.CopyHunk
+.EmptyHunk
+		moveq	#-1,d2
+		move.l	-(a2),d0
+		cmp.l	d2,d0
+		beq.s	.NoReloc
+		move.l	#$3ec,(a1)+
+		bra.s	.FirstReloc
+.NextReloc	move.l	-(a2),d0
+		cmp.l	d2,d0
+		beq.s	.EndReloc
+.FirstReloc	move.l	a1,a6
+		addq.w	#4,a1
+		move.l	d0,(a1)+
+		moveq	#0,d1
+.NextOffset	move.l	-(a2),d0
+		cmp.l	d2,d0
+		beq.s	.CountOffsets
+		addq.l	#1,d1
+		move.l	d0,(a1)+
+		bra.s	.NextOffset
+.CountOffsets	move.l	d1,(a6)
+		bra.s	.NextReloc
+.EndReloc	clr.l	(a1)+
+.NoReloc	move.l	#$3f2,(a1)+
+		subq.l	#1,d4
+		bne.s	.NextHunk
+
+		moveq	#1,d0
+.ExitFree	move.l	d0,d2
+		move.l	d5,d0
+		move.l	d6,a1
+		move.l	4.w,a6
+		jsr	-210(a6)
+		move.l	d2,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;-------------------------------------------------
+
+RS_Super27	add.l	a0,a0
+		add.l	a0,a0
+		cmp.l	#($a8*4)+8,-4(a0)
+		bne.s	.Exit
+
+		cmp.l	#$4eaeff28,$38(a0)
+		bne.s	.Exit
+		cmp.l	#$b0ba0126,$3c(a0)
+		bne.s	.Exit
+		cmp.l	#$dbfa00a2,$c0(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DS_Super27	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdm_DosBase(a6),d7
+		move.l	xfdsi_SegList(a5),a4
+		add.l	a4,a4
+		add.l	a4,a4
+
+		move.l	$164(a4),d5
+		move.l	d5,d0		;d5 = len decr buf
+		moveq	#0,d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdsi_Error(a5)
+		move.l	d0,d6		;d6 = hunk info
+		beq	.Exit
+
+		move.l	d6,a2
+		move.l	(a4),a0
+		add.l	a0,a0
+		add.l	a0,a0
+		move.l	-(a0),d0
+		subq.l	#8,d0
+		addq.w	#8,a0
+.CopyData	move.l	(a0)+,(a2)+
+		subq.l	#4,d0
+		bne.s	.CopyData
+
+.DecrNext	move.l	d6,a0
+		tst.l	(a0)
+		bne.s	.DecrDone
+		add.l	d5,a0		;decr buf len
+.Copy		move.b	-(a2),-(a0)
+		cmp.l	d6,a2
+		bne.s	.Copy
+		addq.w	#4,a0
+		subq.w	#4,a7
+		move.b	(a0)+,(a7)
+		move.b	(a0)+,1(a7)
+		move.b	(a0)+,2(a7)
+		move.b	(a0)+,3(a7)
+		move.l	(a7),d0
+		add.l	d0,a0
+		move.b	(a0)+,(a7)
+		move.b	(a0)+,1(a7)
+		move.b	(a0)+,2(a7)
+		move.b	(a0)+,3(a7)
+		move.l	a0,a1
+		add.l	(a7)+,a1
+		movem.l	d5-d7/a6,-(a7)
+		bsr	D_Super
+		movem.l	(a7)+,d5-d7/a6
+		bra.s	.DecrNext
+
+.DecrDone	move.l	$16c(a4),d4	;hunks
+		move.l	a4,d1
+		lsr.l	#2,d1
+		move.l	a6,-(a7)
+		move.l	d7,a6
+		jsr	-156(a6)
+		move.l	(a7)+,a6
+
+		lea	xfdsi_SegList(a5),a4
+		clr.l	(a4)
+		move.l	d4,d2
+		move.w	xfdsi_RelMode(a5),d3
+		move.l	d6,a3
+
+.AllocNext	cmp.w	#XFDREL_DEFAULT,d3
+		beq.s	.AllocDefault
+		moveq	#2,d1
+		cmp.w	#XFDREL_FORCECHIP,d3
+		beq.s	.AllocChipFast
+		moveq	#4,d1
+		cmp.w	#XFDREL_FORCEFAST,d3
+		beq.s	.AllocChipFast
+		move.w	#XFDERR_BADRELMODE,xfdsi_Error(a5)
+		bra.b	.ErrorFree
+.AllocDefault	moveq	#0,d1
+		move.w	(a3),d1
+		rol.w	#3,d1
+		and.w	#$0006,d1
+.AllocChipFast	move.l	(a3)+,d0
+		addq.w	#4,a3
+		and.l	#$00ffffff,d0
+		move.l	d0,-(a7)
+		jsr	-198(a6)
+		move.l	(a7)+,d1
+		tst.l	d0
+		beq.b	.ErrorFree
+		move.l	d0,a0
+		move.l	d1,(a0)+
+		move.l	a0,d0
+		lsr.l	#2,d0
+		move.l	d0,(a4)
+		move.l	a0,a4
+		clr.l	(a0)+
+		subq.l	#8,d1
+		beq.s	.Empty
+.CopyHunk	move.l	(a3)+,(a0)+
+		subq.l	#4,d1
+		bne.s	.CopyHunk
+.Empty		tst.l	(a3)+
+		beq.s	.Empty
+		subq.w	#4,a3
+		subq.l	#1,d2
+		bne.s	.AllocNext
+
+		lea	xfdsi_SegList(a5),a3
+		moveq	#-1,d2
+.RelocNext	move.l	(a3),a3
+		add.l	a3,a3
+		add.l	a3,a3
+.RelocHunk	move.l	-(a2),d0
+		cmp.l	d2,d0
+		beq.s	.RelocEnd
+		lea	xfdsi_SegList(a5),a0
+.GetHunk	move.l	(a0),a0
+		add.l	a0,a0
+		add.l	a0,a0
+		dbf	d0,.GetHunk
+		addq.w	#4,a0
+		move.l	a0,d1
+.Relocate	move.l	-(a2),d0
+		cmp.l	d2,d0
+		beq.s	.RelocHunk
+		add.l	d1,4(a3,d0.l)
+		bra.s	.Relocate
+.RelocEnd	subq.l	#1,d4
+		bne.s	.RelocNext
+
+		moveq	#1,d0
+		bra.s	.ExitFree
+
+.ErrorFree	lea	xfdsi_SegList(a5),a4
+		move.l	(a4),d0
+		clr.l	(a4)
+.FreeNext	lsl.l	#2,d0
+		beq.s	.ExitFree
+		move.l	d0,a1
+		move.l	(a1),d2
+		move.l	-(a1),d0
+		jsr	-210(a6)
+		move.l	d2,d0
+		bra.s	.FreeNext
+
+.ExitFree	move.l	d0,d2
+		move.l	d5,d0
+		move.l	d6,a1
+		jsr	-210(a6)
+		move.l	d2,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;=================================================
+
+D_Super		cmp.w	#$1e0,d0
+		beq.s	D_SuperBit
+		cmp.w	#$1d8,d0	* modified version!
+		beq.s	D_SuperBit
+		cmp.w	#$6e,d0
+		beq	D_SuperABCxABC
+		cmp.w	#$66,d0		* modified version!
+		beq	D_SuperABCxABC
+		cmp.w	#$5c,d0
+		beq	D_SuperABCABC
+		cmp.w	#$8e,d0
+		beq	D_SuperByte
+		rts
+
+D_SuperBit	subq.w	#4,a7
+		move.b	(a0)+,(a7)
+		move.b	(a0)+,1(a7)
+		move.b	(a0)+,2(a7)
+		move.b	(a0)+,3(a7)
+		move.l	(a7),d0
+		add.l	a2,d0
+		move.l	d0,(a7)
+		move.l	a7,a3
+		sub.w	#$100,a7
+		subq.w	#8,a0
+		move.w	#$100-1,d0
+.CopyTab	move.b	-(a0),-(a3)
+		dbf	d0,.CopyTab
+		add.w	#$108,a0
+
+		moveq	#8-1,d3
+		move.b	(a0)+,d2
+.lbC0002CA	moveq	#0,d0
+		moveq	#1,d1
+		bsr	.lbC000376
+		btst	#1,d0
+		bne.s	.lbC000302
+		tst.b	d0
+		bne.s	.lbC0002F4
+		moveq	#0,d1
+		bsr	.lbC000376
+		move.b	(a3,d0.l),(a2)+
+		bra.s	.lbC00036C
+
+.lbC0002F4	moveq	#0,d0
+		moveq	#1,d1
+		bsr.s	.lbC000376
+		addq.b	#2,d0
+		move.b	(a3,d0.l),(a2)+
+		bra.s	.lbC00036C
+
+.lbC000302	moveq	#0,d1
+		bsr.s	.lbC000376
+		cmp.b	#4,d0
+		bne.s	.lbC00031A
+		moveq	#0,d0
+		moveq	#2,d1
+		bsr.s	.lbC000376
+		addq.b	#6,d0
+		move.b	(a3,d0.l),(a2)+
+		bra.s	.lbC00036C
+
+.lbC00031A	cmp.b	#5,d0
+		bne.s	.lbC000330
+		moveq	#0,d0
+		moveq	#3,d1
+		bsr.s	.lbC000376
+		add.b	#14,d0
+		move.b	(a3,d0.l),(a2)+
+		bra.s	.lbC00036C
+
+.lbC000330	cmp.b	#6,d0
+		bne.s	.lbC000346
+		moveq	#0,d0
+		moveq	#4,d1
+		bsr.s	.lbC000376
+		add.b	#$1E,d0
+		move.b	(a3,d0.l),(a2)+
+		bra.s	.lbC00036C
+
+.lbC000346	move.b	(a0)+,d0
+		cmp.b	#$C2,d0
+		bcs.s	.lbC000364
+		sub.b	#$C2,d0
+		move.l	a2,a6
+		sub.w	#$3F,a6
+		move.b	(a6,d0.l),(a2)+
+		move.b	1(a6,d0.l),(a2)+
+		bra.s	.lbC00036C
+
+.lbC000364	add.b	#$3E,d0
+		move.b	(a3,d0.l),(a2)+
+.lbC00036C	cmp.l	a0,a1
+		bcc	.lbC0002CA
+		add.w	#$100,a7
+		move.l	(a7)+,a2
+		rts
+
+.lbC000376	roxl.b	#1,d2
+		roxl.b	#1,d0
+		dbra	d3,.lbC000382
+		move.b	(a0)+,d2
+		moveq	#8-1,d3
+.lbC000382	dbra	d1,.lbC000376
+		rts
+
+D_SuperABCxABC	subq.w	#4,a7
+		move.b	-8(a0),(a7)
+		move.b	-7(a0),1(a7)
+		move.b	-6(a0),2(a7)
+		move.b	-5(a0),3(a7)
+		move.l	a7,a3
+.lbC0002B2	move.b	(a0)+,d0
+		cmp.b	(a3),d0
+		bne.s	.lbC0002D8
+		moveq	#0,d0
+		move.b	(a0)+,d0
+		addq.w	#3,d0
+		moveq	#2,d1
+.lbC0002CC	move.l	a2,a6
+		sub.l	d0,a6
+.lbC0002D0	move.b	(a6)+,(a2)+
+		dbra	d1,.lbC0002D0
+		bra.s	.lbC00030C
+
+.lbC0002D8	cmp.b	1(a3),d0
+		bne.s	.lbC0002EC
+		moveq	#0,d0
+		moveq	#0,d1
+		move.b	(a0)+,d1
+		subq.b	#1,d1
+		move.b	(a0)+,d0
+		addq.w	#4,d0
+		bra.s	.lbC0002CC
+
+.lbC0002EC	cmp.b	2(a3),d0
+		bne.s	.lbC000302
+		moveq	#0,d0
+		moveq	#0,d1
+		move.b	(a0)+,d1
+		subq.b	#1,d1
+		move.b	(a0)+,d0
+		lsl.w	#8,d0
+		move.b	(a0)+,d0
+		bra.s	.lbC0002CC
+
+.lbC000302	cmp.b	3(a3),d0
+		bne.s	.lbC00030A
+		move.b	(a0)+,d0
+.lbC00030A	move.b	d0,(a2)+
+.lbC00030C	cmp.l	a1,a0
+		bcs.s	.lbC0002B2
+		addq.w	#4,a7
+		rts
+
+D_SuperABCABC	subq.w	#4,a7
+		move.b	-8(a0),(a7)
+		move.b	-7(a0),1(a7)
+		move.b	-6(a0),2(a7)
+		move.b	-5(a0),3(a7)
+		move.l	a7,a3
+.lbC0002B2	move.b	(a0)+,d0
+		cmp.b	2(a3),d0
+		bne.s	.lbC0002CA
+		move.b	(a0)+,(a2)+
+		bra.s	.lbC0002FA
+
+.lbC0002CA	cmp.b	1(a3),d0
+		bne.s	.lbC0002EE
+		moveq	#0,d1
+		moveq	#0,d2
+		move.b	(a0)+,d1
+		move.b	(a0)+,d2
+.lbC0002D8	move.w	d2,d3
+		moveq	#0,d4
+.lbC0002DC	move.b	(a0,d4.l),(a2)+
+		addq.b	#1,d4
+		dbra	d3,.lbC0002DC
+		dbra	d1,.lbC0002D8
+		add.l	d4,a0
+		bra.s	.lbC0002FA
+
+.lbC0002EE	cmp.b	(a3),d0
+		bne.s	.lbC0002F8
+		moveq	#1,d1
+		moveq	#1,d2
+		bra.s	.lbC0002D8
+
+.lbC0002F8	move.b	d0,(a2)+
+.lbC0002FA	cmp.l	a1,a0
+		bcs.s	.lbC0002B2
+		addq.w	#4,a7
+		rts
+
+D_SuperByte	subq.w	#6,a7
+		move.b	-10(a0),(a7)
+		move.b	-9(a0),1(a7)
+		move.b	-8(a0),2(a7)
+		move.b	-7(a0),3(a7)
+		move.b	-6(a0),4(a7)
+		move.b	-5(a0),5(a7)
+		move.l	a7,a3
+.lbC0002B6	move.b	(a0)+,d0
+		cmp.b	(a3),d0
+		bne.s	.lbC0002D8
+		moveq	#0,d1
+		move.b	(a0)+,d1
+		addq.w	#3,d1
+		move.b	(a0)+,d0
+.lbC0002D0	move.b	d0,(a2)+
+		dbra	d1,.lbC0002D0
+		bra.s	.lbC00032A
+
+.lbC0002D8	cmp.b	1(a3),d0
+		bne.s	.lbC0002FA
+		moveq	#0,d1
+		move.b	(a0)+,d1
+		lsl.w	#8,d1
+		move.b	(a0)+,d1
+		add.l	#$104,d1
+		move.b	(a0)+,d0
+.lbC0002F0	move.b	d0,(a2)+
+		subq.l	#1,d1
+		bne.s	.lbC0002F0
+		bra.s	.lbC00032A
+
+.lbC0002FA	cmp.b	2(a3),d0
+		bne.s	.lbC00030A
+		move.b	(a0)+,d0
+		move.b	d0,(a2)+
+		move.b	d0,(a2)+
+		move.b	d0,(a2)+
+		bra.s	.lbC00032A
+
+.lbC00030A	cmp.b	4(a3),d0
+		beq.s	.lbC000318
+		cmp.b	3(a3),d0
+		bne.s	.lbC00031E
+		clr.b	(a2)+
+.lbC000318	clr.b	(a2)+
+		clr.b	(a2)+
+		bra.s	.lbC00032A
+
+.lbC00031E	cmp.b	5(a3),d0
+		bne.s	.lbC000328
+		move.b	(a0)+,(a2)+
+		bra.s	.lbC00032A
+
+.lbC000328	move.b	d0,(a2)+
+.lbC00032A	cmp.l	a1,a0
+		bcs.s	.lbC0002B6
+		addq.w	#6,a7
+		rts
+
+S_Super_END

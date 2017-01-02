@@ -1,0 +1,119 @@
+*****************************************************************************
+*   $Id: PKProt.a,v 1.2 2005/06/23 14:39:16 stoecker Exp $
+*   Power Packer protector decrunching slave
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+
+S_PKProt
+		IFND	XFD_LASTSLAVE
+		dc.l	S_PKProt_END
+		ELSE
+		dc.l	0
+		ENDIF
+		dc.w	2
+		dc.w	39
+		dc.l	N_PKProt
+		dc.w	XFDPFF_RELOC
+		dc.w	0
+		dc.l	RB_PKProt
+		dc.l	DB_PKProt
+		dc.l	0
+		dc.l	0
+		dc.w	XFDID_PKProtector200
+		dc.w	0
+		dc.l	400
+
+N_PKProt	dc.b	'PK-Protector 2.00',0
+		even
+
+;-------------------------------------------------
+
+RB_PKProt	JSR	xfdCodeBeginRecog
+		TST.L	D0
+		BEQ.B	.Exit
+
+		cmp.l	#$60000006,(a0)+
+		bne.s	.Exit
+		cmp.l	#$59455021,(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_PKProt	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+
+		move.l	xfdbi_SourceBufLen(a5),d0
+		subq.l	#8,d0
+		move.l	d0,xfdbi_TargetBufSaveLen(a5)
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	_LVOAllocMem(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.b	.Exit
+
+		move.l	xfdbi_SourceBuffer(a5),a0
+		move.l	d0,a1
+
+		moveq	#-32,d2
+		add.l	xfdbi_TargetBufSaveLen(a5),d2
+
+		moveq	#1,d1
+		add.l	16(a0),d1
+		sub.l	12(a0),d1
+
+		move.l	(a0)+,(a1)+	;3f3
+		move.l	(a0)+,(a1)+	;0
+		move.l	(a0)+,(a1)+	;x
+		move.l	(a0)+,(a1)+	;0
+		move.l	(a0)+,(a1)+	;x-1
+
+		move.l	(a0)+,d0
+		subq.l	#2,d0
+		move.l	d0,(a1)+
+
+.CopyHead	subq.l	#1,d1
+		beq.s	.SkipHead
+		move.l	(a0)+,(a1)+
+		subq.l	#4,d2
+		bra.s	.CopyHead
+
+.SkipHead	move.l	(a0)+,(a1)+	;3e9
+		move.l	(a0)+,d0
+		subq.l	#2,d0
+		move.l	d0,(a1)+
+
+		addq.w	#8,a0
+		move.l	d2,d0
+		jsr	_LVOCopyMem(a6)
+
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+S_PKProt_END
+

@@ -1,0 +1,452 @@
+*****************************************************************************
+*   $Id: DoubleAction.a,v 1.2 2005/06/23 14:39:16 stoecker Exp $
+*   Double Action decrunching slave
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+
+S_Double10	
+		IFND	XFD_LASTSLAVE
+		dc.l	S_Double_END
+		ELSE
+		dc.l	0
+		ENDIF
+		dc.w	2
+		dc.w	39
+		dc.l	N_Double10
+		dc.w	XFDPFF_ADDR
+		dc.w	0
+		dc.l	RB_Double10
+		dc.l	DB_Double10
+		dc.l	0
+		dc.l	0
+		dc.w	XFDID_DoubleAction10
+		dc.w	0
+		dc.l	$266+$26+4
+
+N_Double10	dc.b	'Double Action 1.0',0
+		even
+
+;-------------------------------------------------
+
+RB_Double10	cmp.l	#$53462606,$b6(a0)
+		bne.s	.Exit
+		cmp.l	#$4dfa0006,$ba(a0)
+		bne.s	.Exit
+		cmp.l	#$78084ed4,$be(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_Double10	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a0
+
+		moveq	#0,d7
+		cmp.l	#$343c0082,$196(a0)
+		beq.s	.Valid
+
+		moveq	#2,d7
+		cmp.l	#$343c0302,$1a8(a0)
+		beq.s	.Valid
+
+		moveq	#4,d7
+		cmp.l	#$343c0502,$1a8(a0)
+		beq.s	.Valid
+
+		moveq	#6,d7
+		cmp.l	#$343c1102,$1aa(a0)
+		beq.s	.Valid
+
+.ExitCorrupt	move.w	#XFDERR_CORRUPTEDDATA,xfdbi_Error(a5)
+		moveq	#0,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+.Offset		dc.w	0
+		dc.w	$10
+		dc.w	$10
+		dc.w	$1a
+
+.Valid		move.w	.Offset(pc,d7.w),d0
+		lea	$24c(a0),a4
+		add.w	d0,a4
+
+		move.l	$12(a4),xfdbi_JmpAddress(a5)
+		move.l	$a(a4),d0
+		add.l	$1a(a4),d0
+		move.l	d0,xfdbi_DecrAddress(a5)
+
+		move.l	$e(a4),d0
+		sub.l	$a(a4),d0
+		move.l	d0,xfdbi_TargetBufLen(a5)
+		sub.l	$1a(a4),d0
+		move.l	d0,xfdbi_TargetBufSaveLen(a5)
+		add.l	$1a(a4),d0
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit
+
+		move.l	d0,a1		;uncr start
+		move.l	a1,a2
+		move.l	(a4),d1
+		sub.l	$a(a4),d1	;uncr len
+		add.l	d1,a2		;uncr end
+		move.l	a2,a3
+
+		move.l	$4(a4),d0
+		sub.l	$a(a4),d0	;cr len
+		lea	$22(a4),a0	;cr start
+		move.l	a0,-(a7)
+		add.l	d0,a0		;cr end
+
+		move.w	.Code(pc,d7.w),d0
+		jsr	.Code(pc,d0.w)
+		
+		cmp.l	(a7)+,a0
+		bne.s	.Corrupt
+		tst.w	d3
+		beq.s	.Ok
+
+.Corrupt	move.l	xfdbi_TargetBuffer(a5),a1
+		move.l	xfdbi_TargetBufLen(a5),d0
+		jsr	-210(a6)
+		bra	.ExitCorrupt
+
+.Ok		move.l	a3,a0		;uncr end
+		add.l	xfdbi_TargetBufLen(a5),a1	;byte end
+		move.l	a1,a2
+		sub.l	xfdbi_TargetBufSaveLen(a5),a2	;byte start
+		move.b	$8(a4),d5
+		move.b	$9(a4),d6
+
+.Byte1		move.b	-(a0),d0
+		cmp.b	d5,d0
+		bne.s	.Byte4
+		move.b	-(a0),d2
+		move.b	-(a0),d1
+.Byte3		move.b	d1,-(a1)
+		cmp.l	a2,a1
+		beq.s	.Byte6
+		subq.b	#1,d2
+		bne.s	.Byte3
+		bra.s	.Byte1
+
+.Byte4		cmp.b	d6,d0
+		bne.s	.Byte5
+		moveq	#0,d1
+		move.b	-(a0),d2
+		bra.s	.Byte3
+
+.Byte5		move.b	d0,-(a1)
+		cmp.l	a2,a1
+		bne.s	.Byte1
+
+.Byte6		cmp.l	xfdbi_TargetBuffer(a5),a0
+		bne.s	.Corrupt
+
+		move.l	a0,a1
+		add.l	$1a(a4),a0
+		move.l	a0,a2
+		add.l	xfdbi_TargetBufSaveLen(a5),a2
+.Copy		move.b	(a0)+,(a1)+
+		cmp.l	a0,a2
+		bne.s	.Copy
+
+		moveq	#1,d0
+		bra	.Exit
+
+.Code		dc.w	D_Double10a-.Code
+		dc.w	D_Double10b-.Code
+		dc.w	D_Double10b-.Code
+		dc.w	D_Double10b-.Code
+
+;=================================================
+
+D_Double10a	move.l	-(a0),d5
+		moveq	#0,d2
+
+.Decr1		moveq	#3,d4
+		bsr.s	.GetBits
+		cmp.b	#6,d6
+		bcs.s	.Decr8
+		bne.s	.Decr10
+
+.Decr2		moveq	#2,d4
+		bsr.s	.GetBits
+		cmp.b	#2,d6
+		bcs.s	.Decr3
+		bne.s	.Decr4
+		moveq	#3,d3
+		bra	.Decr15
+
+.Decr3		moveq	#1,d3
+		tst.b	d6
+		beq	.Decr15
+		bra	.Decr16
+
+.Decr4		moveq	#1,d4
+		bsr.s	.GetBits
+		tst.b	d6
+		bne.s	.Decr5
+		moveq	#3,d4
+		bsr.s	.GetBits
+		addq.w	#6,d6
+		bra.s	.Decr8
+
+.Decr5		moveq	#1,d4
+		bsr.s	.GetBits
+		tst.b	d6
+		beq.s	.Decr6
+		moveq	#16,d4
+		bra.s	.Decr7
+
+.Decr6		moveq	#10,d4
+.Decr7		bsr.s	.GetBits
+		subq.w	#1,d6
+
+.Decr8		move.w	d6,d3
+.Decr9		moveq	#8,d4
+		bsr.s	.GetBits
+		move.b	d6,-(a2)
+		cmp.l	a1,a2
+		dbeq	d3,.Decr9
+		cmp.w	#-1,d3
+		bne	.Exit
+		moveq	#1,d4
+		bsr.s	.GetBits
+		tst.b	d6
+		beq.s	.Decr2
+
+.Decr10		moveq	#2,d4
+		bsr.s	.GetBits
+		cmp.b	#3,d6
+		beq.s	.Decr11
+		moveq	#2,d3
+		cmp.b	#1,d6
+		bcs.s	.Decr15
+		beq.s	.Decr16
+		moveq	#3,d3
+		bra.s	.Decr16
+
+.GetBits	subq.w	#1,d4
+		moveq	#0,d6
+.GetBits1	lsl.l	#1,d5
+		bne.s	.GetBits2
+		move.l	-(a0),d5
+		roxl.l	#1,d5
+.GetBits2	roxl.w	#1,d6
+		dbra	d4,.GetBits1
+		rts
+
+.Decr11		moveq	#2,d4
+		bsr.s	.GetBits
+		cmp.b	#3,d6
+		beq.s	.Decr12
+		moveq	#4,d3
+		bra.s	.Decr14
+
+.Decr12		moveq	#2,d4
+		bsr.s	.GetBits
+		cmp.b	#3,d6
+		beq.s	.Decr13
+		moveq	#7,d3
+		bra.s	.Decr14
+
+.Decr13		moveq	#8,d4
+		moveq	#10,d3
+		bsr.s	.GetBits
+
+.Decr14		add.w	d6,d3
+		moveq	#1,d4
+		bsr.s	.GetBits
+		tst.b	d6
+		bne.s	.Decr16
+.Decr15		moveq	#7,d4
+		moveq	#2,d2
+		bra.s	.Decr17
+
+.Decr16		moveq	#8,d4
+		move.w	#$82,d2
+
+.Decr17		bsr.s	.GetBits
+		add.l	d2,d6
+.Decr18		move.b	-1(a2,d6.l),-(a2)
+		cmp.l	a1,a2
+		dbeq	d3,.Decr18
+		cmp.w	#-1,d3
+		beq	.Decr1
+.Exit		rts
+
+;=================================================
+
+D_Double10b	move.l	-(a0),d5
+		moveq	#0,d2
+
+.Decr1		moveq	#3,d4
+		bsr	.GetBits
+		cmp.b	#6,d6
+		bcs.s	.Decr8
+		bne.s	.Decr10
+
+.Decr2		moveq	#2,d4
+		bsr	.GetBits
+		cmp.b	#2,d6
+		bcs.s	.Decr3
+		bne.s	.Decr4
+		moveq	#3,d3
+		bra	.Decr16
+
+.Decr3		moveq	#1,d3
+		tst.b	d6
+		beq	.Decr17
+		moveq	#9,d4
+		bra	.Decr20
+
+.Decr4		moveq	#1,d4
+		bsr.s	.GetBits
+		tst.b	d6
+		bne.s	.Decr5
+		moveq	#3,d4
+		bsr.s	.GetBits
+		addq.w	#6,d6
+		bra.s	.Decr8
+
+.Decr5		moveq	#1,d4
+		bsr.s	.GetBits
+		tst.b	d6
+		beq.s	.Decr6
+		moveq	#16,d4
+		bra.s	.Decr7
+
+.Decr6		moveq	#10,d4
+.Decr7		bsr.s	.GetBits
+		subq.w	#1,d6
+
+.Decr8		move.w	d6,d3
+.Decr9		moveq	#8,d4
+		bsr.s	.GetBits
+		move.b	d6,-(a2)
+		cmp.l	a1,a2
+		dbeq	d3,.Decr9
+		cmp.w	#-1,d3
+		bne	.Exit
+		moveq	#1,d4
+		bsr.s	.GetBits
+		tst.b	d6
+		beq.s	.Decr2
+
+.Decr10		moveq	#2,d4
+		bsr.s	.GetBits
+		cmp.b	#3,d6
+		beq.s	.Decr12
+		moveq	#2,d3
+		cmp.b	#1,d6
+		bcs.s	.Decr17
+		beq.s	.Decr11
+		cmp.w	#6,d7
+		bne.s	.Decr21
+		moveq	#14,d4
+		move.w	#$902,d2
+		bra.s	.Decr22
+.Decr11		cmp.w	#6,d7
+		bne.s	.Decr19
+		moveq	#11,d4
+		bra.s	.Decr20
+
+.GetBits	subq.w	#1,d4
+		moveq	#0,d6
+.GetBits1	lsl.l	#1,d5
+		bne.s	.GetBits2
+		move.l	-(a0),d5
+		roxl.l	#1,d5
+.GetBits2	roxl.w	#1,d6
+		dbra	d4,.GetBits1
+		rts
+
+.Decr12		moveq	#2,d4
+		bsr.s	.GetBits
+		cmp.b	#3,d6
+		beq.s	.Decr13
+		moveq	#4,d3
+		bra.s	.Decr15
+
+.Decr13		moveq	#2,d4
+		bsr.s	.GetBits
+		cmp.b	#3,d6
+		beq.s	.Decr14
+		moveq	#7,d3
+		bra.s	.Decr15
+
+.Decr14		moveq	#8,d4
+		moveq	#10,d3
+		bsr.s	.GetBits
+
+.Decr15		add.w	d6,d3
+.Decr16		moveq	#1,d4
+		bsr.s	.GetBits
+		tst.b	d6
+		bne.s	.Decr18
+.Decr17		moveq	#8,d4
+		moveq	#2,d2
+		bra.s	.Decr22
+
+.Decr18		moveq	#1,d4
+		bsr.s	.GetBits
+		tst.b	d6
+		bne.s	.Decr21
+.Decr19		move.w	.Tab1-2(pc,d7.w),d4
+.Decr20		move.w	#$102,d2
+		bra.s	.Decr22
+
+.Decr21		move.w	.Tab2-2(pc,d7.w),d4
+		move.w	.Tab3-2(pc,d7.w),d2
+
+.Decr22		bsr.s	.GetBits
+		add.l	d2,d6
+.Decr23		move.b	-1(a2,d6.l),-(a2)
+		cmp.l	a1,a2
+		dbeq	d3,.Decr23
+		cmp.w	#-1,d3
+		beq	.Decr1
+.Exit		rts
+
+.Tab1		dc.w	9
+		dc.w	10
+		dc.w	12
+
+.Tab2		dc.w	10
+		dc.w	12
+		dc.w	16
+
+.Tab3		dc.w	$302
+		dc.w	$502
+		dc.w	$1102
+
+S_Double_END
+

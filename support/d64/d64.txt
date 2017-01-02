@@ -1,0 +1,43 @@
+D64 File Structure was developed by Miha Peternel for use in C64S.
+
+D64 file contains all sectors as they appear on the 1541 formatted disk.
+Each sector is 256 bytes long. Error information (1 byte per sector)
+can be added in the end of file.
+
+__________________________________
+  File types currently supported
+
+  174848 bytes = 35 tracks
+  175531 bytes = 35 tracks + 683 bytes error information
+  196608 bytes = 40 tracks
+  197376 bytes = 40 tracks + 768 bytes error information
+
+_______________
+  Track sizes
+
+  Tracks, size
+    1-17   21 sectors * 256 bytes
+   18-24   19 sectors * 256 bytes
+   25-30   18 sectors * 256 bytes
+   31-35   17 sectors * 256 bytes
+  *36-40*  17 sectors * 256 bytes
+
+  Tracks 36-40 are non-standard.
+
+____________________________________
+  Actual layout for 35 track image
+
+  Offset, size, description
+   0*256, 256   track 1, sector 0
+   1*256, 256   track 1, sector 1
+   ...
+  20*256, 256   track 1, sector 20
+  21*256, 256   track 2, sector 0
+   ...
+ 682*256, 256   track 35, sector 16
+ 683*256, 683   error info (byte per sector in the same order)
+
+
+C64S 2.5 introduces NewD64 format of D64 files. The format is still
+under construction, so the description is not available yet. It will
+be formally published with C64S 3.0.

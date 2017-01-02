@@ -1,0 +1,942 @@
+*****************************************************************************
+*   $Id: TurboSqueezer.a,v 1.2 2005/06/23 14:39:16 stoecker Exp $
+*   Turbo Squeezer decrunching slave
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+**************************************************
+
+S_TurboSq51	dc.l	S_TurboSq61
+		dc.w	2
+		dc.w	39
+		dc.l	N_TurboSq51
+		dc.w	XFDPFF_RELOC!XFDPFF_RELMODE
+		dc.w	0
+		dc.l	RB_TurboSq51
+		dc.l	DB_TurboSq51
+		dc.l	RS_TurboSq51
+		dc.l	DS_TurboSq51
+		dc.w	XFDID_TurboSqueezer51
+		dc.w	0
+		dc.l	$224+4+16
+
+N_TurboSq51	dc.b	'TurboSqueezer 5.1',0
+		even
+
+;-------------------------------------------------
+
+RB_TurboSq51	MOVEQ	#0,D0
+		CMP.L	#$48E7FFFE,$28(A0)
+		BNE.B	.Exit
+		CMP.L	#$D3C9D3C9,$3C(A0)
+		BNE.B	.Exit
+		CMP.L	#$58892A49,$40(A0)
+		BNE.B	.Exit
+		CMP.L	#$018C2449,$50(A0)
+		BNE.B	.Exit
+		MOVEQ	#1,d0
+.Exit		RTS
+
+;-------------------------------------------------
+
+RS_TurboSq51	ADD.L	A0,A0
+		ADD.L	A0,A0
+		LEA	-$24(A0),A0
+		BRA.B	RB_TurboSq51
+
+;-------------------------------------------------
+
+DB_TurboSq51	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+
+		move.l	xfdbi_SourceBuffer(a5),a0
+		lea	$1D8(A0),a3
+
+		LEA	D_TurboSq51(PC),A0
+		MOVE.L	A0,-(A7)
+		BRA.W	DB_TurboSq
+
+;-------------------------------------------------
+
+Turbo_First	set	0
+Turbo_Hunks	set	4
+Turbo_Buffer	set	8
+
+DS_TurboSq51	movem.l	d2-d7/a2-a6,-(a7)
+		sub.w	#12,a7
+		move.l	a0,a5
+
+		move.l	xfdsi_SegList(a5),a0
+		add.l	a0,a0
+		add.l	a0,a0
+		move.l	a0,Turbo_First(a7)
+
+		lea	$1D8-$24(a0),a3
+		move.l	(a0),a0
+		add.l	a0,a0
+		add.l	a0,a0
+		move.l	a0,a6
+		move.l	(a0)+,a1
+		add.l	a1,a1
+		add.l	a1,a1
+		addq.w	#4,a1
+		move.l	a1,Turbo_Hunks(a7)
+		move.l	8(a3),d0
+		lsl.l	#2,d0
+		add.l	d0,a1
+		move.l	a1,Turbo_Buffer(a7)
+		add.l	4(a3),a0
+		move.l	a1,a2
+		add.l	(a3),a1
+		BSR.B	D_TurboSq51
+		move.l	8(a3),d7
+		lea	$c(a3),a3
+		BRA.W	DS_TurboSq
+
+;-------------------------------------------------
+
+D_TurboSq51	MOVEQ	#0,D7
+.Decr1		LSR.L	#1,D7
+		BNE.B	.Decr2
+		BSR.B	.Decr17
+.Decr2		BCS.B	.Decr7
+		LSR.L	#1,D7
+		BNE.B	.Decr3
+		BSR.B	.Decr17
+.Decr3		BCS.B	.Decr6
+		MOVEQ	#11,D1
+		BSR.B	.Decr18
+		MOVE.W	D0,D3
+		MOVEQ	#2,D1
+.Decr4		BSR.B	.Decr18
+		ADDQ.W	#2,D0
+.Decr5		MOVE.B	(A1,D3.W),-(A1)
+		DBRA	D0,.Decr5
+		BRA.B	.Decr16
+.Decr6		MOVEQ	#0,D2
+		BRA.B	.Decr15
+.Decr7		LSR.L	#1,D7
+		BNE.B	.Decr8
+		BSR.B	.Decr17
+.Decr8		BCS.B	.Decr12
+		LSR.L	#1,D7
+		BNE.B	.Decr9
+		BSR.B	.Decr17
+.Decr9		BCS.B	.Decr11
+		MOVEQ	#9,D1
+.Decr10		BSR.B	.Decr18
+		MOVE.B	(A1,D0.W),-(A1)
+		MOVE.B	(A1,D0.W),-(A1)
+		BRA.B	.Decr16
+.Decr11		MOVEQ	#5,D1
+		BSR.B	.Decr18
+		MOVE.W	D0,D3
+		MOVEQ	#1,D1
+		BRA.B	.Decr4
+.Decr12		LSR.L	#1,D7
+		BNE.B	.Decr13
+		BSR.B	.Decr17
+.Decr13		BCS.B	.Decr21
+		MOVEQ	#2,D1
+		MOVEQ	#1,D2
+.Decr14		BSR.B	.Decr18
+		ADD.W	D0,D2
+.Decr15		MOVEQ	#7,D1
+		BSR.B	.Decr18
+		MOVE.B	D0,-(A1)
+		DBRA	D2,.Decr15
+.Decr16		CMPA.L	A1,A2
+		BLT.B	.Decr1
+		RTS	
+.Decr17		MOVE.L	-(A0),D7
+		MOVE	#$10,CCR
+		ROXR.L	#1,D7
+		RTS	
+.Decr18		MOVEQ	#0,D0
+.Decr19		LSR.L	#1,D7
+		BNE.B	.Decr20
+		MOVE.L	-(A0),D7
+		MOVE	#$10,CCR
+		ROXR.L	#1,D7
+.Decr20		ROXL.W	#1,D0
+		DBRA	D1,.Decr19
+		RTS	
+.Decr21		LSR.L	#1,D7
+		BNE.B	.Decr22
+		BSR.B	.Decr17
+.Decr22		BCS.B	.Decr23
+		MOVEQ	#4,D1
+		BRA.B	.Decr10
+.Decr23		LSR.L	#1,D7
+		BNE.B	.Decr24
+		BSR.B	.Decr17
+.Decr24		BCS.B	.Decr26
+		MOVEQ	#7,D1
+		BSR.B	.Decr18
+		MOVEQ	#4,D1
+.Decr25		MOVE.W	D0,D3
+		BSR.B	.Decr18
+		ADDI.W	#9,D0
+		BRA.W	.Decr5
+.Decr26		LSR.L	#1,D7
+		BNE.B	.Decr27
+		BSR.B	.Decr17
+.Decr27		BCC.B	.Decr28
+		MOVEQ	#8,D2
+		MOVEQ	#6,D1
+		BRA.B	.Decr14
+.Decr28		MOVEQ	#11,D1
+		BSR.B	.Decr18
+		MOVEQ	#6,D1
+		BRA.B	.Decr25
+
+**************************************************
+
+S_TurboSq61	dc.l	S_TurboSq80
+		dc.w	2
+		dc.w	39
+		dc.l	N_TurboSq61
+		dc.w	XFDPFF_RELOC!XFDPFF_RELMODE
+		dc.w	0
+		dc.l	RB_TurboSq61
+		dc.l	DB_TurboSq61
+		dc.l	RS_TurboSq61
+		dc.l	DS_TurboSq61
+		dc.w	XFDID_TurboSqueezer61
+		dc.w	0
+		dc.l	$224+4+16
+
+N_TurboSq61	dc.b	'TurboSqueezer 6.1',0
+		even
+
+;-------------------------------------------------
+
+RB_TurboSq61	MOVEQ	#0,D0
+		cmp.l	#$207afff0,$32(a0)
+		bne.s	.Exit
+		cmp.l	#$d1c8d1c8,$36(a0)
+		bne.s	.Exit
+		cmp.l	#$203a01c8,$46(a0)
+		bne.s	.Exit
+		cmp.l	#$d1fa01ba,$50(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+.Exit		rts
+
+;-------------------------------------------------
+
+RS_TurboSq61	add.l	a0,a0
+		add.l	a0,a0
+		LEA	-$24(A0),A0
+		BRA.B	RB_TurboSq61
+
+;-------------------------------------------------
+
+DB_TurboSq61	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+
+		move.l	xfdbi_SourceBuffer(a5),a0
+		lea	$208(a0),a3
+
+		LEA	D_TurboSq61(PC),A0
+		MOVE.L	A0,-(A7)
+
+DB_TurboSq	moveq	#20,d0
+		add.l	(a3),d0
+		move.l	8(a3),d1	;wegen bss
+		lsl.l	#2,d1
+		lea	24(a3,d1.l),a2	;cr data
+		add.l	d1,d0		;einmal hunklen tab
+		add.l	d1,d0		;einmal wegen bss verlängerung
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	_LVOAllocMem(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq	.Exit
+
+		move.l	d0,a1
+		move.l	#HUNK_HEADER,(a1)+
+		clr.l	(a1)+
+		move.l	8(a3),d0
+		move.l	d0,(a1)+
+		clr.l	(a1)+
+		subq.l	#1,d0
+		move.l	d0,(a1)+
+
+		move.l	a1,-(a7)
+		lea	12(a3),a0
+		move.l	8(a3),d0
+.CorrectHeader	move.l	(a0)+,d1
+		subq.l	#2,d1
+		move.l	d1,(a1)+
+		subq.l	#1,d0
+		bne.s	.CorrectHeader		
+
+		move.l	a2,a0		;cr data
+		move.l	a1,a2
+		add.l	(a3),a1
+		move.l	a1,a4		;decr end
+		add.l	4(a3),a0
+
+		MOVE.L	4(A7),A6
+		JSR	(A6)	
+
+		move.l	8(a3),d2	;amount hunks
+		move.l	a2,a1
+		move.l	(a7)+,a2
+		MOVE.L	(A7)+,D0	;update ptr
+
+.CorrectHunks	move.l	(a1)+,d0
+		cmp.w	#$3eb,d0
+		beq.s	.CorrectBSS
+		move.l	(a1)+,d0
+		lsl.l	#2,d0
+		add.l	d0,a1
+		addq.w	#4,a2
+
+		move.l	(a1)+,d0
+		cmp.w	#$3ec,d0
+		bne.s	.CorrectNext
+
+.CorrectReloc	move.l	(a1)+,d0
+		beq.s	.HunkEnd
+		move.l	(a1),d1
+		lsr.l	#2,d1
+		move.l	d1,(a1)+
+		lsl.l	#2,d0
+		add.l	d0,a1
+		bra.s	.CorrectReloc		
+
+.CorrectBSS	move.l	a4,a0
+		addq.w	#4,a4
+.Copy		move.l	-(a0),4(a0)
+		cmp.l	a1,a0
+		bne.s	.Copy
+		move.l	(a2)+,d0
+		and.l	#$3fffffff,d0
+		move.l	d0,(a1)+
+
+.HunkEnd	addq.w	#4,a1
+
+.CorrectNext	subq.l	#1,d2
+		bne.s	.CorrectHunks
+
+		sub.l	xfdbi_TargetBuffer(a5),a4
+		move.l	a4,xfdbi_TargetBufSaveLen(a5)
+
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;-------------------------------------------------
+
+DS_TurboSq61	movem.l	d2-d7/a2-a6,-(a7)
+		sub.w	#12,a7
+
+		move.l	a0,a5
+
+		move.l	xfdsi_SegList(a5),a0
+		add.l	a0,a0
+		add.l	a0,a0
+		move.l	a0,Turbo_First(a7)
+
+		lea	$208-$24(a0),a3
+		move.l	(a0),a0
+		add.l	a0,a0
+		add.l	a0,a0
+		move.l	a0,a6
+		move.l	(a0)+,a1
+		add.l	a1,a1
+		add.l	a1,a1
+		addq.w	#4,a1
+		move.l	a1,Turbo_Hunks(a7)
+
+		move.l	8(a3),d0
+		lsl.l	#2,d0
+		add.l	d0,a1
+		move.l	a1,Turbo_Buffer(a7)
+		add.l	4(a3),a0
+		move.l	a1,a2
+		add.l	(a3),a1
+		bsr	D_TurboSq61
+		move.l	8(a3),d7
+		lea	$c(a3),a3
+
+DS_TurboSq	move.l	a6,a1
+		move.l	-(a1),d0
+		move.l	4.w,a6
+		jsr	_LVOFreeMem(a6)
+
+		move.l	d7,d6
+		lea	xfdsi_SegList(a5),a2
+		clr.l	(a2)
+		move.l	Turbo_Hunks(a7),a4
+		move.w	#XFDERR_NOMEMORY,xfdsi_Error(a5)
+		move.w	xfdsi_RelMode(a5),d5
+
+.AllocHunks	move.l	(a3)+,d0
+		move.l	d0,d1
+		lsl.l	#2,d0
+		move.l	d0,d2
+		cmp.w	#XFDREL_DEFAULT,d5
+		beq.s	.AllocDefault
+		move.l	#$10003,d1
+		cmp.w	#XFDREL_FORCECHIP,d5
+		beq.s	.AllocChipFast
+		move.l	#$10005,d1
+		cmp.w	#XFDREL_FORCEFAST,d5
+		beq.s	.AllocChipFast
+		move.w	#XFDERR_BADRELMODE,xfdsi_Error(a5)
+		bra.b	.ErrorFree
+.AllocDefault	move.w	#1,d1
+		swap	d1
+		lsr.w	#8,d1
+		lsr.w	#5,d1
+.AllocChipFast	jsr	_LVOAllocMem(a6)
+		move.l	d0,(a4)+
+		beq.b	.ErrorFree
+		move.l	d0,d1
+		lsr.l	#2,d1
+		addq.l	#1,d1
+		move.l	d1,(a2)
+		move.l	d0,a2
+		move.l	d2,(a2)+
+		subq.l	#1,d6
+		bne.s	.AllocHunks
+		clr.l	(a2)
+
+		move.l	Turbo_Buffer(a7),a4
+		move.l	Turbo_Hunks(a7),a3
+.NextHunk	move.l	(a3)+,a0
+		addq.w	#8,a0
+		move.l	(a4)+,d0
+		cmp.w	#$3eb,d0
+		beq.s	.NoCopy
+		move.l	(a4)+,d0
+		beq.s	.NoCopy
+		move.l	a0,a1
+.CopyCode	move.l	(a4)+,(a1)+
+		subq.l	#1,d0
+		bne.s	.CopyCode
+.NoCopy		move.l	Turbo_Hunks(a7),a1
+.NextReloc	move.l	(a4)+,d0
+		cmp.w	#$3ec,d0
+		bne.s	.NoReloc
+.GetRelocs	move.l	(a4)+,d2
+		beq.s	.NextReloc
+		move.l	(a4)+,d1
+		move.l	(a1,d1.l),d0
+		addq.l	#8,d0
+.DoReloc	move.l	(a4)+,d1
+		add.l	d0,(a0,d1.l)
+		subq.l	#1,d2
+		bne.s	.DoReloc
+		bra.s	.GetRelocs
+.NoReloc	subq.l	#1,d7
+		bne.s	.NextHunk
+
+		moveq	#1,d0
+		bra.s	.ExitFree
+
+.ErrorFree	lea	xfdsi_SegList(a5),a2
+.FreeSeg	move.l	(a2),d0
+		beq.s	.ExitFree
+		lsl.l	#2,d0
+		move.l	d0,a2
+		move.l	a2,a1
+		move.l	-(a1),d0
+		jsr	_LVOFreeMem(a6)
+		bra.s	.FreeSeg
+
+.ExitFree	move.l	d0,d2
+		move.l	Turbo_Hunks(a7),a1
+		subq.w	#8,a1
+		move.l	(a1),d0
+		jsr	_LVOFreeMem(a6)
+		move.l	Turbo_First(a7),a1
+		move.l	-(a1),d0
+		jsr	_LVOFreeMem(a6)
+		move.l	d2,d0
+
+.Exit		add.w	#12,a7
+		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;=================================================
+
+D_TurboSq61	moveq	#-1,d5
+		moveq	#$3f,d6
+		moveq	#0,d7
+.Decr1		moveq	#0,d3
+		lsr.l	#1,d7
+		bne.s	.Decr2
+		bsr.s	.Decr16
+.Decr2		bcc.s	.Decr11
+		lsr.l	#1,d7
+		bne.s	.Decr3
+		bsr.s	.Decr16
+.Decr3		bcs.s	.Decr4
+		moveq	#0,d2
+		bra.s	.Decr10
+
+.Decr4		lsr.l	#1,d7
+		bne.s	.Decr5
+		bsr.s	.Decr16
+.Decr5		bcs.s	.Decr6
+		moveq	#1,d2
+		moveq	#0,d1
+		bra.s	.Decr9
+
+.Decr6		lsr.l	#1,d7
+		bne.s	.Decr7
+		bsr.s	.Decr16
+.Decr7		bcc.s	.Decr8
+		moveq	#7,d2
+		moveq	#5,d1
+		bra.s	.Decr9
+
+.Decr8		moveq	#1,d1
+		moveq	#3,d2
+.Decr9		bsr.s	.Decr17
+		move.w	d0,d3
+		add.w	d0,d2
+.Decr10		moveq	#7,d1
+		bsr.s	.Decr17
+		move.b	d0,-(a1)
+		cmp.l	a2,a1
+		dbeq	d2,.Decr10
+		cmp.w	d5,d2
+		bne.s	.Exit
+
+.Decr11		cmp.w	d6,d3
+		beq.s	.Decr1
+		lsr.l	#1,d7
+		bne.s	.Decr12
+		bsr.s	.Decr16
+.Decr12		bcs.s	.Decr20
+		moveq	#11,d1
+		bsr.s	.Decr17
+		move.w	d0,d3
+		moveq	#2,d1
+.Decr13		bsr.s	.Decr17
+		addq.w	#2,d0
+.Decr14		move.b	(a1,d3.w),-(a1)
+		cmp.l	a2,a1
+		dbeq	d0,.Decr14
+		cmp.w	d5,d0
+		beq.s	.Decr1
+.Exit		rts
+
+.Decr16		move.l	-(a0),d7
+		move.b	#$10,ccr
+		roxr.l	#1,d7
+		rts
+
+.Decr17		moveq	#0,d0
+.Decr18		lsr.l	#1,d7
+		bne.s	.Decr19
+		move.l	-(a0),d7
+		move.b	#$10,ccr
+		roxr.l	#1,d7
+.Decr19		roxl.w	#1,d0
+		dbra	d1,.Decr18
+		rts
+
+.Decr20		lsr.l	#1,d7
+		bne.s	.Decr21
+		bsr.s	.Decr16
+.Decr21		bcs.s	.Decr22
+		moveq	#5,d1
+		bsr.s	.Decr17
+		move.w	d0,d3
+		moveq	#1,d1
+		bra.s	.Decr13
+
+.Decr22		lsr.l	#1,d7
+		bne.s	.Decr23
+		bsr.s	.Decr16
+.Decr23		bcs.s	.Decr25
+		moveq	#9,d1
+		moveq	#$40,d2
+.Decr24		bsr.s	.Decr17
+		add.w	d2,d0
+		move.b	(a1,d0.w),-(a1)
+		cmp.l	a2,a1
+		beq.s	.Exit
+		move.b	(a1,d0.w),-(a1)
+		cmp.l	a2,a1
+		bne	.Decr1
+		rts
+
+.Decr25		lsr.l	#1,d7
+		bne.s	.Decr26
+		bsr.s	.Decr16
+.Decr26		bcs.s	.Decr27
+		moveq	#5,d1
+		moveq	#0,d2
+		bra.s	.Decr24
+
+.Decr27		lsr.l	#1,d7
+		bne.s	.Decr28
+		bsr.s	.Decr16
+.Decr28		bcs.s	.Decr30
+		moveq	#7,d1
+		bsr.s	.Decr17
+		moveq	#4,d1
+.Decr29		move.w	d0,d3
+		bsr.s	.Decr17
+		add.w	#10,d0
+		bra	.Decr14
+
+.Decr30		moveq	#11,d1
+		bsr.s	.Decr17
+		moveq	#6,d1
+		bra.s	.Decr29
+
+**************************************************
+
+S_TurboSq80
+		IFND	XFD_LASTSLAVE
+		dc.l	S_TurboSq_END
+		ELSE
+		dc.l	0
+		ENDIF
+		dc.w	2
+		dc.w	39
+		dc.l	N_TurboSq80
+		dc.w	XFDPFF_RELOC!XFDPFF_RELMODE
+		dc.w	0
+		dc.l	RB_TurboSq80
+		dc.l	DB_TurboSq80
+		dc.l	RS_TurboSq80
+		dc.l	DS_TurboSq80
+		dc.w	XFDID_TurboSqueezer80
+		dc.w	0
+		dc.l	$1ec+4+16
+
+N_TurboSq80	dc.b	'TurboSqueezer 8.0',0
+		even
+
+;-------------------------------------------------
+
+RB_TurboSq80	MOVEQ	#0,D0
+		cmp.l	#$207afff0,$32(a0)
+		bne.s	.Exit
+		cmp.l	#$d1c8d1c8,$36(a0)
+		bne.s	.Exit
+		cmp.l	#$22582848,$3a(a0)
+		bne.s	.Exit
+		cmp.l	#$28092c09,$50(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+.Exit		rts
+
+;-------------------------------------------------
+
+RS_TurboSq80	add.l	a0,a0
+		add.l	a0,a0
+		MOVEQ	#0,D0
+		CMP.L	#($6B*4)+8,-4(A0)
+		BLT.B	.Exit
+		LEA	-$24(A0),A0
+		BRA.B	RB_TurboSq80
+
+.Exit		RTS
+
+;-------------------------------------------------
+
+DB_TurboSq80	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+
+		move.l	xfdbi_SourceBuffer(a5),a0
+		lea	$218(a0),a3
+		move.l	#$3ea,d0
+
+		cmp.l	(a3),d0
+		beq.s	.Ok
+		sub.w	#$10,a3
+		cmp.l	(a3),d0
+		beq.s	.Ok
+		sub.w	#$30,a3
+		cmp.l	(a3),d0
+		beq.s	.Ok
+		move.w	#XFDERR_BADHUNK,xfdbi_Error(a5)
+		moveq	#0,d0
+		bra	.Exit
+
+.Ok		addq.w	#8,a3
+		
+		moveq	#20,d0
+		add.l	4(a3),d0
+		move.l	8(a3),d1	;wegen bss
+		lsl.l	#2,d1
+		add.l	d1,d0
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	_LVOAllocMem(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq	.Exit
+
+		move.l	d0,a1
+		move.l	#$3f3,(a1)+
+		clr.l	(a1)+
+		move.l	8(a3),d0
+		move.l	d0,(a1)+
+		clr.l	(a1)+
+		subq.l	#1,d0
+		move.l	d0,(a1)+
+
+		move.l	a3,a0
+		move.l	a1,a2
+		add.l	4(a0),a1
+		move.l	a1,a4		;decr end
+		add.l	(a0)+,a0
+		addq.w	#8,a0
+
+		bsr	D_TurboSq80
+
+		move.l	8(a3),d2	;amount hunks
+		move.l	a2,a1
+
+		move.l	d2,d0
+.CorrectHeader	move.l	(a1),d1
+		subq.l	#2,d1
+		move.l	d1,(a1)+
+		subq.l	#1,d0
+		bne.s	.CorrectHeader		
+
+.CorrectHunks	move.l	(a1)+,d0
+		cmp.w	#$3eb,d0
+		beq.s	.CorrectBSS
+		move.l	(a1)+,d0
+		lsl.l	#2,d0
+		add.l	d0,a1
+		addq.w	#4,a2
+
+		move.l	(a1)+,d0
+		cmp.w	#$3ec,d0
+		bne.s	.CorrectNext
+
+.CorrectReloc	move.l	(a1)+,d0
+		beq.s	.HunkEnd
+		move.l	(a1),d1
+		lsr.l	#2,d1
+		move.l	d1,(a1)+
+		lsl.l	#2,d0
+		add.l	d0,a1
+		bra.s	.CorrectReloc		
+
+.CorrectBSS	move.l	a4,a0
+		addq.w	#4,a4
+.Copy		move.l	-(a0),4(a0)
+		cmp.l	a1,a0
+		bne.s	.Copy
+		move.l	(a2)+,d0
+		and.l	#$3fffffff,d0
+		move.l	d0,(a1)+
+
+.HunkEnd	addq.w	#4,a1
+
+.CorrectNext	subq.l	#1,d2
+		bne.s	.CorrectHunks
+
+		sub.l	xfdbi_TargetBuffer(a5),a4
+		move.l	a4,xfdbi_TargetBufSaveLen(a5)
+
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;-------------------------------------------------
+
+DS_TurboSq80	movem.l	d2-d7/a2-a6,-(a7)
+		sub.w	#12,a7
+		move.l	a0,a5
+
+		move.l	xfdsi_SegList(a5),a0
+		add.l	a0,a0
+		add.l	a0,a0
+		move.l	a0,Turbo_First(a7)
+
+		move.l	(a0),a0
+		add.l	a0,a0
+		add.l	a0,a0
+		move.l	a0,a6
+		move.l	(a0)+,a1
+		add.l	a1,a1
+		add.l	a1,a1
+		addq.w	#4,a1
+		move.l	a1,Turbo_Hunks(a7)
+
+		move.l	8(a0),d7
+		move.l	d7,d0
+		lsl.l	#2,d0
+		add.l	d0,a1
+		move.l	a1,a3
+		move.l	a1,Turbo_Buffer(a7)
+		add.l	d0,Turbo_Buffer(a7)
+		move.l	a1,a2
+		add.l	4(a0),a1
+		add.l	(a0)+,a0
+		addq.w	#8,a0
+		move.l	d7,-(a7)
+		bsr.b	D_TurboSq80
+		move.l	(a7)+,d7
+
+		bra	DS_TurboSq
+
+;=================================================
+
+D_TurboSq80	moveq	#-1,d5
+		moveq	#$3f,d6
+		moveq	#0,d7
+.Decr1		moveq	#0,d3
+		add.l	d7,d7
+		bne.s	.Decr2
+		bsr.s	.Decr16
+.Decr2		bcc.s	.Decr11
+		add.l	d7,d7
+		bne.s	.Decr3
+		bsr.s	.Decr16
+.Decr3		bcs.s	.Decr4
+		moveq	#0,d2
+		bra.s	.Decr10
+
+.Decr4		add.l	d7,d7
+		bne.s	.Decr5
+		bsr.s	.Decr16
+.Decr5		bcs.s	.Decr6
+		moveq	#1,d2
+		moveq	#0,d1
+		bra.s	.Decr9
+
+.Decr6		add.l	d7,d7
+		bne.s	.Decr7
+		bsr.s	.Decr16
+.Decr7		bcc.s	.Decr8
+		moveq	#7,d2
+		moveq	#5,d1
+		bra.s	.Decr9
+
+.Decr8		moveq	#1,d1
+		moveq	#3,d2
+.Decr9		bsr.s	.Decr17
+		move.w	d0,d3
+		add.w	d0,d2
+.Decr10		moveq	#7,d1
+		bsr.s	.Decr17
+		move.b	d0,-(a1)
+		cmp.l	a2,a1
+		dbeq	d2,.Decr10
+		cmp.w	d5,d2
+		bne.s	.Exit
+
+.Decr11		cmp.w	d6,d3
+		beq.s	.Decr1
+		add.l	d7,d7
+		bne.s	.Decr12
+		bsr.s	.Decr16
+.Decr12		bcs.s	.Decr20
+		moveq	#11,d1
+		bsr.s	.Decr17
+		move.w	d0,d3
+		moveq	#2,d1
+.Decr13		bsr.s	.Decr17
+		addq.w	#2,d0
+.Decr14		move.b	(a1,d3.w),-(a1)
+		cmp.l	a2,a1
+		dbeq	d0,.Decr14
+		cmp.w	d5,d0
+		beq.s	.Decr1
+.Exit		rts
+
+.Decr16		move.l	-(a0),d7
+		move.b	#$10,ccr
+		addx.l	d7,d7
+		rts
+
+.Decr17		moveq	#0,d0
+.Decr18		add.l	d7,d7
+		bne.s	.Decr19
+		move.l	-(a0),d7
+		move.b	#$10,ccr
+		addx.l	d7,d7
+.Decr19		roxl.w	#1,d0
+		dbra	d1,.Decr18
+		rts
+
+.Decr20		add.l	d7,d7
+		bne.s	.Decr21
+		bsr.s	.Decr16
+.Decr21		bcs.s	.Decr22
+		moveq	#5,d1
+		bsr.s	.Decr17
+		move.w	d0,d3
+		moveq	#1,d1
+		bra.s	.Decr13
+
+.Decr22		add.l	d7,d7
+		bne.s	.Decr23
+		bsr.s	.Decr16
+.Decr23		bcs.s	.Decr25
+		moveq	#9,d1
+		moveq	#$40,d2
+.Decr24		bsr.s	.Decr17
+		add.w	d2,d0
+		move.b	(a1,d0.w),-(a1)
+		cmp.l	a2,a1
+		beq.s	.Exit
+		move.b	(a1,d0.w),-(a1)
+		cmp.l	a2,a1
+		bne	.Decr1
+		rts
+
+.Decr25		add.l	d7,d7
+		bne.s	.Decr26
+		bsr.s	.Decr16
+.Decr26		bcs.s	.Decr27
+		moveq	#5,d1
+		moveq	#0,d2
+		bra.s	.Decr24
+
+.Decr27		add.l	d7,d7
+		bne.s	.Decr28
+		bsr.s	.Decr16
+.Decr28		bcs.s	.Decr30
+		moveq	#7,d1
+		bsr.s	.Decr17
+		moveq	#4,d1
+.Decr29		move.w	d0,d3
+		bsr.s	.Decr17
+		add.w	#10,d0
+		bra	.Decr14
+
+.Decr30		moveq	#11,d1
+		bsr.s	.Decr17
+		moveq	#6,d1
+		bra.s	.Decr29
+
+S_TurboSq_END
+

@@ -1,0 +1,251 @@
+*****************************************************************************
+*   $Id: TryIt.a,v 1.2 2005/06/23 14:39:16 stoecker Exp $
+*   TryIt Cruncher decrunching slave
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+
+S_TryIt101
+		IFND	XFD_LASTSLAVE
+		dc.l	S_TryIt_END
+		ELSE
+		dc.l	0
+		ENDIF
+		dc.w	2
+		dc.w	39
+		dc.l	N_TryIt101
+		dc.w	XFDPFF_ADDR
+		dc.w	0
+		dc.l	RB_TryIt101
+		dc.l	DB_TryIt101
+		dc.l	0
+		dc.l	0
+		dc.w	XFDID_TryItCruncher101
+		dc.w	0
+		dc.l	$5ba+4+4
+
+N_TryIt101	dc.b	'TryIt Cruncher 1.01',0
+		even
+
+;-------------------------------------------------
+
+RB_TryIt101	cmp.l	#$b02d0021,$ec(a0)
+		bne.s	.Exit
+		cmp.l	#$b02d0023,$f6(a0)
+		bne.s	.Exit
+		cmp.l	#$b02d0020,$106(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_TryIt101	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a3
+
+		move.l	$196(a3),d0
+		move.l	d0,xfdbi_TargetBufSaveLen(a5)
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	$166(a3),xfdbi_JmpAddress(a5)
+		move.l	$1ae(a3),xfdbi_DecrAddress(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit
+
+		move.l	#$420,d0
+		moveq	#1,d1
+		jsr	-198(a6)
+		tst.l	d0
+		bne.s	.Ok
+		move.l	xfdbi_TargetBuffer(a5),a1
+		move.l	xfdbi_TargetBufLen(a5),d0
+		jsr	-210(a6)
+		moveq	#0,d0
+		bra.s	.Exit
+
+.Ok		move.l	d0,a6
+		move.l	d0,a1
+		lea	$196(a3),a0
+		move.w	#($420/4)-1,d0
+.Copy		move.l	(a0)+,(a1)+
+		dbf	d0,.Copy
+
+		move.l	xfdbi_TargetBuffer(a5),24(a6)
+		lea	$5ba(a3),a1
+		bsr.s	D_TryIt101
+
+		move.l	a6,a1
+		move.l	#$420,d0
+		move.l	4.w,a6
+		jsr	-210(a6)
+
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;=================================================
+
+D_TryIt101	move.l	24(a6),a2	
+		move.l	20(a6),d0
+		move.l	12(a6),d3
+		add.l	d3,a2		
+		lea	36(a6),a0
+		add.l	16(a6),a1	
+		move.l	a0,a4
+		moveq	#31,d7
+		move.l	-(a1),d5
+		move.l	-(a1),d4
+		lsr.l	#1,d0
+		add.l	d0,a0
+.Decr1		move.l	a0,a3
+.Decr2		moveq	#1,d0
+		moveq	#0,d6
+.Decr3		lsr.l	#1,d5
+		roxl.l	#1,d6
+		subq.w	#1,d7
+		bpl.s	.Decr4
+		moveq	#31,d7
+		move.l	d4,d5
+		move.l	-(a1),d4
+.Decr4		subq.w	#1,d0
+		bne.s	.Decr3
+
+		eor.b	#1,d6
+		add.l	d6,d6
+		add.l	d6,a3
+		moveq	#0,d6
+		move.w	(a3),d6
+		cmp.w	#$400,d6
+		bcc.s	.Decr7
+		add.l	a4,d6
+		move.l	d6,a3
+		bra.s	.Decr2
+
+.Decr7		move.b	d6,-(a2)
+		subq.l	#1,d3
+		bne.s	.Decr1
+
+		move.l	24(a6),a1
+		move.l	4(a6),d0
+		move.l	a1,a0
+		add.l	d0,a0
+		move.l	a1,a2
+		add.l	12(a6),a2
+.Decr8		moveq	#0,d0
+		move.b	-(a2),d0
+		cmp.b	34(a6),d0
+		bne.s	.Decr9
+		move.b	-(a2),d1
+		beq.s	.Decr17
+		move.b	-(a2),d0
+		move.b	d0,-(a0)
+		move.b	d1,-(a0)
+		move.b	d0,-(a0)
+		move.b	d1,-(a0)
+		bra.s	.Decr18
+
+.Decr9		cmp.b	33(a6),d0
+		bne.s	.Decr10
+		moveq	#2,d4
+		bra.s	.Decr11
+
+.Decr10		cmp.b	35(a6),d0
+		bne.s	.Decr12
+		moveq	#3,d4
+.Decr11		moveq	#0,d1
+		move.b	-(a2),d1
+		beq.s	.Decr17
+		bra.s	.Decr15
+
+.Decr12		cmp.b	32(a6),d0
+		bne.s	.Decr13
+		moveq	#3,d4
+		moveq	#0,d1
+		move.b	-(a2),d1
+		beq.s	.Decr17
+		bra.s	.Decr14
+
+.Decr13		cmp.b	11(a6),d0
+		bne.s	.Decr17
+		moveq	#0,d4
+		move.b	-(a2),d4
+		beq.s	.Decr17
+		moveq	#0,d1
+		move.b	-(a2),d1
+.Decr14		rol.w	#8,d1
+		move.b	-(a2),d1
+		rol.w	#8,d1
+.Decr15		move.l	a0,a3
+		add.l	d1,a3
+.Decr16		move.b	-(a3),-(a0)
+		dbra	d4,.Decr16
+		bra.s	.Decr18
+
+.Decr17		move.b	d0,-(a0)
+.Decr18		cmp.l	a2,a1
+		blt.s	.Decr8
+
+		move.l	24(a6),a0	;byte decruncher
+		move.l	a0,a1
+		add.l	(a6),a0
+		add.l	4(a6),a1
+		move.b	-(a1),d1
+.Decr19		cmp.b	8(a6),d1
+		beq.s	.Decr21
+		cmp.b	9(a6),d1
+		beq.s	.Decr21
+		move.b	d1,d2
+		move.b	-(a1),d1
+		move.b	d2,-(a0)
+.Decr20		cmp.l	24(a6),a0
+		bgt.s	.Decr19
+		rts
+
+.Decr21		move.b	d1,d2
+		moveq	#0,d4
+		move.b	-(a1),d4
+		cmp.b	#3,d4
+		bcc.s	.Decr22
+		move.b	d2,d3
+		move.b	-(a1),d1
+		bra.s	.Decr24
+
+.Decr22		cmp.b	9(a6),d2
+		bne.s	.Decr23
+		move.b	-(a1),d1
+		move.b	10(a6),d3
+		bra.s	.Decr24
+
+.Decr23		move.b	-(a1),d3
+		move.b	-(a1),d1
+.Decr24		move.b	d3,-(a0)
+		dbra	d4,.Decr24
+		bra.s	.Decr20
+
+S_TryIt_END
+

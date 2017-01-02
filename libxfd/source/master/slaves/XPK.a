@@ -1,0 +1,222 @@
+*****************************************************************************
+*   $Id: XPK.a,v 1.2 2005/06/23 14:39:16 stoecker Exp $
+*   XPK decrunching slave
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+
+		INCLUDE "xpk/xpk.i"
+
+**************************************************
+
+S_XPKpacked	dc.l	S_XPKcrypted
+		dc.w	2
+		dc.w	39
+		dc.l	N_XPKpacked
+		dc.w	XFDPFF_DATA|XFDPFF_RECOGLEN|XFDPFF_USERTARGET
+		dc.w	0
+		dc.l	RB_XPKpacked
+		dc.l	DB_XPK
+		dc.l	SD_XPKpacked
+		dc.l	VD_XPK
+		dc.w	XFDID_XPKPacked
+		dc.w	0
+		dc.l	$24+16
+
+S_XPKcrypted
+		IFND	XFD_LASTSLAVE
+		dc.l	S_XPK_END
+		ELSE
+		dc.l	0
+		ENDIF
+		dc.w	2
+		dc.w	39
+		dc.l	N_XPKcrypted
+		dc.w	XFDPFF_DATA!XFDPFF_PASSWORD|XFDPFF_RECOGLEN|XFDPFF_USERTARGET
+		dc.w	-1
+		dc.l	RB_XPKcrypted
+		dc.l	DB_XPK
+		dc.l	SD_XPKcrypted
+		dc.l	VD_XPK
+		dc.w	XFDID_XPKCrypted
+		dc.w	0
+		dc.l	$24+16
+
+N_XPKpacked	dc.b	'XPK Packed',0
+N_XPKcrypted	dc.b	'XPK Crypted',0
+XPKlib		dc.b	"xpkmaster.library",0
+		even
+
+
+;-------------------------------------------------
+
+RB_XPKpacked	BSR.B	SD_XPKpacked
+		TST.L	D0
+		BEQ.B	.Exit
+		MOVE.L	$C(A0),D1
+		MOVE.L	D1,xfdrr_FinalTargetLen(A1)
+		ADD.L	#XPK_MARGIN,D1
+		MOVE.L	D1,xfdrr_MinTargetLen(A1)
+		MOVEQ	#8,D1
+		ADD.L	4(A0),D1
+		MOVE.L	D1,xfdrr_MinSourceLen(A1)
+.Exit		RTS
+
+SD_XPKpacked	moveq	#0,d0
+		cmp.l	#'XPKF',(a0)	;some more verification
+		bne.s	.Exit
+		btst	#1,$20(a0)	;password?
+		bne.s	.Exit
+		moveq	#1,d0
+.Exit		rts
+
+;-------------------------------------------------
+
+RB_XPKcrypted	BSR.B	SD_XPKcrypted
+		TST.L	D0
+		BEQ.B	.Exit
+		MOVE.L	$C(A0),D1
+		MOVE.L	D1,xfdrr_FinalTargetLen(A1)
+		ADD.L	#XPK_MARGIN,D1
+		MOVE.L	D1,xfdrr_MinTargetLen(A1)
+		MOVEQ	#8,D1
+		ADD.L	4(A0),D1
+		MOVE.L	D1,xfdrr_MinSourceLen(A1)
+.Exit		RTS
+
+SD_XPKcrypted	moveq	#0,d0
+		cmp.l	#'XPKF',(a0)	;some more verification
+		bne.s	.Exit
+		btst	#1,$20(a0)	;password?
+		beq.s	.Exit
+		moveq	#1,d0
+.Exit		rts
+
+;-------------------------------------------------
+
+VD_XPK		lea	8(a0),a1
+		moveq	#4-1,d1
+.Cmp		cmp.b	#$30,(a1)
+		blt.s	.Exit
+		cmp.b	#$5a,(a1)+
+		bgt.s	.Exit
+		dbf	d1,.Cmp
+		moveq	#8,d1
+		add.l	4(a0),d1	;crlen
+		cmp.l	d0,d1		;crlen > buflen ??
+		bgt.s	.Exit
+		move.l	d1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_XPK		movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a2
+
+		moveq	#0,d0
+		lea	XPKlib(pc),a1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	_LVOOpenLibrary(a6)
+		move.w	#XFDERR_MISSINGRESOURCE,xfdbi_Error(a5)
+		tst.l	d0
+		BEQ.B	.Exit
+		move.l	d0,a4
+
+		clr.l	-(a7)
+		move.l	xfdbi_Special(a5),-(a7)
+		move.l	#XPK_Password,-(a7)
+		BTST	#1,$20(A2)	;password?
+		BNE.B	.passwd
+		MOVE.L	#TAG_IGNORE,(A7)	* no pwd
+.passwd		move.l	xfdbi_TargetBufLen(a5),-(a7)
+		move.l	#XPK_OutBufLen,-(a7)
+		MOVE.L	xfdbi_UserTargetBuf(A5),-(A7)
+		move.l	#XPK_OutBuf,-(a7)
+		move.l	xfdbi_SourceBufLen(a5),-(a7)
+		move.l	#XPK_InLen,-(a7)
+		move.l	a2,-(a7)
+		move.l	#XPK_InBuf,-(a7)
+		move.l	a7,a0
+		exg	a4,a6
+		JSR	_LVOXpkUnpack(A6)
+		exg	a4,a6
+		LEA	11*4(A7),A7
+
+		tst.l	d0
+		BNE.B	.Error
+		MOVEQ	#1,D0
+
+.ExitLib	move.l	d0,-(a7)
+		move.l	a4,a1
+		jsr	_LVOCloseLibrary(a6)
+		move.l	(a7)+,d0
+
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+** some stuff to translate XPK errorcodes to XFD
+
+.Error		cmp.w	#XPKERR_REQTIMEOUT,d0
+		blo.b	.Skip
+		not.w	d0
+		add.w	d0,d0
+		move.w	.Table(pc,d0.w),xfdbi_Error(a5)
+.Skip		MOVEQ	#0,D0
+		bra.s	.ExitLib
+
+.Table		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_NOFUNC
+		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_NOFILES
+		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_IOERRIN
+		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_IOERROUT
+		dc.w	XFDERR_CORRUPTEDDATA	;XPKERR_CHECKSUM
+		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_VERSION
+		dc.w	XFDERR_NOMEMORY		;XPKERR_NOMEM
+		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_LIBINUSE
+		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_WRONGFORM
+		dc.w	XFDERR_NOMEMORY		;XPKERR_SMALLBUF
+		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_LARGEBUF
+		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_WRONGMODE
+		dc.w	XFDERR_WRONGPASSWORD	;XPKERR_NEEDPASSWD
+		dc.w	XFDERR_CORRUPTEDDATA	;XPKERR_CORRUPTPKD
+		dc.w	XFDERR_MISSINGRESOURCE	;XPKERR_MISSINGLIB
+		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_BADPARAMS
+		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_EXPANSION
+		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_NOMETHOD
+		dc.w	XFDERR_WRONGPASSWORD	;XPKERR_ABORTED
+		dc.w	XFDERR_BUFFERTRUNCATED	;XPKERR_TRUNCATED
+		dc.w	XFDERR_BETTERCPU	;XPKERR_WRONGCPU
+		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_PACKED
+		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_NOTPACKED
+		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_FILEEXISTS
+		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_OLDMASTLIB
+		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_OLDSUBLIB
+		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_NOCRYPT
+		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_NOINFO
+		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_LOSSY
+		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_NOHARDWARE
+		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_BADHARDWARE
+		dc.w	XFDERR_WRONGPASSWORD	;XPKERR_WRONGPW
+		dc.w	XFDERR_NOTSUPPORTED	;XPKERR_UNKNOWN
+		dc.w	XFDERR_WRONGPASSWORD	;XPKERR_REQTIMEOUT
+
+S_XPK_END

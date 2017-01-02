@@ -1,0 +1,435 @@
+*****************************************************************************
+*   $Id: MasterCruncher.a,v 1.2 2005/06/23 14:39:16 stoecker Exp $
+*   Master Cruncher decrunching slave
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+
+S_Master30Addr	dc.l	S_Master30Data
+		dc.w	2
+		dc.w	39
+		dc.l	N_Master30Addr
+		dc.w	XFDPFF_ADDR
+		dc.w	0
+		dc.l	RB_Master30Addr
+		dc.l	DB_Master30Addr
+		dc.l	0
+		dc.l	0
+		dc.w	XFDID_MasterCruncher30Addr
+		dc.w	0
+		dc.l	$1d4+12+4
+
+N_Master30Addr	dc.b	'Master Cruncher 3.0 Addr',0
+		even
+
+;-------------------------------------------------
+
+RB_Master30Addr	cmp.l	#$3ea,$1cc(a0)
+		bne.s	.Exit
+
+		cmp.l	#$4bfa0180,$28(a0)
+		bne.s	.Exit
+		cmp.l	#$2b490014,$38(a0)
+		bne.s	.Exit
+		cmp.l	#$610c4eb9,$44(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_Master30Addr	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+
+		move.w	#$1d4,d2
+                move.l	xfdbi_SourceBuffer(a5),a0
+		move.l	$3e(a0),xfdbi_DecrAddress(a5)
+		move.l	$48(a0),xfdbi_JmpAddress(a5)		
+
+DB_Master30	move.l	xfdbi_SourceBuffer(a5),a4
+		lea	(a4,d2.w),a2
+		move.l	(a2),d0
+		move.l	d0,xfdbi_TargetBufSaveLen(a5)
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit
+
+		move.l	d0,a1
+		move.l	a2,a0
+		bsr	D_Master30
+		moveq	#1,d0
+
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+**************************************************
+
+S_Master30Data	dc.l	S_Master30Reloc
+		dc.w	2
+		dc.w	39
+		dc.l	N_Master30Data
+		dc.w	XFDPFF_DATA|XFDPFF_USERTARGET|XFDPFF_RECOGLEN
+		dc.w	0
+		dc.l	RB_Master30Data
+		dc.l	DB_Master30Data
+		dc.l	SD_Master30Data
+		dc.l	VD_Master30Data
+		dc.w	XFDID_MasterCruncher30Data
+		dc.w	0
+		dc.l	8+8+4
+
+N_Master30Data	dc.b	'Master Cruncher 3.0 Data',0
+		even
+
+;-------------------------------------------------
+
+RB_Master30Data	BSR.B	SD_Master30Data
+		TST.L	D0
+		BEQ.B	.err
+		ADD.L	8(A0),D0	* store minimum size *
+		MOVE.L	D0,xfdrr_MinSourceLen(A1)
+		CMP.L	#$C800000,D0	* shorter than 200MB
+		BGT.B	.err
+		MOVE.L	4(A0),D1
+		CMP.L	D1,D0
+		BGT.B	.err
+		MOVE.L	D1,xfdrr_MinTargetLen(A1)
+		MOVE.L	D1,xfdrr_FinalTargetLen(A1)
+		MOVEQ	#1,D0
+		RTS
+.err		MOVEQ	#0,D0
+		RTS
+
+SD_Master30Data	MOVEQ	#0,D0
+		CMP.L	#'KDUB',(A0)
+		BEQ.B	.Ok4
+		CMP.L	#'HAL!',(A0)
+		BEQ.B	.Ok4
+		CMP.L	#'LSD!',(A0)
+		BEQ.B	.Ok4
+		CMP.W	#'PA',(A0)
+		BNE.B	.Exit
+		ADDQ.L	#4,A0
+		CMP.W	#'.2',2(A0)
+		BNE.B	.Exit
+		CMP.L	#'CKV1',-2(A0)
+		BEQ.B	.Ok8
+		CMP.L	#$02000200,-2(A0)
+		BNE.B	.Exit
+.Ok8		MOVEQ	#8,D0
+		RTS
+.Ok4		MOVEQ	#4,D0
+.Exit		RTS
+
+;-------------------------------------------------
+
+VD_Master30Data	MOVE.L	D0,D1		; store buflen
+		BSR.B	SD_Master30Data
+		BEQ.B	.Exit
+		ADD.L	8(A0),D0	; crlen
+		CMP.L	D1,D0		; crlen > buflen ??
+		BGT.B	.Exit
+		MOVE.L	4(A0),D1
+		SUB.L	8(A0),D1
+		BGE.B	.Ok		; D0 contains already length
+.Exit		MOVEQ	#0,D0
+.Ok		RTS
+
+;-------------------------------------------------
+
+DB_Master30Data	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+
+		MOVE.L	xfdbi_SourceBuffer(A5),A0
+		BSR.B	SD_Master30Data	; get buffer start
+		ADDQ.L	#4,A0
+		MOVE.L	xfdbi_UserTargetBuf(A5),A1
+		BSR.W	D_Master30
+		moveq	#1,d0
+
+		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+
+**************************************************
+
+S_Master30Reloc	
+		IFND	XFD_LASTSLAVE
+		dc.l	S_Master_END
+		ELSE
+		dc.l	0
+		ENDIF
+		dc.w	2
+		dc.w	39
+		dc.l	N_Master30Reloc
+		dc.w	XFDPFF_RELOC!XFDPFF_RELMODE
+		dc.w	0
+		dc.l	RB_Master30Reloc
+		dc.l	DB_Master30Reloc
+		dc.l	RS_Master30Reloc
+		dc.l	DS_Master30Reloc
+		dc.w	XFDID_MasterCruncher30
+		dc.w	0
+		dc.l	$390+12+12
+
+N_Master30Reloc	dc.b	'Master Cruncher 3.0',0
+		even
+
+;-------------------------------------------------
+
+RB_Master30Reloc
+		cmp.l	#$3ea,$388(a0)
+		bne.s	.Exit
+
+		cmp.l	#$4bfa0338,$2c(a0)
+		bne.s	.Exit
+		cmp.l	#$2b490014,$3e(a0)
+		bne.s	.Exit
+		cmp.l	#$2b4a0018,$48(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_Master30Reloc
+		movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+
+		move.w	#$390,d2
+		bra	DB_Master30
+
+;-------------------------------------------------
+
+RS_Master30Reloc
+		add.l	a0,a0
+		add.l	a0,a0
+		cmp.l	#($d8*4)+8,-4(a0)
+		bne.s	.Exit
+
+		cmp.l	#$4bfa0338,$2c-$24(a0)
+		bne.s	.Exit
+		cmp.l	#$2b490014,$3e-$24(a0)
+		bne.s	.Exit
+		cmp.l	#$2b4a0018,$48-$24(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DS_Master30Reloc
+		movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdsi_SegList(a5),a4
+		clr.l	xfdsi_SegList(a5)
+		add.l	a4,a4
+		add.l	a4,a4
+
+		move.l	(a4),a0
+		add.l	a0,a0
+		add.l	a0,a0
+		move.l	(a0)+,a1
+		move.l	(a0),d2		;dest len
+		add.l	a1,a1
+		add.l	a1,a1
+		addq.w	#4,a1
+
+		movem.l	d2/a0/a1/a4/a6,-(a7)
+		bsr.s	D_Master30
+		movem.l	(a7)+,d2/a1	;a0
+		subq.w	#4,a1
+		move.l	-(a1),d0
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-210(a6)
+		move.l	4(a7),a1	;a4
+		move.l	-(a1),d0
+		jsr	-210(a6)
+		move.l	(a7)+,a2	;a1
+		addq.w	#4,a7
+		move.l	(a7)+,a6
+
+		move.l	a2,a0
+		move.l	d2,d0
+		lea	xfdsi_SegList(a5),a1
+		move.w	xfdsi_RelMode(a5),d1
+		jsr	_LVOxfdRelocate(a6)
+		moveq	#0,d1
+		move.w	d0,xfdsi_Error(a5)
+		bne.s	.FreeSeg
+		moveq	#1,d1
+
+.FreeSeg	move.l	d1,-(a7)
+		lea	-4(a2),a1
+		move.l	-(a1),d0
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-210(a6)
+		move.l	(a7)+,d0
+
+		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;=================================================
+
+D_Master30	lea	.Tab(pc),a3
+		moveq	#-1,d7
+		move.l	a1,a4
+		move.l	(a0)+,d5
+		add.l	d5,a1
+		add.l	(a0),a0
+		subq.w	#4,a0
+		tst.w	-(a0)
+		bpl.s	.Decr1
+		subq.w	#1,a0
+.Decr1		move.b	-(a0),d0
+.Decr2		lsl.b	#1,d0
+		bne.s	.Decr3
+		move.b	-(a0),d0
+		roxl.b	#1,d0
+.Decr3		bcc.s	.Decr11
+		clr.w	d1
+		lsl.b	#1,d0
+		bne.s	.Decr4
+		move.b	-(a0),d0
+		roxl.b	#1,d0
+.Decr4		bcc.s	.Decr10
+		moveq	#3,d3
+.Decr5		clr.w	d1
+		move.b	(a3,d3.w),d2
+		ext.w	d2
+		moveq	#-1,d4
+		lsl.w	d2,d4
+		not.w	d4
+		subq.w	#1,d2
+.Decr6		lsl.b	#1,d0
+		bne.s	.Decr7
+		move.b	-(a0),d0
+		roxl.b	#1,d0
+.Decr7		roxl.w	#1,d1
+		dbra	d2,.Decr6
+		tst.w	d3
+		beq.s	.Decr8
+		cmp.w	d1,d4
+		dbne	d3,.Decr5
+.Decr8		move.b	4(a3,d3.w),d2
+		ext.w	d2
+		add.w	d2,d1
+.Decr10		move.b	-(a0),-(a1)
+		cmp.l	a4,a1
+		dbeq	d1,.Decr10
+		cmp.w	d7,d1
+		bne	.Decr9
+
+.Decr11		moveq	#3,d2
+.Decr12		lsl.b	#1,d0
+		bne.s	.Decr13
+		move.b	-(a0),d0
+		roxl.b	#1,d0
+.Decr13		bcc.s	.Decr14
+		dbra	d2,.Decr12
+.Decr14		clr.w	d1
+		addq.w	#1,d2
+		move.b	8(a3,d2.w),d3
+		beq.s	.Decr17
+		ext.w	d3
+		subq.w	#1,d3
+.Decr15		lsl.b	#1,d0
+		bne.s	.Decr16
+		move.b	-(a0),d0
+		roxl.b	#1,d0
+.Decr16		roxl.w	#1,d1
+		dbra	d3,.Decr15
+.Decr17		move.b	13(a3,d2.w),d3
+		ext.w	d3
+		add.w	d3,d1
+		cmp.w	#2,d1
+		beq.s	.Decr24
+		moveq	#1,d3
+.Decr19		lsl.b	#1,d0
+		bne.s	.Decr20
+		move.b	-(a0),d0
+		roxl.b	#1,d0
+.Decr20		bcc.s	.Decr21
+		dbra	d3,.Decr19
+.Decr21		addq.w	#1,d3
+		clr.w	d2
+		move.b	18(a3,d3.w),d4
+		ext.w	d4
+.Decr22		lsl.b	#1,d0
+		bne.s	.Decr23
+		move.b	-(a0),d0
+		roxl.b	#1,d0
+.Decr23		roxl.w	#1,d2
+		dbra	d4,.Decr22
+		lsl.w	#1,d3
+		add.w	22(a3,d3.w),d2
+		bra.s	.Decr28
+
+.Decr24		clr.w	d2
+		moveq	#5,d3
+		clr.w	d4
+		lsl.b	#1,d0
+		bne.s	.Decr25
+		move.b	-(a0),d0
+		roxl.b	#1,d0
+.Decr25		bcc.s	.Decr26
+		moveq	#8,d3
+		moveq	#$40,d4
+.Decr26		lsl.b	#1,d0
+		bne.s	.Decr27
+		move.b	-(a0),d0
+		roxl.b	#1,d0
+.Decr27		roxl.w	#1,d2
+		dbra	d3,.Decr26
+		add.w	d4,d2
+.Decr28		lea	(a1,d2.w),a2
+		ext.l	d1
+		add.l	d1,a2
+		subq.w	#1,d1
+.Decr29		move.b	-(a2),-(a1)
+		cmp.l	a4,a1
+		dbeq	d1,.Decr29
+		cmp.w	d7,d1
+		beq	.Decr2
+.Decr9		rts
+
+.Tab		dc.b	10,3,2,2
+		dc.b	14,7,4,1
+		dc.b	10,2,1,0,0
+		dc.b	10,6,4,3,2
+		dc.b	11,4,7,0
+		dc.w	$0120,$0000
+		dc.w	$0020,$0000
+
+S_Master_END
+

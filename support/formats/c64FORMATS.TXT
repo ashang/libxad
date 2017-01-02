@@ -1,0 +1,1826 @@
+
+  There are always questions asked regarding the various formats which are
+commonly seen on either the emulators or the real C64. Most often the question
+entails conversion... "What do I do with xxx files?", "How do I make these work
+on xxx emulator?". This document is an attempt to explain their internal
+structure, what to do with them, and some of their respective strengths and
+weaknesses.
+
+  Some of what is contained in this document has been compiled from various
+sources, and I have given the appropriate attributions at the end of this file.
+Some of the information may not be accurate as it may have been taken from
+other documents, and I have no first-hand experience with it. I will try to
+make it as thorough as possible, but if there is something wrong, please alert
+me so I can make the appropriate changes for future releases.
+
+
+  So far, this document covers the following types:
+
+  * D64 (with a description of REL), and some D64 variations
+  * X64
+  * T64
+  * T64 .FRZ (FRoZen Files, saved emulator sessions)
+  * ZipCode (4 files, diskpacked)
+  * ZipCode (6 files, diskpacked)
+  * ZipCode (? files, filepacked)
+  * LNX
+  * PC64 (P/S/U/Rxx)
+  * PC64 .C64 (saved emulator sessions)
+  * Binary
+  * ARK
+  * GEOS VLIR
+  * LHA (-lh1- only)
+  * SFX
+  * SDA
+  * ZIP
+  * CPK
+  * CKIT (Compression Kit)
+
+  At the end of this document is a BINARY/HEX/Decimal conversion chart, useful
+if you don't know how to convert the number bases around. It might come in
+handy when working with and understanding the ZipCode format.
+
+  I will also add that in order to work with some of the rare or unusual image
+types like LHA or ARK, I highly recommend the program Star Commander, by Joe
+Forster/STA. Contained with it are several smaller utilities for working with
+such files (StarArk, StarLHA, StarLynx, etc)
+
+                                                    Peter Schepers,
+                                                    University of Waterloo.
+                                                    August 24, 1996
+
+                                             Email: schepers@dcs1.uwaterloo.ca
+
+
+-------------------------------------------------------------------------------
+
+
+*** D64
+
+  First and foremost we have D64, which is basically a sector-for-sector copy
+of a 1540/1541 disk. There are several versions of these which I will cover
+shortly. The standard D64 is a 174848 byte file comprised of 256 byte blocks
+arranged in 35 tracks with a varying number of sectors per track for a total of
+683 blocks (or sectors). Sector counting starts at 0, not 1, for the first
+sector, therefore a track with 21 sectors will go from 0 to 20.
+
+  The original media (a 5.25" disk) has the tracks laid out as track 1 on the
+very outside of the disk to track 35 being on the inside of the disk. Commodore
+(in their infinite wisdom) varied the number of sectors/track to optimize the
+storage, resulting in the chart below. It shows the sectors/track for a
+standard D64. Since the outside diameter of a circle is the largest (versus
+closer to the center), the outside tracks have the largest amount of storage.
+
+        Track        Sectors/track   # Blocks
+        -----        -------------   --------
+         1-17             21           357
+        18-24             19           133
+        25-30             18           108
+        31-35             17            85
+                                       ---
+                                       683
+
+
+        Track  #Sect  #Blocks in  D64 Offset
+        -----  -----  ----------  ----------
+          1      21        0        $00000
+          2      21       21        $01500
+          3      21       42        $02A00
+          4      21       63        $03F00
+          5      21       84        $05400
+          6      21      105        $06900
+          7      21      126        $07E00
+          8      21      147        $09300
+          9      21      168        $0A800
+         10      21      189        $0BC00
+         11      21      210        $0E200
+         12      21      231        $0E700
+         13      21      252        $0FC00
+         14      21      273        $11100
+         15      21      294        $12600
+         16      21      315        $13B00
+         17      21      336        $15000
+         18      19      357        $16500
+         19      19      376        $17800
+         20      19      395        $18B00
+         21      19      414        $19E00
+         22      19      433        $1B100
+         23      19      452        $1C400
+         24      19      471        $1D700
+         25      18      490        $1EA00
+         26      18      508        $1FC00
+         27      18      526        $20E00
+         28      18      544        $22000
+         29      18      562        $23200
+         30      18      580        $24400
+         31      17      598        $25600
+         32      17      615        $26700
+         33      17      632        $27800
+         34      17      649        $28900
+         35      17      666        $29A00
+
+  The directory track is contained totally on track 18. Sectors 1-18 contain
+the entries and sector 0 contains the BAM and disk name/ID. Since the directory
+is only 18 sectors large (19 less one for the BAM), and each block can contain
+only 8 entries (32 bytes per entry), the maximum number of directory entries is
+144. The first directory block is pointed to by the track/sector link in the
+first two bytes of track 18, sector 0 (BAM block). It then follows the same
+chain structure as a normal file.
+
+Each directory block has the following layout (18,1 partial):
+
+00: 12 04 81 11 00 4E 41 4D 45 53 20 26 20 50 4F 53  <- notice the T/S link
+10: 49 54 A0 A0 A0 00 00 00 00 00 00 00 00 00 15 00
+20: 00 00 84 11 02 41 44 44 49 54 49 4F 4E 41 4C 20  <- and how its not here
+30: 49 4E 46 4F A0 11 0C FE 00 00 00 00 00 00 61 01
+
+The first two bytes of the block ($12,$04) indicate the location of the next
+track/sector of the directory. If the track is set to $00, then it is the last
+block of the directory.
+
+  Bytes: $00-1F: First directory entry
+             00: Track location of next directory block
+             01: Sector location of next directory block
+             02: File type
+                      00=Deleted
+                   01-7F=Unclosed files (* files)
+                      80=DEL
+                      81=SEQ
+                      82=PRG
+                      83=USR
+                      84=REL
+                   85-8F=Not normally used (results in very *weird* types)
+                   bit 7 on, file is locked (< file)
+                   bit 8 on, normal file
+             03: Starting track location of first block of file
+             04: Starting sector location of first block of file
+          05-14: 16 character filename (in PETASCII, padded with $A0)
+             15: Starting track location of side-sector blocks (REL file only)
+             16: Starting sector location of side-sector blocks (REL file only)
+             17: REL file record length (REL file only)
+          18-1D: Unused
+          1E-1F: File size, low-byte/high-byte order ($1E + $1F * 256)
+          20-3F: Second dir entry. From now on the first two bytes of each
+                 entry in this block should be $00, $00, as they are unused.
+          40-5F: Third dir entry
+          60-7F: Fourth dir entry
+          80-9F: Fifth dir entry
+          A0-BF: Sixth dir entry
+          C0-DF: Seventh dir entry
+          E0-FF: Eighth dir entry
+
+The layout of the BAM block is a bit more complicated.
+
+00: 12 01 41 00 12 FF F9 17 15 FF FF 1F 15 FF FF 1F
+10: 15 FF FF 1F 12 FF F9 17 00 00 00 00 00 00 00 00
+20: 00 00 00 00 0E FF 74 03 15 FF FF 1F 15 FF FF 1F
+30: 0E 3F FC 11 07 E1 80 01 15 FF FF 1F 15 FF FF 1F
+40: 15 FF FF 1F 15 FF FF 1F 0D C0 FF 07 13 FF FF 07
+50: 13 FF FF 07 11 FF CF 07 13 FF FF 07 12 7F FF 07
+60: 13 FF FF 07 0A 75 55 01 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 01 08 00 00 03 02 48 00
+80: 11 FF FF 01 11 FF FF 01 11 FF FF 01 11 FF FF 01
+90: 53 48 41 52 45 57 41 52 45 20 31 20 20 A0 A0 A0
+A0: A0 A0 56 54 A0 32 41 A0 A0 A0 A0 00 00 00 00 00
+B0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+C0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+D0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+E0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+F0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+  Bytes:   $00: Track location of the first directory entry block
+            01: Sector locations of the first directory entry block
+            02: Disk DOS version type
+                  $41=1541
+            03: Unused
+         04-8F: BAM entries for each track, in groups of four bytes per track,
+                starting on track 1 (see below for more details)
+         90-AA: Disk name and ID
+         AB-FF: Unused
+
+The BAM entries require a bit (no pun intended) more of a breakdown. Take the
+first entry at bytes 04-07 (12 FF F9 17). The first byte ($12) is the number of
+free sectors on that track. Since we are looking at the track 1 entry, this
+means it only has 18 (decimal) free sectors. The next three bytes represent the
+bitmap of which sectors are used/free. Since it is 3 bytes (8 bits/byte) we
+have 24 bits of storage. Remember that at most, each track only has 21 sectors,
+so there are a few unused bits.
+
+   Bytes: 04-07: 12 FF F9 17   Track 1 BAM
+          08-0B: 15 FF FF FF   Track 2 BAM
+          0C-0F: 15 FF FF 1F   Track 3 BAM
+          ...
+          8C-8F: 11 FF FF 01   Track 35 BAM
+
+
+These entries must be viewed in binary to make any sense. We will use the first
+entry (track 1):
+
+     FF=11111111, F9=11111001, 17=00010111
+
+In order to make any sense out of the binary, flip the bits around.
+
+                   111111 11112222
+        01234567 89012345 67890123
+        --------------------------
+        11111111 10011111 11101000
+        ^                     ^
+    sector 0              sector 20
+
+Since we are on the first track, we have 21 sectors, and only use up to the bit
+20 position. If a bit is on (1), the sector is free. Therefore, track 1 has
+sectors 9,10 and 19 used, all the rest are free.
+
+  Each filetype has its own unique properties, but most follow one simple
+structure. The starting block is pointed to by the directory, and follows a t/s
+chain, until the track value reaches $00. When this happens, the value in the
+sector location indicates how much of the block is used. For example, the
+following chain indicates a file 6 blocks long, and ends when we encounter the
+0,34 chain. At this point the last block occupies from bytes $02-$33 (one less
+than the value actually indicates).
+
+    1     2      3      4     5     6
+  ----  -----  -----  ----  -----  ----
+  17,0  17,10  17,20  17,1  17,11  0,34
+
+
+  The REL filetype, however, has a most unusual structure. It was designed to
+make access to data *anywhere* on the disk very fast. Take a look at this
+directory entry...
+
+20: 00 00 84 11 02 41 44 44 49 54 49 4F 4E 41 4C 20
+30: 49 4E 46 4F A0 11 0C FE 00 00 00 00 00 00 61 01
+
+  Note with this directory entry (REL file) that the three normally empty
+entries at $35, $36 and $37 are now used, as they are explained above. It's the
+sector chain that this entry point to (called the SIDE SECTORS) which are of
+interest here (in this case, track 17 sector 12). Here is a dump of the
+beginning of that sector...
+
+00: 0C 13 00 FE 11 0C 0C 13 06 09 00 00 00 00 00 00
+10: 11 02 11 0D 11 03 11 0E 11 04 11 0F 11 05 11 10
+
+  Bytes:   $00: Track location of next side-sector ($00 if last block)
+            01: Sector location of next side-sector
+            02: Side-sector block number (this block is 0, the next is 1, etc)
+            03: REL file RECORD size (again)
+         04-0F: Track/sector locations of the other side-sectors. Note the
+                first entry is this very sector we have listed here. The next
+                is the next t/s listed at the beginning of the sector. All of
+                this information must be correct.
+         10-FF: T/S chains of *each* block of the data portion.
+
+  If the speed advantage regarding this type file file isn't obvious yet,
+consider the following scenario... If we need record 4000, its only a couple of
+calculations to see how many bytes into the file it is (record# * record
+length). Once we know this, we can calculate how many sectors into the file it
+is (result/254). Now that we know the number of sectors, we can look it up in
+our side-sector tables to see where the record is. The speed of this system is
+truly amazing, given the era of the C64, and a floppy drive.
+
+---
+
+These are some variations of the D64 layout:
+
+  1. Standard 35 track layout but with 683 error bytes added on to the end of
+     the file. This makes the file size 175531. These are not unusual to find.
+     Each byte of the error info corresponds to a single sector stored in the
+     D64, indicating if the sector on the original disk) contained an error.
+     The first byte is for track 1, sector 0, and the last byte is for track
+     35, sector 16.
+
+  2. A 40 track layout, following the same sector/track as a 35 track disk, but
+     the last 5 tracks (36-40) typically contain 17 sectors each. Logically,
+     this would make the file size 196608 bytes (197376 with error bytes). I do
+     not know where the extra BAM information would be stored, as the BAM has
+     no more space after track 35. This format is much more rare.
+
+  As far as I know, here is the meaning of the error bytes added onto the end
+of any extended D64:
+
+    Code  Disk Error  1541 error code
+    ----  ----------  ------------------------------
+     00       00      No error, sector ok.
+     01       20      Header block not found
+     02       21      No sync character
+     03       22      Data block not present
+     04       23      Checksum error in data block
+     05       24      NA
+     06       25      NA
+     07       26      NA
+     08       27      Checksum error in header block
+     09       28      NA
+     0A       29      Disk ID mismatch
+
+  The advantage with using the D64 format (at least staying with the normal 35
+track, no error bytes layout) is it can be converted directly back to a 1541
+disk by either using the proper cable and software on the PC or send it down to
+the C64 and writing it back to a 1541 there. It is the best documented format,
+since it is also native to the C64, with many books explaining the disk layout
+and the internals of the 1541.
+
+
+-------------------------------------------------------------------------------
+
+
+*** X64
+
+  This is a format which was used on the X64 emulator (for UNIX systems), an
+emulator which is not too common any more, and has been replaced by VICE. VICE
+supports the X64 file standard, as well as the regular D64/T64 files. Although
+the X64 format is now mostly unused, it existed and should be mentioned. It is
+almost the same as a D64, except there is a 64-byte header at the beginning of
+the file. Here is the layout.
+
+0000: 43 15 41 64 01 01 00 00 00 00 00 00 00 00 00 00
+0010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0040: standard D64 file starts here....
+
+   Bytes: 00-03: This is the "Magic header" (43 15 41 64)
+             04: Header version major (01)
+             05: Header version minor (01)
+             06: Device type represented
+                   00=1541
+                   01=1570
+                   02=1571
+                   03=1581
+             07: Maximum tracks in image (only used on disks with a version
+                 higher than 01 01)
+             08: Flag indicating a second side of the disk exists
+                   00=No second side
+                   01=Second side
+             09: Error data flag (I assume the data is added onto the end of
+                 the image)
+          0A-1F: Unused
+          20-3E: Disk image description (in ASCII)
+             3F: Always set to 00
+             40: Standard D64 file begins here
+
+  In most images, bytes 07-3F are set to zero. Some versions of the X64
+emulator don't use bytes 08-3F. The header used above is exactly what 64COPY
+uses to create X64's.
+
+  There is no advantage for PC users to use this format since no PC emulator
+uses it, and it is *functionally* the same as a D64.
+
+
+-------------------------------------------------------------------------------
+
+
+*** T64
+
+  This format was designed by Miha Peternal for use with his C64s emulator. It
+has a very structured directory (similar to a D64 directory entry), with each
+entry taking up 32 bytes, and a reasonably well-documented format.
+
+  It has a large header at the beginning of the file used for file signature,
+tape name, number of directory entries, used entries, and the remainder for
+actual directory entries.
+
+  Following *immediately* after the end of the directory comes the data for
+each file. Each directory entry includes the information of where its data
+starts in the file, as well as how long the file is, so you know how to
+delineate each file.
+
+Here is a HEX dump of the first few bytes of a standard T64 file:
+
+Offset                   HEX Info                              ASCII
+------                   --------                              -----
+000000: 43 36 34 53 20 74 61 70 65 20 69 6D 61 67 65 20   C64S tape image
+000010: 66 69 6C 65 00 00 00 00 00 00 00 00 00 00 00 00   file
+000020: 01 01 90 01 05 00 00 00 43 36 34 53 20 44 45 4D           C64S DEM
+000030: 4F 20 54 41 50 45 20 20 20 20 20 20 20 20 20 20   O TAPE
+000040: 01 01 01 08 85 1F 00 00 00 04 00 00 00 00 00 00
+000050: 53 50 59 4A 4B 45 52 48 4F 45 4B 20 20 20 20 20   SPYJKERHOEK
+000060: 01 01 01 08 B0 Ca 00 00 84 1B 00 00 00 00 00 00
+000070: 49 4D 50 4F 53 53 49 42 4C 45 20 4D 49 53 53 2E   IMPOSSIBLE MISS.
+...
+...
+0003E0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0003F0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+000400: 1A 08 E4 07 9E 32 30 38 30 14 14 14 14 14 14 14
+
+  The first 32 bytes (0000-001F) represent the signature of the file, telling
+us it is a tape image file for C64S.
+
+Offset                   HEX Info                              ASCII
+------                   --------                              -----
+000000: 43 36 34 53 20 74 61 70 65 20 69 6D 61 67 65 20   C64S tape image
+000010: 66 69 6C 65 00 00 00 00 00 00 00 00 00 00 00 00   file
+
+  It is important that the string C64 be at the beginning of the file because
+it is the string which is used to identify the file type. There are several
+variations of this string like "C64S tape file" or "C64 tape image file". The
+string is stored in DOS ASCII characters.
+
+  The next 32 bytes contain all the info about the directory size, number of
+used entries, tape image name, tape version#, etc.
+
+Offset                   HEX Info                              ASCII
+------                   --------                              -----
+000020: 01 01 90 01 05 00 00 00 43 36 34 53 20 44 45 4D           C64S DEM
+000030: 4F 20 54 41 50 45 20 20 20 20 20 20 20 20 20 20   O TAPE
+
+Bytes 20-21: Tape version number of either $0100 or $0101. I am not sure what
+             this is used for.
+      22-23: Maximum number of entries in the directory, stored in
+             low-byte/high-byte order (in this case 90(HEX)=144, so total =
+             144+1*256 = 400 entries.
+      24-25: Total number of used entries, once again in low-byte/high-byte.
+             Used = 5+0*256 = 5 entries.
+      26-27: Unused
+      29-3F: Tape Image Name,
+
+  The next 32 bytes (and on until the end of the directory) contain individual
+directory entries.
+
+Offset                   HEX Info                              ASCII
+------                   --------                              -----
+000040: 01 01 01 08 85 1F 00 00 00 04 00 00 00 00 00 00
+000050: 53 50 59 4A 4B 45 52 48 4F 45 4B 20 20 20 20 20   SPYJKERHOEK
+000060: 01 01 01 08 B0 Ca 00 00 84 1B 00 00 00 00 00 00
+000070: 49 4D 50 4F 53 53 49 42 4C 45 20 4D 49 53 53 2E   IMPOSSIBLE MISS.
+
+Bytes    40: Directory entry type: 0 = free (usually)
+                                   1 = Normal tape file
+                                   3 = Memory Snapshot, v .9, uncompressed
+                               2-255 = Reserved (for memory snapshots)
+         41: C64 file type. Its usually set to 1, but it does change if whats
+             stored is a snapshot (FRZ file).
+      42-43: Start address (or Load address). This is the first two bytes of
+             the C64 file which is usually the load address (typically 01 08)
+      44-45: End address (actual end address in memory, if the file was loaded
+             into a C64)
+      46-47: Not used
+      48-4B: Offset into the image file (from the beginning) of where the C64
+             file starts (stored as low-byte/high-byte)
+      4C-4F: Not used
+      50-5F: C64 filename (in PETASCII, padded with $20, not $A0)
+
+  Typically, an empty entry will have no contents at all, and not just have the
+first byte set to 00. If you do set only the filetype byte to 00 and then use
+the file in C64S, you will see the entry is still on the directory.
+
+0003E0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0003F0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+  Starting at $000400 (assuming a directory with 30 entries) we now have actual
+file data.
+
+000400: 1A 08 E4 07 9E 32 30 38 30 14 14 14 14 14 14 14
+...
+
+
+  This format has some advantages over D64's in that there is very little
+wasted space, except for the empty directory entries. It is also laid out very
+logically, with entries and headers all being in 32-byte chunks. This makes for
+easy support.
+
+  It has several big disadvantages as well, the biggest being that C64s is
+really the only emulator to support it extensively. PC64 will (if it doesn't
+already) support it but Alec64 (as of now) does not. Also, it is not a native
+C64 filetype, so if you want to make the files available for a C64, they will
+have to be converted to something else first.
+
+  One other drawback is its lack of adequate documentation. Miha, when he
+introduced it, did include a basic description of the layout, but with certain
+details missing raising some questions. What does the Tape Version do, what are
+the C64 file type numbers, why include the first two bytes of the file (assumed
+to be load address) when he could have instead stored the file size and offset
+into the image of where the file starts.
+
+
+-------------------------------------------------------------------------------
+
+
+*** C64s ".FRZ" FRoZen Files
+
+  These, similar in nature to PC64's .C64 files, are a complete memory dump of
+the 64K RAM, color RAM and I/O ports. The only emulator file which can hold FRZ
+files is a T64, as its directory/filetype values allow for it. These files (as
+of C64s V2.0), when converted to binaries, are 66806 bytes large.
+
+  Bytes: 00000-00001: Load address (always 00,00)
+         00002-10001: Main 64k RAM ($0000-FFFF)
+         10002-10401: Color RAM ($D800-DBFF)
+         10402-104F5: I/O ports
+
+  Since these files are only supported by C64s (up to version 2.0 at present),
+it is not worth getting to involved in the layout. I was attempting to get the
+I/O port layout, but realized the only other file type these could ever be
+converted to would be a .C64 file for PC64 (DOS). However, PC64's saved files
+require a lot more information (user options), and that would be difficult to
+add in.
+
+
+-------------------------------------------------------------------------------
+
+
+*** DiskPacked ZipCode (4-file version, 1!xxxxxx, 2!xxxxxx, etc)
+
+  This format works directly on D64 images only. It is a compressed form of a
+D64 disk (or D64 files) and is comprised of 4 files, with each file containing
+approximately the same number of sectors. Here is a chart of the filenames, the
+range of tracks, and the total sectors that each file contains:
+
+   Name       Range   Block count
+   --------   -----   -----------
+   1!xxxxxx   1-8     168 sectors
+   2!xxxxxx   9-16    168 sectors
+   3!xxxxxx   17-25   172 sectors
+   4!xxxxxx   26-35   175 sectors
+
+  This format uses sector interleaving to read the disk. It reads each sector
+using an interleave of -10 (for even #'s sectors, 0,2,4...) and +11 for odd
+numbered sectors (1,3,5...). The actual value for both interleaves varies as we
+progress further into the disk. At track 18, it goes to -9 for evens and +10
+for odds, and at track 25 it changes to -8 for evens and +9 for odds. This is
+important to better understand the layout, as it means the sectors are *not*
+stored in order (0,1,2...), but the changing interleave makes reading/writing
+the sectors much faster. This also means that in order to reconstruct each
+track, a buffer of memory the size of the largest track (track 1, 21
+sectors*256 bytes = 5.25 kbytes) must be set aside, and the sector information
+copied into the appropriate area until the whole track is assembled.
+
+Here is a partial HEX dump of the first file and description of the layout...
+
+0000: FE 03 36 34 41 00 00 41 0B 00 41 01 00 41 0C 00
+0010: 41 02 00 41 0D 00 41 03 00 41 0E 00 41 04 00 41
+0020: 0F 00 41 05 00 41 10 00 41 06 00 81 11 33 02 00
+0030: 2F 80 25 9D FA 66 AF 9B 6A 14 A0 E4 10 CA 18 90
+0040: 7B 67 51 47 92 2B 4C 52 83 78 01 A9 58 D0 31 70
+0050: 34 30 B7 85 2C D4 9F 1C 1F A9 EA EA EA 15 3E 02
+0060: D0 00 41 07 00 41 12 00 41 08 00 41 13 00 41 09
+
+  Byte: $00-01: Load address, low-byte/high-byte (03FE for first file, 0400 for
+                the next three files)
+         02-03: Disk ID, only contained in first file.
+
+  From here on, the format can vary, depending on the contents of each sector.
+The next two bytes contain the track/sector, but with the track containing the
+compression used, encoded on the top two bits...
+
+Bit: 76543210
+     xxyyyyyy
+     ^^|    |
+     | ------
+     |   ^
+     |   |
+     |   |
+     |   These are the track bits.
+     |
+     These are the compression flags
+
+Since the track only ranges from 1-35, only the bottom 5 bit are used. This
+leaves the top two empty, and useable. Here is their useage:
+
+   00 - No compression, the sector is stored in full. The next 256 bytes
+        contain the full sector information.
+   01 - Sector is filled with *one* character. The next character is the fill
+        byte. Repeat it 256 times, and fill the sector.
+   10 - Sector is compressed using RLE compression (see below for details)
+   11 - Unused (at least in 4-pack ZipCodes, I don't know about 6-pack)
+
+  Lets look at each method of storing a sector with different compression
+methods, using the above example...
+
+  00: This is the simplest method, as it entails no compression. All we have it
+      a track, sector, and 256 bytes of data follow it.
+
+  01: At byte 04 we have 41 00 00. Breaking down $41 to binary we have
+      "01000001". The top two bits indicate we have type 01 compression (fill
+      sector), and the bottom 6 indicate we have track 1. The next byte is the
+      sector (00), and the next byte is also a $00, indicating this sector is
+      completely filled with $00.
+
+      0000: .. .. .. .. 41 00 00 41 0B 00 41 01 00 41 0C 00
+      0010: 41 02 00 41 0D 00 41 03 00 41 0E 00 41 04 00 41
+
+  10: The RLE encoding takes some explanation. RLE stands for "RUN LENGTH
+      ENCODING", and is simply a means of encoding a series of the same numbers
+      into a much smaller string (i.e. encoding the 1's in the string
+      "0456111111111645" into something much shorter).
+
+      Looking at the example below, when we encounter a 10 type, we have track
+      ($81), sector ($11), the length of the encoded sector ($33, 51 decimal)
+      and a REP code, used as a flag to show when we encounter an encoded
+      repeated string. The REP code can change for each sector encoded as it is
+      a byte which will *not* be encountered in the sector.
+
+      0020: .. .. .. .. .. .. .. .. .. .. .. 81 11 33 02 00
+      0030: 2F 80 25 9D FA 66 AF 9B 6A 14 A0 E4 10 CA 18 90
+      0040: 7B 67 51 47 92 2B 4C 52 83 78 01 A9 58 D0 31 70
+      0050: 34 30 B7 85 2C D4 9F 1C 1F A9 EA EA EA 15 3E 02
+      0060: D0 00 .. .. .. .. .. .. .. .. .. .. .. .. .. ..
+
+      We know with this example that the encoded data is 51 bytes long ($33),
+      and with a REP code of $02, when we encounter a $02, we have an encoded
+      sequence. If we do not encounter a $02, we have normal bytes. In the
+      above sequence, we do not encounter a $02 until 005F, so all the rest are
+      normal bytes, which would go into the sector starting at position 00.
+
+      Once we hit a $02, the next two bytes are encoded this way... repeat
+      count ($D0, decimal 208), byte to repeat ($00). So we fill the next $D0
+      (208 bytes) with 00's.
+
+      If you add up what we had before the $02, it was 48 bytes long, add this
+      to the 208 bytes and we have a full sector of 256 bytes. A 256-byte
+      sector stored in 55 (51 + 4 byte header) bytes represents a good savings.
+
+      Notice the byte sequence in the above example 'EA EA EA'. Why was this
+      not encoded? Simple. The encoding sequence (REP, LENGTH, CHAR) takes
+      three bytes. It would not make any sense to encode something which is no
+      shorter than the original string. ZipCode will only encode a repeated
+      string of 4 bytes or longer.
+
+      Now, lets break down the above sample into its encoded parts, to see how
+      its made...
+
+      0000: FE 03          - Load Address
+      0002: 36 34          - Disk ID
+      0004: 41 00 00       - T/S 1,00, fill 00
+      0007: 41 0B 00       - T/S 1,11, fill 00
+      000A: 41 01 00       - T/S 1,01, fill 00
+      000D: 41 0C 00       - T/S 1,12, fill 00
+      0010: 41 02 00       - T/S 1,02, fill 00
+      0013: 41 0D 00       - T/S 1,13, fill 00
+      0016: 41 03 00       - T/S 1,03, fill 00
+      0019: 41 0E 00       - T/S 1,14, fill 00
+      001C: 41 04 00       - T/S 1,04, fill 00
+      001F: 41 0F 00       - T/S 1,15, fill 00
+      0022: 41 05 00       - T/S 1,05, fill 00
+      0025: 41 10 00       - T/S 1,16, fill 00
+      0028: 41 06 00       - T/S 1,06, fill 00
+      002B: 81 11 33 02    - T/S 1,17, RLE, length 51 bytes, REP byte 02
+            00 2F 80 25    - Normal data
+            9D FA 66 AF
+            9B 6A 14 A0
+            E4 10 CA 18
+            90 7B 67 51
+            47 92 2B 4C
+            52 83 78 01
+            A9 58 D0 31
+            70 34 30 B7
+            85 2C D4 9F
+            1C 1F A9 EA
+            EA EA 15 3E
+      005F: 02 D0 00       - REP byte found, repeat 208, fill with 00
+      0062: 41 07 00       - T/S 1,07, fill 00
+      0065: 41 12 00       - T/S 1,18, fill 00
+
+  This listing is basically what you would see if you ran CheckZipCode from
+inside 64COPY. It will dump out the ZipCode files into their constituent parts,
+so you can see how the file is made, and if any errors exist.
+
+  There is no benefit for using ZipCode as it is only used for making disks
+easier to upload/download (for a BBS), or store. It is not a format that any of
+the emulators use directly. You can find utilites for the PC to undo and create
+the images, if you need to.
+
+
+-------------------------------------------------------------------------------
+
+
+*** Diskpacked Zipcode (6-file version, 1!!xxxxx, 2!!xxxxx, etc)
+
+  This is another rare form of ZipCode, spanning 6 archive files, and hence the
+nick-name "6-pack". Note the difference in the filename structure from a 4-pack
+ZipCode.
+
+    Name      Track Range
+  --------    -----------
+  1!!xxxxx       1 - 6
+  2!!xxxxx       7 - 12
+  3!!xxxxx      13 - 18
+  4!!xxxxx      19 - 25
+  5!!xxxxx      26 - 32
+  6!!xxxxx      33 - 35 (or 40 for 40-track images)
+
+  The format for these is *nothing* like the 4-pack. It contains no compression
+and no track/sector references. Rather, all the sector data is encoded into raw
+GCR (Group Code Recording) codes. GCR is the method used to store information,
+at the lowest level, on a 1541 drive. It converts 4-bit nybbles (2 nybbles per
+byte) into an encoded 5-bit GCR code. The conversion chart for 4-bit to 5-bit
+conversion is as follows:
+
+     Hex   Binary    GCR      Hex   Binary    GCR
+     ---   ------   -----     ---   ------   -----
+     $0 -   0000  - 01010     $8 -   1000  - 01001
+      1 -   0001  - 01011      9 -   1001  - 11001
+      2 -   0010  - 10010      A -   1010  - 11010
+      3 -   0011  - 10011      B -   1011  - 11011
+      4 -   0100  - 01110      C -   1100  - 01101
+      5 -   0101  - 01111      D -   1101  - 11101
+      6 -   0110  - 10110      E -   1110  - 11110
+      7 -   0111  - 10111      F -   1111  - 10101
+
+If you look over the GCR bits, there are two details that should be noted.
+
+  1. You cannot combine *any* two GCR bytes into numbers that contain more than
+     10 consecutive 1-bits (at most we can get is 8). Ten (or more) consecutive
+     1-bits is used for a SYNC mark, used to tell the disk controller that
+     sector data is coming up. (In actual fact, the 1541 records an overkill of
+     40 sequential 1-bits to the disk as a SYNC mark to ensure the controller
+     can find it)
+
+  2. There will never be any more than two consecutive 0-bits. This is done to
+     help in the accuracy of clocking data back to the 1541 controller.
+
+  Using the above table, lets convert some numbers. For reasons I will explain
+later, we must work in groups of four bytes in order to convert normal HEX to
+GCR.
+
+     Using these HEX numbers...
+
+     0D  F5  E4  37
+
+     now, split these values into nybbles and convert to binary...
+
+      0     D       F     5       E     4       3     7
+     ----  ----    ----  ----    ----  ----    ----  ----
+     0000  1101    1111  0101    1110  0100    0011  0111
+
+     convert nybbles to GCR using the conversion table...
+
+     0000  1101    1111  0101    1110  0100    0011  0111
+     ----- -----   ----- -----   ----- -----   ----- -----
+     01010 11101   10101 01111   11110 01110   10011 10111
+
+     now, recombine the bit into groups of 8...
+
+     01010 11101   10101 01111   11110 01110   10011 10111
+     |       ||          ||         ||          ||       |
+     | byte 1||  byte 2  ||  byte 3 ||  byte 4  ||       |
+     |       ||          ||         ||          ||       |
+      -------  ----------  ---------  ----------  -------
+     01010111   01101010   11111111    00111010   01110111
+
+     and convert back to HEX...
+
+     01010111   01101010   11111111    00111010   01110111
+     --------   --------   --------    --------   --------
+        57         6A         FF          3A         77
+
+  So, now we have converted a group of 4 bytes into 5 CGR bytes. The reason we
+must encode in groups of 4 is that it is the *minimum* number of bytes which,
+when converted to GCR bits, is divisible by 8 bits... 1 byte wold be 10 bits, 2
+bytes would be 20, 3 bytes would be 30, but 4 bytes is 40 bits, divisible by 8
+since it leaves us with 5 groups of 8 bits.
+
+  Now that we have a foundation of GCR encoding, we can begin to analyse the
+layout of the 6-pack zipcode. Below is a sample of the first file (1!!):
+
+0000: FF 03 24 52 55 25 29 4B 9A E7 25 55 55 52 55 35
+0010: 2D 4B 9A E7 25 55 55 52 54 A5 49 4B 9A E7 25 55
+0020: 55 52 54 B5 4D 4B 9A E7 25 55 55 52 55 65 39 4B
+0030: 9A E7 25 55 55 52 55 75 3D 4B 9A E7 25 55 55 52
+0040: 54 E5 59 4B 9A E7 25 55 55 52 54 F5 5D 4B 9A E7
+0050: 25 55 55 52 55 A5 25 4B 9A E7 25 55 55 52 55 B5
+0060: 65 4B 9A E7 25 55 55 52 54 95 69 4B 9A E7 25 55
+0070: 55 52 55 95 6D 4B 9A E7 25 55 55 52 55 E5 35 4B
+0080: 9A E7 25 55 55 52 55 55 75 4B 9A E7 25 55 55 52
+0090: 54 D5 79 4B 9A E7 25 55 55 52 55 D5 55 4B 9A E7
+00A0: 25 55 55 52 57 25 A9 4B 9A E7 25 55 55 52 57 35
+00B0: AD 4B 9A E7 25 55 55 52 56 A5 C9 4B 9A E7 25 55
+00C0: 55 52 56 B5 CD 4B 9A E7 25 55 55 52 57 65 B9 4B
+00D0: 9A E7 25 55 55 29 0F 05 C0 99 00 02 C8 D0 D4 A9
+00E0: 02 8D 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00F0: 00 00 00 00 00 00 00 00 00 41 4D 45 3A 20 31 32
+0100: 33 34 15 D4 B5 2D 4B 52 D4 B5 2D 4B 52 D4 B5 2D
+0110: 4B 52 D4 B5 2D 4B 52 D4 B5 2D 4B 52 D4 B5 2D 4B
+0120: 52 D4 B5 2D 4B 52 D4 B5 2D 4B 52 D4 B5 2D 4B 52
+0130: D4 B5 2D 4B 52 D4 B5 2D 4B 52 D4 B5 2D 4B 52 D4
+0140: B5 2D 4B 52 D4 B5 29 4D 55 55 D4 A5 2D 4B 52 D4
+0150: B5 2D 4B 52 D4 B5 2D 4B 52 D4 B5 2D 4B 52 D4 B5
+0160: 2D 4B 52 D4 B5 2D 4B 52 D4 B5 2D 4B 52 D4 B5 2D
+
+  Each file starts with a 3-byte signature, $FF, $03, and then either a $24 for
+a 35 track image, or a $29 for a 40 track image.
+
+0000: FF 03 24 .. .. .. .. .. .. .. .. .. .. .. .. ..
+
+  Track information follows, and is comprised of a 256 byte track descriptor
+block (mostly GCR encoded), followed by sector information at 326 bytes/sector.
+The track descriptor contains the header information of each sector in that
+track, as well as the number of sectors encoded on that track. Note that each
+of the entries in the descriptor take 10 bytes, as 10 bytes (GCR) decodes to 8
+bytes normal HEX. These also correspond to the header info on a real 1541 disk.
+Here is the layout (re-arranged from the above block)...
+
+  Sec  Byte CGR Contents                    Normal Contents (decoded)
+  ---  ---- -----------------------------   -------------------------
+   0    00: 52 55 25 29 4B 9A E7 25 55 55   08 02 00 01 31 32 0F 0F
+   1    0A: 52 55 35 2D 4B 9A E7 25 55 55   08 03 01 01 31 32 0F 0F
+   2    14: 52 54 A5 49 4B 9A E7 25 55 55   08 00 02 01 31 32 0F 0F
+   3    1E: 52 54 B5 4D 4B 9A E7 25 55 55   08 01 03 01 31 32 0F 0F
+   4    28: 52 55 65 39 4B 9A E7 25 55 55   08 06 04 01 31 32 0F 0F
+   5    32: 52 55 75 3D 4B 9A E7 25 55 55   08 07 05 01 31 32 0F 0F
+   6    3C: 52 54 E5 59 4B 9A E7 25 55 55   08 04 06 01 31 32 0F 0F
+   7    46: 52 54 F5 5D 4B 9A E7 25 55 55   08 05 07 01 31 32 0F 0F
+   8    50: 52 55 A5 25 4B 9A E7 25 55 55   08 0A 08 01 31 32 0F 0F
+   9    5A: 52 55 B5 65 4B 9A E7 25 55 55   08 0B 09 01 31 32 0F 0F
+   10   64: 52 54 95 69 4B 9A E7 25 55 55   08 08 0A 01 31 32 0F 0F
+   11   6E: 52 55 95 6D 4B 9A E7 25 55 55   08 09 0B 01 31 32 0F 0F
+   12   78: 52 55 E5 35 4B 9A E7 25 55 55   08 0E 0C 01 31 32 0F 0F
+   13   82: 52 55 55 75 4B 9A E7 25 55 55   08 0F 0D 01 31 32 0F 0F
+   14   8C: 52 54 D5 79 4B 9A E7 25 55 55   08 0C 0E 01 31 32 0F 0F
+   15   96: 52 55 D5 55 4B 9A E7 25 55 55   08 0D 0F 01 31 32 0F 0F
+   16   A0: 52 57 25 A9 4B 9A E7 25 55 55   08 12 10 01 31 32 0F 0F
+   17   AA: 52 57 35 AD 4B 9A E7 25 55 55   08 13 11 01 31 32 0F 0F
+   18   B4: 52 56 A5 C9 4B 9A E7 25 55 55   08 10 12 01 31 32 0F 0F
+   19   BE: 52 56 B5 CD 4B 9A E7 25 55 55   08 11 13 01 31 32 0F 0F
+   20   C8: 52 57 65 B9 4B 9A E7 25 55 55   08 16 14 01 31 32 0F 0F
+
+        D2: 29 0F 05 C0 99 00 02 C8 D0 D4   Unused
+        DC: A9 02 8D 00 00 00 00 00 00 00   Unused
+        E6: 00 00 00 00 00 00 00 00 00 00   Unused
+        F0: 00 00 00 00 00 00               Unused
+        F6: 41 4D 45 3A 20 31 32 33 34      ASCII string "AME: 1234" (not GCR)
+        FF: 15                              Number of sectors in this track
+
+  The entries for Sectors 17-20 will only be valid if the track being operated
+on has that many sectors in it. If the value at $FF is 0, then we have an empty
+track (bad track from the original disk). When this happens, all the sector
+header info in the track descriptor block will be invalid. If we only use up to
+sector 16 (for tracks 31 and up), then all the info following the entry for
+sector 16 will be invalid. Invalid data can be anything, just ignore it.
+
+  There is a good trick here which involved the track descriptor block. If you
+are looking over a set of 6-pack files, you can tell where a new track starts
+by looking for the ASCII string "AME: 1234". Since it always seems to be at
+the end of the track descriptor block, it is a useful marker. It is a little
+more difficult to determine what track you are on, but given the track ranges
+for each file, you can figure it out.
+
+  Each sector header block is laid out in the following order (after decoding
+the 10 GCR bytes to 8 normal bytes):
+
+  Byte:   $00 - Always $08, the ID for a "header block"
+           01 - Header checksum (EOR of bytes 02-05)
+           02 - Sector number
+           03 - Track number
+           04 - Second byte of disk ID
+           05 - First byte of disk ID
+        06-07 - Filler bytes (usually $0F)
+
+  Each sector is 326 bytes long (GCR encoded), and each track is 256 bytes + (#
+of sectors/track * 326) bytes. Track 1 would be 256 + (21 * 326) = 7102 bytes.
+The sector information stored in a specific interleave pattern, depending on
+the track we are on. Note that if this was a 40 track image, the interleave
+pattern for the last set of tracks would apply up to track 40 instead of 35.
+
+  Track    Sector interleave storage pattern
+  -----    ----------------------------------------------------
+   1-17 -  0,8,16,3,11,19,6,14,1,9,17,4,12,20,7,15,2,10,18,5,13
+  18-24 -  0,8,16,5,13,2,10,18,7,15,4,12,1,9,17,6,14,3,11
+  25-30 -  0,8,16,6,14,4,12,2,10,1,9,17,7,15,5,13,3,11
+  31-35 -  0,8,16,7,15,6,14,5,13,4,12,3,11,2,10,1,9
+
+  The data within each sector is stored *out of order*. The last 70 bytes are
+first, the the first 256 bytes follow. We actually only decode 325 bytes (from
+0-324), so the last byte is left out. Once decoded, we have the following
+information:
+
+   Bytes:    $000 - Contains $07, the ID for a "data block"
+          001-100 - Normal sector info
+              101 - Sector checksum (EOR of the data block, from 001-100)
+          102-103 - Filler bytes, usually $00
+
+  ZipCode disks are usually used to transfer disks which contain errors
+(copy-protected disks). Since this is the case, the offset for each track into
+its respective file can vary. Assuming that the image contains no errors, we
+can look at each file and calculate the offset position of where each track
+should be. Note that the entries for files 1!!, 2!! and 3!! are the same. The
+only difference among these three is 3!!, which contains track 18, a track with
+only 19 sectors, and hence the file will be slightly shorter.
+
+   File 1!!  Offset           File 2!!  Offset
+   --------  -------------    --------  -------------
+   Track 1   $0003 (3)        Track 7   $0003 (3)
+   Track 2   $1BC1 (7105)     Track 8   $1BC1 (7105)
+   Track 3   $377F (14207)    Track 9   $377F (14207)
+   Track 4   $533D (21309)    Track 10  $533D (21309)
+   Track 5   $6EFB (28411)    Track 11  $6EFB (28411)
+   Track 6   $8AB9 (35513)    Track 12  $8AB9 (35513)
+
+   File 3!!  Offset           File 4!!  Offset
+   --------  -------------    --------  -------------
+   Track 13  $0003 (3)        Track 19  $0003 (3)
+   Track 14  $1BC1 (7105)     Track 20  $1935 (6453)
+   Track 15  $377F (14207)    Track 21  $3267 (12903)
+   Track 16  $533D (21309)    Track 22  $4B99 (19353)
+   Track 17  $6EFB (28411)    Track 23  $64CB (25803)
+   Track 18  $8AB9 (35513)    Track 24  $7DFD (32253)
+                              Track 25  $972F (38703)
+
+   File 5!!  Offset           File 6!!  Offset
+   --------  -------------    --------  -------------
+   Track 26  $0003 (3)        Track 33  $0003 (3)
+   Track 27  $17EF (6127)     Track 34  $16A9 (5801)
+   Track 28  $2FDB (12251)    Track 35  $2D4F (11599)
+   Track 29  $47C7 (18375)
+   Track 30  $5FB3 (24499)
+   Track 31  $779F (30623)
+   Track 32  $8E45 (36421)
+
+  Looking at the error codes for a normal 1541 disk, lets look at how some of
+the errors can be stored in the ZipCode images...
+
+  Error   Error description and method
+  -----   ----------------------------------------------------------------
+   20     Header block not found: This usually pertains to a whole track. I
+          don't know how a ZipCode disk would convey this.
+
+   21     No SYNC character: Each sector has a SYNC mark preceeding it. If it
+          is not found, the ZipCode image won't store the sector.
+
+   22     Data block not present: Not sure how ZipCode would transmit this one.
+
+   23     Checksum error in data block: This one comes from the checksum value
+          stored after the sector data. If the checksum present doesn't match
+          the checksum you calculate, we get the error.
+
+   27     Checksum error in header block: This is where the checksum stored in
+          the sector header block doesn't correspond to the checksum you
+          calculate for the header.
+
+   29     Disk ID mismatch: This one is not an error per se, but simply that
+          the ID stored in the sector header block doesn't match the one stored
+          in track 18, sector 0 (BAM sector).
+
+  The real strength of this format is its usefulness in transmitting
+error-protected disks. It is about the only format (next to using extended
+D64's) which does so. If the disk to copy has no errors, using this format is a
+waste of space as normal ZipCode (4-pack) would do just even better.
+
+
+-------------------------------------------------------------------------------
+
+
+*** FilePacked ZipCode (A!xxxxxx, B!xxxxxx, etc)
+
+  This is another rarely seen format, and is very similar to the Diskpacked
+(4-pack) Zipcode in structure. It is comprised of a series of files denoted by
+A!xxxxxx, using letters instead of numbers as the first characters of the
+filename. It also contains one other file called X!xxxxxx which contains a
+directory of the files stored in the overall archive. Here is the layout of the
+files:
+
+0000: FF 03 A6 92 01 2D 01 41 00 05 04 52 08 01 40 00
+0010: 10 EC FF 07 01 44 00 42 4C 41 53 54 20 56 4F 4C
+0020: 55 4D 45 20 31 33 38 A0 A0 30 31 20 32 41 01 04
+0030: A0 01 55 00 92 04 70 03 C0 12 00 03 10 2D 03 0D
+
+  Bytes: 00-01: Load Address, usually $FF, $03, or $03FF)
+            02: Number of sectors in the file (maximum 166, or $A6)
+         03-??: Zipcoded sector data starts here
+
+  If 166 sectors was not enough to store the file then more x!xxxxxx files are
+needed, and the layout is the same.
+
+  The sector information is zipcoded in the same manner as Diskpacked 4-pack
+Zipcodes, but there is one significant difference. Since files have track and
+sector links, the compression is stored in the top two bits of the track link,
+and the remainder of the sector (254 bytes) is encoded. Each block of the file
+is stored in full, even the last one, though it is rarely completely used.
+
+  Bits
+  ----
+   00 - No compression, the sector is stored in full. The next 256 bytes
+        contain the full sector information.
+   01 - Sector is filled with *one* character. The next character is the fill
+        byte. Repeat it 256 times, and fill the sector.
+   10 - Sector is compressed using RLE compression (see below for details)
+   11 - Unused (at least in 4-pack ZipCodes, I don't know about 6-pack)
+
+  If the track is decoded as $00, then we are on the last block of the file,
+and the sector represents the number of bytes used. The sector is still decoded
+as a full 254 byte block.
+
+  The special file, X!xxxxxx, as mentioned above, contains a listing of all the
+files in the archive. It has most of the information that the D64/1541 entry
+would. Here is the layout:
+
+0800: 00 04 08 00 00 9E 32 30 36 31 00 00 00 A0 00 8C
+0810: 20 D0 8C 21 D0 B9 C7 08 F0 06 20 D2 FF C8 D0 F5
+0820: 85 FF 85 FB A0 0A 84 FC 85 FD 85 FE A0 11 B1 FB
+0830: 48 AA C8 B1 FB 48 A8 20 4B 09 20 41 09 8A 20 41
+0840: 09 98 20 41 09 68 AA 68 18 65 FD 85 FD 8A 65 FE
+0850: 85 FE 20 39 09 20 3C 09 A0 00 B1 FB C9 A0 F0 08
+0860: 20 41 09 C8 C0 10 D0 F2 20 3C 09 C0 13 F0 06 20
+0870: 39 09 C8 D0 F6 A0 10 B1 FB 29 7F 20 41 09 20 3F
+0880: 09 A5 FB 18 69 15 85 FB 90 02 E6 FC E6 FF A5 FF
+0890: CD FF 09 D0 97 AA A0 00 20 4B 09 8E 08 09 8C 09
+08A0: 09 A6 FD A4 FE 20 4B 09 8D 1A 09 8E 1B 09 8C 1C
+08B0: 09 AD FE 09 09 30 8D 2D 09 A0 00 B9 F7 08 F0 06
+08C0: 20 41 09 C8 D0 F5 60 93 9B 11 11 11 11 11 11 11
+08D0: 11 11 11 11 11 11 11 11 11 48 4F 4C 44 20 53 54
+08E0: 4F 50 20 54 4F 20 50 41 55 53 45 20 4C 49 53 54
+08F0: 49 4E 47 3A 0D 0D 00 0D 0D 54 4F 54 41 4C 20 46
+0900: 49 4C 45 53 20 20 3D 20 30 30 0D 54 4F 54 41 4C
+0910: 20 42 4C 4F 43 4B 53 20 3D 20 30 30 30 0D 50 41
+0920: 43 4B 45 44 20 46 49 4C 45 53 20 3D 20 30 0D 05
+0930: 5B 5A 43 20 49 49 5D 0D 00 A9 20 2C A9 22 2C A9
+0940: 0D 20 D2 FF A5 91 C9 7F F0 FA 60 8E 92 09 8C 93
+0950: 09 A0 02 A9 30 99 96 09 88 10 FA A2 02 AD 92 09
+0960: 38 FD 8F 09 8D 94 09 AD 93 09 E9 00 8D 95 09 90
+0970: 11 AD 94 09 8D 92 09 AD 95 09 8D 93 09 FE 96 09
+0980: D0 DB CA 10 D8 AD 98 09 AE 97 09 AC 96 09 60 01
+0990: 0A 64 00 00 00 00 31 32 33 00 00 00 00 00 00 00
+09A0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+09B0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+09C0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+09D0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+09E0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+09F0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 05 0D
+
+  Bytes: 0801-09FD: BASIC program which lists the contents of the archive
+              09FE: Number of archive (x!xxxxxx) files. If the value is 3, we
+                    have A!xxxxxx, B!xxxxxx and C!xxxxxx
+              09FF: Number of C64 files contained in the archive
+              0A00: Start of the directory
+
+  Each file has a directory entry in the X!xxxxxx file, starting at $0A00, each
+21 bytes long, and laid out as follows:
+
+0A00: 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D
+0A10: C4 03 00 12 00 42 4C 41 53 54 20 23 31 33 38 20
+0A20: 20 2F 53 43 49 D0 20 00 02 01 2D 2D 2D 2D 2D 2D
+0A30: 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D C4 03 00 12 00 31
+0A40: A0 A0 A0 A0 A0 A0 A0 A0 A0 A0 A0 A0 A0 A0 A0 D0
+0A50: 8A 00 13 00 32 A0 A0 A0 A0 A0 A0 A0 A0 A0 A0 A0
+0A60: A0 A0 A0 A0 D0 36 00 1A 01 33 A0 A0 A0 A0 A0 A0
+0A70: A0 A0 A0 A0 A0 A0 A0 A0 A0 D0 17 00 1D 01 34 A0
+0A80: A0 A0 A0 A0 A0 A0 A0 A0 A0 A0 A0 A0 A0 A0 D0 2C
+0A90: 00 1E 02 35 A0 A0 A0 A0 A0 A0 A0 A0 A0 A0 A0 A0
+0AA0: A0 A0 A0 D0 1B 00 21 01 36 A0 A0 A0 A0 A0 A0 A0
+0AB0: A0 A0 A0 A0 A0 A0 A0 A0 D0 38 00 22 05 37 A0 A0
+0AC0: A0 A0 A0 A0 A0 A0 A0 A0 A0 A0 A0 A0 A0 D0 8D 00
+0AD0: 10 02 38 A0 A0 A0 A0 A0 A0 A0 A0 A0 A0 A0 A0 A0
+0AE0: A0 A0 D0 5A 00 09 02 39 A0 A0 A0 A0 A0 A0 A0 A0
+0AF0: A0 A0 A0 A0 A0 A0 A0 D0 36 00 05 02 2D 2D 2D 2D
+0B00: 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D C4 03 00 12
+0B10: 00 .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..
+
+  Bytes: 00-0F: 16 character filename (PETASCII, padded with $A0)
+            10: Filetype (The same as a D64/1541)
+         11-12: Length of the file in blocks
+         13-14: Starting track/sector of the file
+
+  In order to extract *one* specific file, you would have to read the entire
+archive until you came across the directory entry that you wanted, then process
+that specific file. This format does not contain any offset references in the
+central directory, just the original file size, and that doesn't tell us
+anything about where a file might be in the archive, since the file is
+compressed.
+
+  Since this format is so unused and rare, I can't see any benefit of using it
+over LNX as a native C64 file. The only plus is it uses simple compression,
+whereas LNX does not, but this is not a significant enough benefit to warrant
+its use.
+
+
+-------------------------------------------------------------------------------
+
+
+*** LNX (Lynx or Ultimate Lynx)
+
+  This is a suprisingly good format, beautifully designed around the block size
+of the 1541. It consists of "blocks" of 254 bytes each (256 if we are on a real
+1541 or a D64 due to the inclusion of the track/sector info at the beginning of
+each sector). When these files are on *any* other format they do not have the
+track/sector info, and therefore use only 254 bytes/block. Here is a dump of
+the directory header of one permutation of the layout...
+
+0000: 01 08 5B 08 0A 00 97 35 33 32 38 30 2C 30 3A 97
+0010: 35 33 32 38 31 2C 30 3A 97 36 34 36 2C C2 28 31
+0020: 36 32 29 3A 99 22 93 11 11 11 11 11 11 11 11 22
+0030: 3A 99 22 20 20 20 20 20 55 53 45 20 4C 49 4E 58
+0040: 20 54 4F 20 44 49 53 53 4F 4C 56 45 20 54 48 49
+0050: 53 20 46 49 4C 45 22 3A 89 31 30 00 00 00 0D 20
+0060: 31 20 20 2A 55 4C 54 52 41 2D 4C 59 4E 58 20 32
+0070: 30 30 31 20 42 59 20 53 2E 42 2E 0D 20 33 20 0D
+0080: 45 4C 45 50 2E 20 41 4E 54 49 43 2B 34 2F 47 50
+0090: 0D 20 31 36 31 20 0D 50 0D 20 39 20 0D 45 2E 41
+00A0: 4E 54 49 43 20 49 4E 54 52 4F 2F 47 50 0D 20 34
+00B0: 34 20 0D 50 0D 20 32 36 20 0D 45 2E 41 4E 54 49
+00C0: 43 20 50 49 43 2E 20 2F 47 50 0D 20 32 38 20 0D
+00D0: 50 0D 20 33 31 20 0D BD BD BD BD BD BD BD BD BD
+00E0: BD BD BD BD BD BD BD BD BD BD BD BD BD BD BD BD
+00F0: BD BD BD BD BD BD BD BD BD BD BD BD BD BD 01 08
+0100: 0A 08 58 1B 9E 32 30 36 31 00 00 00 78 A9 34 85
+
+  It starts out with a BASIC program which, when loaded and run, displays the
+message "Use LYNX to dissolve this file". The actual message and size of the
+program can change. Usually, its 94 bytes long, from $0000 to $005D.
+
+0000: 01 08 5B 08 0A 00 97 35 33 32 38 30 2C 30 3A 97
+0010: 35 33 32 38 31 2C 30 3A 97 36 34 36 2C C2 28 31
+0020: 36 32 29 3A 99 22 93 11 11 11 11 11 11 11 11 22
+0030: 3A 99 22 20 20 20 20 20 55 53 45 20 4C 49 4E 58
+0040: 20 54 4F 20 44 49 53 53 4F 4C 56 45 20 54 48 49
+0050: 53 20 46 49 4C 45 22 3A 89 31 30 00 00 00 .. ..
+
+  Following this is the "signature" of the archive, as well as the size of the
+directory (in blocks) and the number of directory entries in the archive. These
+are stored in CBM lower case (ASCII for the most part), it is delimited by
+carriage returns ($0D) after each entry (except the dir block size!), and
+has spaces on both sides of the numbers. Normally the signature will contain
+the string "LYNX" somewhere.
+
+0050: .. .. .. .. .. .. .. .. .. .. .. .. .. .. 0D 20
+0060: 31 20 20 2A 55 4C 54 52 41 2D 4C 59 4E 58 20 32   1  *ULTRA-LYNX 2
+0070: 30 30 31 20 42 59 20 53 2E 42 2E 0D 20 33 20 0D   001 BY S.B.  3
+
+  So in this example, we have a directory of 1 block (254 bytes) long, the
+archive was created by "Ultra-Lynx 2001 by S.B.", and we have 3 entries in the
+directory. The total directory length is 1 block * 254 bytes=254 bytes.
+Therefore at byte $00FE, the program data will start. If the directory size was
+3 blocks, the data would start at $02FA. I do not know what the maximum size is
+for either number (dir size/entry total), but it would seem to be that since
+the 1541 only can store 144 files, these numbers would be limited accordingly.
+
+0080: 45 4C 45 50 2E 20 41 4E 54 49 43 2B 34 2F 47 50   ELEP. ANTIC+4/GP
+0090: 0D 20 31 36 31 20 0D 50 0D 20 39 20 0D .. .. ..     161  P  9
+
+  This is the first directory entry called "ELEP. ANTIC+4/GP". The layout has
+the filename (in PETASCII), followed by the size of the file in blocks of 254
+bytes, the file type (P, S, R, U), the size in bytes of the last block of the
+file plus 1. If the file type is RELATIVE, this entry is the RECORD size, and
+the next entry is the last block size. If the file type is not RELATIVE, the
+next entry will be the next filename.
+
+0090: .. .. .. .. .. .. .. .. .. .. .. .. .. 45 2E 41
+00A0: 4E 54 49 43 20 49 4E 54 52 4F 2F 47 50 0D 20 34
+00B0: 34 20 0D 50 0D 20 32 36 20 0D .. .. .. .. .. ..
+
+This is the second directory entry. It follows the same layout as the first.
+
+00B0: .. .. .. .. .. .. .. .. .. .. 45 2E 41 4E 54 49
+00C0: 43 20 50 49 43 2E 20 2F 47 50 0D 20 32 38 20 0D
+00D0: 50 0D 20 33 31 20 0D
+
+This is the third (and last in this example) entry.
+
+00D0: .. .. .. .. .. .. .. BD BD BD BD BD BD BD BD BD
+00E0: BD BD BD BD BD BD BD BD BD BD BD BD BD BD BD BD
+00F0: BD BD BD BD BD BD BD BD BD BD BD BD BD BD 01 08
+0100: 0A 08 58 1B 9E 32 30 36 31 00 00 00 78 A9 34 85
+
+  The remaining bytes are unused, and exist simply as filler to pad the
+directory so as it takes up to its alloted space (recall it is one block of 254
+bytes). Once the directory has ended, the real file information is stored.
+Since in this example the directory is only 1 block long, the file info starts
+at byte $00FE...
+
+00F0: .. .. .. .. .. .. .. .. .. .. .. .. .. .. 01 08
+0100: 0A 08 58 1B 9E 32 30 36 31 00 00 00 78 A9 34 85
+
+  The files are also stored so that they take up the full multiples of 254
+bytes. This does result in a little dead space at the end of each file stored,
+but its a small price to pay for how easy it is to break up the file on a real
+C64.
+
+  The best feature of this file is how it is constructed and gets broken up on
+a real C64. When a LNX is created, a new file is created on the disk containing
+all the necessary information about the files it is going to contain such as
+the BASIC program, signature and central directory. The header track/sector
+link is then pointed to the beginning of the first file. The last sector
+track/sector link of the first file is then pointed to the start of the second
+file and so on, until the last file is added. This method makes creating LNX's
+very quick!
+
+  The advantage to this method is that *no* files are moved or compressed, they
+are simply "linked" (hence the name LNX) together by changing the t/s links to
+create one large file.
+
+  One disadvantage is the lack of a better laid out central directory, one that
+had the same number of bytes used for each entry, like the D64 or T64, and had
+a user-definable directory size, also like the D64/T64. As it is, all the
+emulator utilities (and perhaps the native C64 Lynxing utilities as well?)
+cannot add files to a LNX archive once it is created. If a LNX is created with
+three files in it, generally you can't add any more. There may be a little dead
+space (due to the directory size always being multiples of 254) if the
+directory entries don't take up the whole 254 bytes, but I would not muck
+around with it.
+
+
+-------------------------------------------------------------------------------
+
+
+*** P00/S00/U00/R00 (for PC64)
+
+  These files are used exclusively by the PC64 emulator and, as far as I know,
+will not be adopted by anyone else. Each one has the same layout with the
+filetype being stored in the DOS extension. Pxx is a PRG, Sxx is a SEQ, Uxx is
+a USR and Rxx is a relative file. This is a dump of a Pxx file (PRG).
+
+0000: 43 36 34 46 69 6C 65 00 43 52 49 53 49 53 20 4D    C64File CRISIS M
+0010: 4F 55 4E 54 41 49 4E 00 00 00 01 08 11 08 0A 00    OUNTAIN
+
+  The header is only 26 bytes long and starts with the file signature
+"C64File", in ASCII. Note the varying case of the text. Then we get a 00 used
+as a separator, and then the 16 byte filename (in PETASCII), padded with $00
+(*NOT* $A0). Then, if the file is an Rxx, we get the relative file RECORD size,
+else it is a 00. Then another 00 separator, followed by program data.
+
+  The 'xx' in the extension of the file is usually 00, except when we have two
+DOS filenames which would be the same, but the C64 filenames are different! If
+we have two C64 filenames which are the same, they *cannot* co-exist in the
+same directory. If we have two files which do convert down to be the same DOS
+filename, the extension is incremented until an unused one is found. We can
+have up to 99 different C64 files with the same corresponding DOS names as
+thats all the extension will hold.
+
+  Each PC64 file only has one entry, there are no multi-file archives allowed.
+This will result in a large number of these files in a directory, even for only
+a few programs, as each C64 file will result in a PC64 file entry. The DOS
+filename is generated by an algorithm used inside PC64 when a file needs to be
+created. It compresses the 16-byte name down to one that fits the DOS 8.3 size
+and character limitations.
+
+  Probably this formats biggest drawback is that the files tend to be small,
+and thus on large hard disks tend to waste a lot of space due to a large
+"slack" area. When DOS stores files of any size, each one takes up a minimum of
+one cluster, which on small drives may only be 2 kb, but on vary large disks
+could be as high as 32 kb (even 64 kb). An emulator file which is only a few kb
+would, on the large disks, only use a small portion of the total cluster, and
+thus a lot of wasted space results.
+
+  Another drawback (not obvious right away) is since some games are made up of
+a large number of files, it would be best to store each game in a different
+sub-directory, or else you aren't sure what files belong to what programs. File
+management is much more difficult.
+
+  One other thing which most people might not know is you *can't* rename the
+P/S/R/U files. If you do, PC64 won't be able to load them. When PC64 goes
+searching for files, it takes the 16-byte C64 filename, does its magic to
+reduce it to 8.3, then looks to see which DOS files match. Remember, there
+could be several files with the same 8 character name, but the extensions will
+be P00, P01, P02 etc. If it can't find the 16-byte C64 filename in amongst
+those that match, it will report a "File not found". I've tried this with the
+DOS version (PC64 1.20) and it does report an error locating the file, both in
+the File Manager and the 64 window.
+
+  About the only benefit about this format is that the layout and useage is
+fairly simple to do, but the drawbacks outweigh the benefits.
+
+
+-------------------------------------------------------------------------------
+
+
+*** PC64 .C64 Saved Images
+
+  These are files created when you save a C64 window under PC64 (DOS only). It
+consists of a 64k memory dump, color ram dump, I/O ports, the name of the ROM
+images you were using at the time, and user-setable options. Typical size is
+around 69091 bytes. Here is what I know so far:
+
+  Byte: $00000-00008: The signature "C64Image" followed by a $00. Note the
+                      varying case of the text.
+         00009-10008: Main memory of the C64 (64K, $0000-FFFF)
+         10009-10408: Color memory (1k, $D800-DBFF)
+         10409-?????: I/O memory and user-selectable options (ROM version, etc)
+
+  Since these files are only supported by PC64 for DOS (*NOT* for Win95), it is
+not worth getting too much into the layout. I was attempting to get a very
+detailed description of the I/O ports and options area but decided it wasn't
+worth it. About the only file type these *could* be converted to is a FRZ file
+to C64s to use.
+
+
+-------------------------------------------------------------------------------
+
+
+*** Binary
+
+  This may seem to be a non-format, as it has no layout whatsoever, but instead
+is simply a data file. It is assumed that a binary is a single file, usually
+having no extension, sitting on a PC hard disk, not inside of *any* other file
+(like D64/T64/LNX etc). The only reason I mention it is because of the filename
+limitations imposed by the PC architecture, and some of the problems that can
+cause.
+
+  The PC has an 8.3 filename convention (assuming DOS, not OS/2 or Windows
+95/NT long filenames), allowing for, at most, a filename of 13 characters. The
+PC also has character limitations on filenames, most of which didn't apply to
+the C64. When converting a C64 file from any emulator file, you *cannot* use
+the C64 filename directly on the PC since, first of all its likely too long,
+and secondly it may contain characters illegal in the DOS world (i.e. ASCII 46,
+the 'extension' separator).
+
+  In order to convert a filename from C64 to DOS, the use of translate tables
+(translating illegal characters to legal ones) as well as an algorithm to
+reduce the filesize down to useable size (typically only 8 characters from 16)
+must be used.
+
+  Included within the PC64 distribution archive is a C program which does just
+what I have described. It contains an algorithm which will remove illegal
+characters, then reduce the filename down using several different rules, all to
+make the filename  conform to the DOS 8.3 naming standards.
+
+  There is very little benefit or disadvantage to using binary. About the only
+thing which is important to remember is you generally lose most of the original
+C64 filename, which *will* cause problems when you try to reconstruct them.
+Binaries have no way of preserving the long names.
+
+
+-------------------------------------------------------------------------------
+
+
+*** ARK
+
+  This format bears some resemblance to LNX archives in that all the files are
+simply stored, one after the other, and are byte aligned to take up multiples
+of 254 bytes (265 on a real 1541). However, there is no BASIC program at the
+beginning telling you to "Use LYNX to dissolve this file". Another odd
+difference is that ARK files are *always* multiples of 254 bytes, since even
+the last block of the last file is 254 bytes long
+
+  The structure of the directory is also a little different, as all entries
+take up 29 bytes (unlike LNX's variable size). Below is a sample of an ARK
+file, with a few of its directory entries...
+
+0000: 1F C2 8A 41 4C 57 41 59 53 20 45 44 2E 56 32 2E
+0010: 33 20 20 00 00 00 00 00 00 00 00 00 2A 00 C2 D3
+0020: 5A 4F 4F 4D 34 20 45 44 49 54 20 56 30 2E 30 31
+0030: 00 00 00 00 00 00 00 00 00 10 00 C2 BF 50 41 52
+0040: 54 59 2D 44 45 4D 4F 20 20 20 20 20 20 00 00 00
+0050: 00 00 00 00 00 00 08 00 C2 5C 46 49 4B 30 5C 20
+0060: 4D 52 2E 20 42 55 5C 4B 49 20 00 00 00 00 00 00
+0070: 00 00 00 10 00 C2 DD 53 59 4C 57 45 53 54 45 52
+0080: 55 52 45 42 47 4F 20 00 00 00 00 00 00 00 00 00
+0090: 0C 00 C2 D8 54 41 2D 54 41 2D 50 4C 45 2D 50 4C
+
+  Byte:    00: Number of files in the ARKive ($1F = 31 files)
+        01-1D: First directory entry (29 bytes per entry)
+           01: File Attribute (same as a D64 attribute)
+                  81=SEQ
+                  82=PRG
+                  83=USR
+                  84=REL
+               85-8F=Not normally used (results in very *weird* types)
+               bit 7 on, file is locked (< file, $Cx)
+               bit 8 on, normal file ($8x).
+           02: Number of bytes+1 used in the last sector of the file
+        03-12: 16-byte filename (in PETASCII, padded with $A0)
+        13-1B: REL file info (side sector t/s link, record length). Note, these
+               are also the same locations that GEOS stores its VLIR file info,
+               but ARK's can't possibly contain VLIR files as they are much too
+               complex. See the entry on GEOS VLIR for more info.
+        1C-1D: Length of file (in blocks, low-byte, high-byte order)
+        1E-3A: Second directory entry
+        3B-57: Third directory entry
+        58-74: Fourth directory entry
+        75-91: Fifth directory entry
+        ...
+
+  The starting location of the file information takes some calculation to find
+out. Since we have 31 entries, total byte size of the directory is 31*29+1=900
+(the 1 comes from the first byte of the file, the # of entries). Now, we take
+the 900 and divide it by 254 to see the number of blocks. 900/254 = 3.543, or 4
+blocks. So now we know that the file information starts at 4*254 = 1016 ($3F8)
+
+  Seeing as no emulator that I know of supports ARK format, I can't see any
+usefulness in using it. It does have a better directory structure than LNX as
+each entry has a consistent byte size (versus LNX). In fact, the entries are
+virtually identical to the D64/1541.
+
+  There are also a few utilities for UnARK'ing on the PC. It would seem that
+LNX is the better supported format, on both the C64 and the emulators. Star
+Commander does contain a utility called StarArk which will unark these files
+into a D64 image.
+
+
+-------------------------------------------------------------------------------
+
+
+* GEOS VLIR
+
+  Later on in the life of the C64, an OS called GEOS came out. It was a system
+much like the MacOS in that it used icons, windows, a mouse pointer and
+resource drivers. In order to contain all the information needed for the
+windowing system (icon, window position, creation time/date), a new filetype
+called VLIR was needed. While GEOS files may not be of interest to the majority
+of emulator users, it is possible that these files might be encountered, and
+some knowledge of them would be helpful.
+
+  Each GEOS file or application is comprised of many separate chains (called
+RECORDS) for different sections of the app/file. Each RECORD can be loaded in
+separately, and overtop of one another. Below is a dump of the first directory
+sector of the GEOS 2.0 disk. Note the first entry seems normal enough, but the
+rest have additional information in the normally unused section of the entry.
+
+00: 12 04 82 13 00 47 45 4F 53 20 56 32 2E 30 20 45  <- Normal entry
+10: 4E 47 4C 2E A0 00 00 00 00 00 00 00 00 00 58 00
+20: 00 00 83 02 02 44 45 53 4B 20 54 4F 50 A0 A0 A0  <- First GEOS file.
+30: A0 A0 A0 A0 A0 02 0F 01 04 58 08 13 0D 23 78 00  <- Note extra info here!
+40: 00 00 83 0B 13 43 4F 4D 4D 20 31 33 35 31 28 61
+50: 29 A0 A0 A0 A0 08 0F 00 0A 58 05 09 15 24 03 00
+60: 00 00 83 0F 0D 4D 50 53 2D 38 30 31 A0 A0 A0 A0
+70: A0 A0 A0 A0 A0 0F 05 00 09 56 07 19 01 00 04 00
+80: 00 00 83 08 0D 43 4F 4E 46 49 47 55 52 45 A0 A0
+90: A0 A0 A0 A0 A0 08 05 01 0E 58 05 1F 0B 31 4E 00
+A0: 00 00 83 01 10 50 41 49 4E 54 20 44 52 49 56 45
+B0: 52 53 A0 A0 A0 01 08 00 06 57 08 0C 0E 00 12 00
+C0: 00 00 83 0B 05 70 72 65 66 65 72 65 6E 63 65 20
+D0: 6D 67 72 A0 A0 0B 12 00 05 56 0A 09 13 2D 16 00
+E0: 00 00 83 08 11 70 61 64 20 63 6F 6C 6F 72 20 6D
+F0: 67 72 A0 A0 A0 08 07 00 05 58 05 19 0C 10 16 00
+
+Lets analyze the second entry to see whats all involved with GEOS files.
+
+20: 00 00 83 02 02 44 45 53 4B 20 54 4F 50 A0 A0 A0
+30: A0 A0 A0 A0 A0 02 0F 01 04 58 08 13 0D 23 78 00
+
+  Byte:   $22: C64 filetype (see the section on D64 for an explanation)
+        23-24: Starting track/sector (2,2 from above) of C64 file if VLIR
+               filetype is $00. If VLIR filetype is $01, track/sector of
+               single-sector RECORD block
+        25-34: Filename (in ASCII, padded with $A0, case varies)
+           35: Track location of info block
+           36: Sector location of info block
+           37: VLIR filetype
+                 $00 - Normal C64 file (non-VLIR)
+                  01 - VLIR file (with info and RECORD blocks)
+           38: GEOS file structure
+                 $00 - Non-GEOS
+                  01 - BASIC
+                  02 - Assembler
+                  03 - Data file
+                  04 - System File
+                  05 - Desk Accessory
+                  06 - Application
+                  07 - Application Data
+                  08 - Font File
+                  09 - Printer Driver
+                  0A - Input Driver
+                  0B - Disk Driver
+                  0C - System Boot File
+                  0D - Temporary
+                  0E - Auto-Boot File
+               0F-FF - Undefined
+           39: Year (19xx)
+           3A: Month (1-12)
+           3B: Day (1-31)
+           3C: Hour (0-23, military time)
+           3D: Minute (0-59)
+        3E-3F: Filesize (in low-byte/high-byte order)
+
+  Note: The bytes $22-24 and $37 need a little more description than is given
+above. If the C64 filetype (loc $22) is a USR, then we need to look at the VLIR
+type (loc. $37). If the VLIR is a $01, then the file is a GEOS VLIR, and bytes
+$23 and $24 will contain the t/s link to the single-sector record block. If the
+VLIR is a 0, then the file is a normal C64 file, be it USR, REL, etc.
+
+  The info block is that which stores items like the ICON, size, load address,
+file types, description, etc. It is *always* 1 sector long, no more. Here is a
+sample info block, and layout...
+
+00: 00 FF 03 15 BF FF FF FF 92 49 01 FF FF 01 80 00
+10: 1D BF FF DD A0 00 5D BF FF C1 A0 00 5D A1 C6 55
+20: A0 29 5D A0 C9 41 A1 09 41 B9 D6 41 A8 00 41 BF
+30: FF C1 80 00 1D 9C 00 15 9C 00 15 80 00 1D 80 00
+40: 01 FF FF FF 83 04 01 56 19 55 19 75 51 64 65 73
+50: 6B 54 6F 70 20 41 4D 20 20 56 32 2E 30 00 00 00
+60: 00 50 65 74 65 72 20 53 63 68 65 70 65 72 73 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 4C 2A 5B 4C 59 5D 4C
+90: A7 61 4C 3A 62 AD 8A 84 D0 01 60 20 7E 23 20 9C
+A0: 55 73 65 20 74 68 65 20 64 65 73 6B 54 6F 70 20
+B0: 74 6F 20 6D 61 6E 61 67 65 20 61 6E 64 20 6D 61
+C0: 6E 69 70 75 6C 61 74 65 20 79 6F 75 72 20 66 69
+D0: 6C 65 73 2E 00 03 20 E3 5C 68 85 FB 20 4F 61 20
+E0: 13 61 20 32 61 20 F2 5C A9 0C 20 CC 49 A9 2E 85
+F0: 13 A9 F9 85 12 A9 2F 85 15 A9 01 85 14 A9 84 85
+
+  Byte: $00-01: Contains $00/$FF since its only 1 block long
+            02: Icon width
+            03: Icon height
+         04-43: Icon information
+            44: C64 filetype (same as that from the directory entry)
+            45: VLIR file type (same as that from the directory entry)
+            46: GEOS file structure (same as that from the dir entry)
+         47-48: Program load address
+         49-4A: Program end address (only with accessories)
+         4B-4C: Program start address
+         4D-60: Class text
+         61-74: Author (with application data: name of application disk)
+         75-88: (with application data: name of application)
+         89-9F: Available for applications, unreserved.
+         A0-FF: Description
+
+  If the file is a VLIR, then the RECORD block is of interest. This single
+sector is made up of up to 127 track/sector pointers, each of which point to
+program sections (called RECORDS). VLIR files are comprised of loadable RECORDS
+(overlays, if you wish to use PC terminology). The first RECORD is what is
+always loaded first when you run that application. After that, the OS loads
+whatever RECORD it needs. Here is a partial sample of the RECORD sector...
+
+00: 00 FF 08 00 09 04 09 03 0A 0A 0B 11 0F 11 00 00
+10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+  Byte: $00-01: Contains 00,FF since its only 1 block long
+         02-03: Starting track/sector (8,0) for the first RECORD
+         04-05: Starting track/sector (9,4) for the second RECORD
+         06-07: Starting track/sector (9,3) for the third RECORD
+         08-09: fourth RECORD (10,10)
+         0A-0B: fifth RECORD (11,17)
+         0C-0D: sixth RECORD (15,17)
+         0E-0F: seventh RECORD (0,0)
+
+When a T/S link of 0,0 is encountered, we are at the end of the RECORD block.
+
+  Note that if you add up the blocks so far, we have only used two, one for the
+INFO sector and one for the RECORD sector. Obviously there are more used, and
+they are contained in the sector chains from the RECORD sector. Each t/s link
+in the RECORD sector points to a chain of sectors, the length of which is
+included in the block count for the GEOS file. Doing a VALIDATE on a GEOS disk
+when not in GEOS would de-allocate all these sector chains (and the RECORD
+sector as well), which would not be good!.
+
+  GEOS disks also contain something called a "border sector" which is also one
+sector long. It has the same layout as a normal directory block, and is used
+for copying files from one disk to another. When you need to copy a file, you
+drag the icon to the bottom of the screen and the file is moved from its normal
+location in the directory to the border sector. This sector's location is
+stored on Track 18, sector 0 at byte $AB and $AC. Since it is only 1 sector, it
+can hold only 8 entries.
+
+  Seeing as this is not an emulator format, I will not comment on its relative
+merits. It is simply another C64 file type, one which is not too useful outside
+of the realm of GEOS.
+
+
+-------------------------------------------------------------------------------
+
+
+*** LHA (created on a C64/C128, not PC)
+
+  These files are created with LHA on the C64 (or C128), and can present
+special problems to the typical PC user. The compression used is LH1, an old
+method used on LHX1xx (pre-version 2), so any version of LHA on the PC can
+uncompress them. However, LHA allows filenames of up to 18 characters long, and
+DOS doesn't know how to handle them. (There may be provisions inside LHA to
+extract and rename files, but I didn't see how.) Usually, some of the files
+already uncompressed will be overwritten by other files just being uncompressed
+because the name is too similar for DOS do distinguish. To LHA however, the
+filenames are quite different.
+
+  The format of LHA is much too complex to get into here. Understanding the
+layout would require knowledge of Huffman coding and sliding dictionaries. It
+is not as simple as ZipCode! The description given in the LHA source code goes
+as follows:
+
+    -lh1-   4k sliding dictionary (max 60 bytes) + dynamic Huffman + fixed
+              encoding of position
+
+  There are several utilities that you can use to decompress these files, the
+already-mentioned LHA on the PC, and STARLHA, one of the many excellent
+utilities contained in the Star Commander distribution package. It will extract
+the files directly into a D64 archive, so the filenames will not be lost.
+
+  To an emulator user there is no use to these files, as their only real useage
+on a C64 was for storage and transmission benefits. The standard compression
+program on the PC is PKZIP (or ZIP compatibles), so unless you have some need
+to send *compressed* files back the C64, there is no use in using LHA.
+
+
+-------------------------------------------------------------------------------
+
+
+*** SFX
+
+  This is *almost* the same as LHA, except there is an LHA extractor program
+attached on the front of the compressed file, capable of decompressing on
+either a C64 or a C128, independant of the load address.
+
+  Approximately 3721 bytes (usually address $0E89) in the file you will find
+the beginning of the LHA archive, denoted by the signature '-lh1-'. *ALL* LHA
+archives have this type of signature string in them ('-lhx-', where x is the
+type of compression used, with C64 archives being 1, and most PC archives being
+5). The actual archive starts 2 bytes before this string is found, and goes to
+the end of the file. If you want to convert them to LHA, you can chop the front
+end off the file (up to two bytes before the -lhx- string), and rename it to an
+LHA. It should then *be* a normal LHA file.
+
+
+-------------------------------------------------------------------------------
+
+
+*** SDA
+
+  The name stands for "Self-Dissolving Archive", and thats exactly what it
+does. There is a decompression engine at the beginning of the file called by a
+BASIC SYS command. It will decompress all the files contained to whatever
+device you specify, or disk you select. It does not appear to be in LHA format,
+but uses its own compression method, and I have not analyzed the assembly
+program to see what type of compression it is. It is possible that there are
+several different SDA formats around, but with their own decompression engine
+attatched, you would never know unless you analyzed the file.
+
+  The only way that I know of to decompress these files is by running it on
+either a real C64 or an emulator window, and let the file undo itself to a disk
+image.
+
+
+-------------------------------------------------------------------------------
+
+
+*** ZIP (created on a C64/C128, not PC)
+
+  These are PKZIP 1.1-compatible archives, which are decompressible on the C64
+using various utilities. The PC version of PKUNZIP will also handle the older
+archives.
+
+
+-------------------------------------------------------------------------------
+
+
+*** CPK
+
+  This is a format created by Andre Fachat in the early days on the emulator
+scene. It is a very basic format using as simple compression technique (RLE)
+with each file following in sequential order (as Andre put it, "its similar to
+a TAR file"). Since there is no central directory, nothing is byte aligned and
+it uses compression, every file will be different.
+
+  The first byte of the file is the version byte. Presently, only $01 is
+supported. The filename follows, stored in standard PETASCII, no padding
+characters (A0) are included. The filetype is attached to the end of the
+filename in the form of ',x', where x is the filetype used (P,S,U), and it is
+in PETASCII upper case. The filename ends with a $00 (null terminated). REL
+files are *not* supported as there is no provision made for the RECORD size
+byte. Following this we get program data.
+
+  The program data requires some explanation as it entails RLE compression.
+When creating the archives, data in the file to be compressed is scanned for
+runs of repeating bytes, and when a string of 3 or more (up to 255) is found,
+then the following sequence of bytes is output...
+
+  $F7 $xx $yy  - where F7 is the code used for "encoded sequence follows", $xx
+                 is the number of times to repeat the byte and $yy is the byte
+                 to repeat.
+
+  Using $F7 as the encoder byte presents one problem. When encoding a file with
+the packer, and we encounter an $F7, what does the packer do? Simple, it gets
+encoded into $F7 $xx $F7 meaning repeat $F7 $xx times. This compression
+technique is very similar to that of the 4-pack ZipCodes. The code 'F7' was
+chosen because it is not a 6502 opcode, a BASIC token, or any commonly used
+byte, but not because it has *the* least probability of occuring.
+
+  The stored program ends when the string $F7 $00 is encountered, since this
+sequence can not occur in the file naturally. The end of the archive is known
+when a filename of $00 occurs, meaning there is no filename, just a null
+termination.
+
+  In order to extract *one* specific file, you would need to read the whole
+archive until you find the filename you want, then output that file only. As
+this format has no central directory and no file location references, there is
+no other way to do it.
+
+
+-------------------------------------------------------------------------------
+
+
+*** CKIT
+
+  This is a relatively recent program which does whole-disk archiving of disks
+from the various Commodore drives (1541/1571/1581). The latest version is
+"CKIT-94", meaning it was released in 1994, which would imply that there were
+earlier versions.
+
+  Of the samples I have seen, I am (so far) unable to determine what
+compression is used. The data is so different from the original disks that it
+would seem to be encrypted. One possible answer is that the disks are actually
+compressed copies of the GCR info, but that is strictly conjecture.
+
+  The file extension for single disk files (i.e. when a compressed disk image
+only takes up one archive file) is "C4-". If an compressed image takes more
+than 1 file, the extension changes.
+
+  The header of the compressed file always starts with the string "MMS " (with
+a space and $00 null termination). On all the samples I have, there follows an
+"XX", but this by no means is conclusive.
+
+0000: 4D 4D 53 20 00 58 58 21 90 89 A0 00 60 00 04 00  MMS  XX
+0010: 00 29 5A EC 94 03 40 06 20 2F BF D5 20 B4 68 81
+0020: A0 8D 10 B4 10 AF 15 03 61 08 07 50 00 10 80 68
+0030: 8A 88 08 91 03 32 1A 0F B7 30 1D 94 D0 7B 28 80
+
+  Byte: $0000-0004 - ASCII string "MMS " with null termination.
+         0005-???? - Compressed data
+
+More information on this format would be appreciated.
+
+
+-------------------------------------------------------------------------------
+
+
+  This document has been compiled by Peter Schepers, 1996, in an attempt to
+unify all the other smaller files dealing with file types that are floating
+about the 'net, or that exist with other programs. It is by no means
+exhaustive, but I will attempt to keep it up-to-date, and correct anything
+which is wrong. Use it, pass it around, upload it, whatever. Just be sure to
+leave it INTACT, don't remove bits of it.
+
+  The following people have helped (in one way or another) with the details,
+compilation, source code, and other aspects of this document (whether they know
+it or not!):
+
+Immers/Neufeld     - 1541 disk layout (from "Inside Commodore DOS")
+Joe Forster/STA    - FilePacked ZipCodes
+Jouko Valta        - X64 header (first 64 bytes)
+Marko Makela       - LNX format
+Andreas Varga      - GEOS file info
+Miha Peternel      - Basic T64 layout
+Wolfgang Lorenz    - Conversion algorithm for PC64 filenames
+Andre Fachat       - CPK layout
+
+  A very special thank you goes to *Paul David Doherty* for his extensive
+contributions regarding the ZipCode format, both 4-file and 6-file DiskPacked,
+much of the GEOS file layout, and some ideas and samples for CKIT. Without his
+help, all three areas would be almost non-existant!
+
+  Much information can also be gleaned from the source code contained in the
+archive CBMConvert 1.1, which is on the FTP.FUNET.FI FTP site. Inside of it are
+the sources for UnZipCode, UnLNX, Ark, some LHA info, etc. It is an invaluable
+set of utilities put together by both Marko Makela and Paul Doherty.
+
+
+-------------------------------------------------------------------------------
+
+
+                      BINARY/HEX/DECIMAL conversion chart
+
+
+ Binary  HEX Dec      Binary  HEX Dec      Binary  HEX Dec      Binary  HEX Dec
+-------- --- ---     -------- --- ---     -------- --- ---     -------- --- ---
+00000000 $00   0     01000000 $40  64     10000000 $80 128     11000000 $C0 192
+00000001  01   1     01000001  41  65     10000001  81 129     11000001  C1 193
+00000010  02   2     01000010  42  66     10000010  82 130     11000010  C2 194
+00000011  03   3     01000011  43  67     10000011  83 131     11000011  C3 195
+00000100  04   4     01000100  44  68     10000100  84 132     11000100  C4 196
+00000101  05   5     01000101  45  69     10000101  85 133     11000101  C5 197
+00000110  06   6     01000110  46  70     10000110  86 134     11000110  C6 198
+00000111  07   7     01000111  47  71     10000111  87 135     11000111  C7 199
+00001000  08   8     01001000  48  72     10001000  88 136     11001000  C8 200
+00001001  09   9     01001001  49  73     10001001  89 137     11001001  C9 201
+00001010  0A  10     01001010  4A  74     10001010  8A 138     11001010  CA 202
+00001011  0B  11     01001011  4B  75     10001011  8B 139     11001011  CB 203
+00001100  0C  12     01001100  4C  76     10001100  8C 140     11001100  CC 204
+00001101  0D  13     01001101  4D  77     10001101  8D 141     11001101  CD 205
+00001110  0E  14     01001110  4E  78     10001110  8E 142     11001110  CE 206
+00001111  0F  15     01001111  4F  79     10001111  8F 143     11001111  CF 207
+00010000  10  16     01010000  50  80     10010000  90 144     11010000  D0 208
+00010001  11  17     01010001  51  81     10010001  91 145     11010001  D1 209
+00010010  12  18     01010010  52  82     10010010  92 146     11010010  D2 210
+00010011  13  19     01010011  53  83     10010011  93 147     11010011  D3 211
+00010100  14  20     01010100  54  84     10010100  94 148     11010100  D4 212
+00010101  15  21     01010101  55  85     10010101  95 149     11010101  D5 213
+00010110  16  22     01010110  56  86     10010110  96 150     11010110  D6 214
+00010111  17  23     01010111  57  87     10010111  97 151     11010111  D7 215
+00011000  18  24     01011000  58  88     10011000  98 152     11011000  D8 216
+00011001  19  25     01011001  59  89     10011001  99 153     11011001  D9 217
+00011010  1A  26     01011010  5A  90     10011010  9A 154     11011010  DA 218
+00011011  1B  27     01011011  5B  91     10011011  9B 155     11011011  DB 219
+00011100  1C  28     01011100  5C  92     10011100  9C 156     11011100  DC 220
+00011101  1D  29     01011101  5D  93     10011101  9D 157     11011101  DD 221
+00011110  1E  30     01011110  5E  94     10011110  9E 158     11011110  DE 222
+00011111  1F  31     01011111  5F  95     10011111  9F 159     11011111  DF 223
+00100000  20  32     01100000  60  96     10100000  A0 160     11100000  E0 224
+00100001  21  33     01100001  61  97     10100001  A1 161     11100001  E1 225
+00100010  22  34     01100010  62  98     10100010  A2 162     11100010  E2 226
+00100011  23  35     01100011  63  99     10100011  A3 163     11100011  E3 227
+00100100  24  36     01100100  64 100     10100100  A4 164     11100100  E4 228
+00100101  25  37     01100101  65 101     10100101  A5 165     11100101  E5 229
+00100110  26  38     01100110  66 102     10100110  A6 166     11100110  E6 230
+00100111  27  39     01100111  67 103     10100111  A7 167     11100111  E7 231
+00101000  28  40     01101000  68 104     10101000  A8 168     11101000  E8 232
+00101001  29  41     01101001  69 105     10101001  A9 169     11101001  E9 233
+00101010  2A  42     01101010  6A 106     10101010  AA 170     11101010  EA 234
+00101011  2B  43     01101011  6B 107     10101011  AB 171     11101011  EB 235
+00101100  2C  44     01101100  6C 108     10101100  AC 172     11101100  EC 236
+00101101  2D  45     01101101  6D 109     10101101  AD 173     11101101  ED 237
+00101110  2E  46     01101110  6E 110     10101110  AE 174     11101110  EE 238
+00101111  2F  47     01101111  6F 111     10101111  AF 175     11101111  EF 239
+00110000  30  48     01110000  70 112     10110000  B0 176     11110000  F0 240
+00110001  31  49     01110001  71 113     10110001  B1 177     11110001  F1 241
+00110010  32  50     01110010  72 114     10110010  B2 178     11110010  F2 242
+00110011  33  51     01110011  73 115     10110011  B3 179     11110011  F3 243
+00110100  34  52     01110100  74 116     10110100  B4 180     11110100  F4 244
+00110101  35  52     01110101  75 117     10110101  B5 181     11110101  F5 245
+00110110  36  54     01110110  76 118     10110110  B6 182     11110110  F6 246
+00110111  37  55     01110111  77 119     10110111  B7 183     11110111  F7 247
+00111000  38  56     01111000  78 120     10111000  B8 184     11111000  F8 248
+00111001  39  57     01111001  79 121     10111001  B9 185     11111001  F9 249
+00111010  3A  58     01111010  7A 122     10111010  BA 186     11111010  FA 250
+00111011  3B  59     01111011  7B 123     10111011  BB 187     11111011  FB 251
+00111100  3C  60     01111100  7C 124     10111100  BC 188     11111100  FC 252
+00111101  3D  61     01111101  7D 125     10111101  BD 189     11111101  FD 253
+00111110  3E  62     01111110  7E 126     10111110  BE 190     11111110  FE 254
+00111111  3F  63     01111111  7F 127     10111111  BF 191     11111111  FF 255
+

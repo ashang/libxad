@@ -1,0 +1,966 @@
+*****************************************************************************
+*   $Id: MagneticFields.a,v 1.2 2005/06/23 14:39:16 stoecker Exp $
+*   Magnetic Fields decrunching slave
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+
+S_Magnetic
+		IFND	XFD_LASTSLAVE
+		dc.l	S_Magnetic_END
+		ELSE
+		dc.l	0
+		ENDIF
+		dc.w	2
+		dc.w	39
+		dc.l	N_Magnetic
+		dc.w	XFDPFF_DATA
+		dc.w	0
+		dc.l	RB_Magnetic
+		dc.l	DB_Magnetic
+		dc.l	RB_Magnetic
+		dc.l	VD_Magnetic
+		dc.w	XFDID_SACFPQCruncher
+		dc.w	0
+		dc.l	14+8+4
+
+N_Magnetic	dc.b	'SA/SC/SF/SP/SQ Cruncher',0
+		even
+
+;-------------------------------------------------
+
+RB_Magnetic	tst.b	2(a0)
+		bne.s	.Exit
+
+		cmp.w	#'SC',(a0)	;12+4+4
+		beq.s	.SC
+		cmp.w	#'SP',(a0)	;12+4
+		bne.s	.NoSP
+.SC		;tst.b	2(a0)		;depth
+		;bne.s	.Exit
+		tst.b	4(a0)		;uncr
+		bne.s	.Exit
+.OldSA		tst.b	8(a0)		;cr
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.NoSP		cmp.w	#'SF',(a0)	;10+4
+		bne.s	.NoSF
+		;tst.b	2(a0)		;uncr
+		;bne.s	.Exit
+		tst.b	6(a0)		;cr
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.NoSF		cmp.w	#'SQ',(a0)	;10+4
+		bne.s	.NoSQ
+		;tst.b	2(a0)		;uncr
+		;bne.s	.Exit
+		move.b	6(a0),d0	;1-3
+		beq.s	.Exit
+		subq.b	#3,d0
+		bgt.s	.Exit
+		moveq	#1,d0
+		rts
+
+.NoSQ		cmp.w	#'SA',(a0)	;14+8+4
+		bne.s	.Exit
+		;tst.b	2(a0)		;depth
+		;bne.s	.Exit
+		tst.b	4(a0)		;special
+		bne.s	.Exit
+		tst.b	6(a0)		;uncr
+		bne.s	.OldSA
+		tst.b	10(a0)		;cr
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+VD_Magnetic	move.l	d0,a1
+
+		cmp.w	#'SA',(a0)
+		bne.s	.NoSA
+		tst.b	6(a0)
+		bne.s	.OldSA
+		moveq	#0,d1
+		move.w	4(a0),d1	;special
+		lsl.l	#3,d1
+		add.l	#14,d1
+		add.l	10(a0),d1	;cr
+		bra.s	.Test
+.OldSA		moveq	#12+8,d1
+		add.l	8(a0),d1	;cr
+		cmp.l	d1,a1
+		bcs.s	.Exit
+		add.l	(a0,d1.l),d1
+		bra.s	.Test
+
+.NoSA		cmp.w	#'SC',(a0)
+		bne.s	.NoSC
+		moveq	#2,d1
+		move.w	2(a0),d0	;depth
+		lsl.l	d0,d1
+		add.l	#12,d1
+		add.l	8(a0),d1	;cr
+		bra.s	.Test
+
+.NoSC		cmp.w	#'SP',(a0)
+		bne.s	.NoSP
+		moveq	#12,d1
+		add.l	8(a0),d1	;cr
+		bra.s	.Test
+
+.NoSP		cmp.w	#'SF',(a0)
+		bne.s	.NoSF
+		moveq	#10,d1
+		add.l	6(a0),d1	;cr
+		bra.s	.Test
+
+.NoSF		cmp.w	#'SQ',(a0)
+		bne.s	.Exit
+		moveq	#10,d1
+		move.l	6(a0),d0	;cr
+		and.l	#$ffffff,d0
+		lsl.l	#2,d0
+		add.l	d0,d1
+.Test		cmp.l	d1,a1
+		bcs.s	.Exit
+		move.l	d1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_Magnetic	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a2
+
+		cmp.w	#'SF',(a2)
+		bne.s	.NotSF
+		move.l	2(a2),d0
+		bra.s	.Alloc
+
+.NotSF		cmp.w	#'SQ',(a2)
+		bne.s	.NotSQ
+		move.l	2(a2),d0
+		addq.l	#7,d0
+		and.w	#$fff8,d0
+		bra.s	.Alloc
+
+.NotSQ	;	cmp.w	#'SC',(a2)
+;		bne.s	.NotSC
+;		move.l	4(a2),d0
+;		mulu	2(a2),d0
+;		moveq	#2,d1
+;		move.w	2(a2),d2
+;		lsl.w	d2,d1
+;		add.l	d1,d0
+;		bra.s	.Alloc
+;
+;.NotSC		cmp.w	#'SP',(a2)
+;		bne.s	.NotSP
+;		move.l	4(a2),d0
+;		mulu	2(a2),d0
+;		bra.s	.Alloc
+
+.NotSP		move.w	#XFDERR_NOTSUPPORTED,xfdbi_Error(a5)
+		moveq	#0,d0
+		bra.s	.Exit
+
+.Alloc		move.l	d0,xfdbi_TargetBufLen(a5)
+		move.l	d0,xfdbi_TargetBufSaveLen(a5)
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit
+
+		;sub.w	#32,a7
+		;move.l	a7,a6
+		move.l	d0,a1
+		move.l	a2,a0
+		bsr.s	D_Magnetic
+		;add.w	#32,a7
+
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;=================================================
+
+D_Magnetic	move.w	(a0),d0
+		;cmp.w	#'SA',d0
+		;beq	D_MagSA
+		;cmp.w	#'SC',d0
+		;beq	D_MagSC
+		cmp.w	#'SF',d0
+		beq.s	D_MagSF
+		;cmp.w	#'SP',d0
+		;beq	D_MagSP
+		bra	D_MagSQ
+
+;-------------------------------------------------
+
+D_MagSF		moveq	#-1,d5
+		move.l	a1,a3
+		addq.w	#2,a0
+		add.l	(a0)+,a1
+		add.l	(a0)+,a0
+		move.b	-(a0),d0
+.Decr_6D2	add.b	d0,d0
+		bne.s	.Decr_6DE
+		move.b	-(a0),d0
+		move.b	d5,ccr
+		addx.b	d0,d0
+.Decr_6DE	bcc	.Decr_784
+		add.b	d0,d0
+		bne.s	.Decr_6EE
+		move.b	-(a0),d0
+		move.b	d5,ccr
+		addx.b	d0,d0
+.Decr_6EE	bcc.s	.Decr_750
+		add.b	d0,d0
+		bne.s	.Decr_6FC
+		move.b	-(a0),d0
+		move.b	d5,ccr
+		addx.b	d0,d0
+.Decr_6FC	bcc.s	.Decr_756
+		add.b	d0,d0
+		bne.s	.Decr_70A
+		move.b	-(a0),d0
+		move.b	d5,ccr
+		addx.b	d0,d0
+.Decr_70A	bcc.s	.Decr_75C
+		add.b	d0,d0
+		bne.s	.Decr_718
+		move.b	-(a0),d0
+		move.b	d5,ccr
+		addx.b	d0,d0
+.Decr_718	bcc.s	.Decr_71E
+		moveq	#9,d4
+		bra.s	.Decr_720
+
+.Decr_71E	moveq	#14,d4
+.Decr_720	moveq	#1,d2
+		moveq	#1,d3
+		moveq	#5,d6
+.Decr_726	move.w	d2,d1
+		subq.w	#1,d1
+		moveq	#0,d7
+.Decr_72C	add.b	d0,d0
+		bne.s	.Decr_738
+		move.b	-(a0),d0
+		move.b	d5,ccr
+		addx.b	d0,d0
+.Decr_738	addx.w	d7,d7
+		dbra	d1,.Decr_72C
+		add.w	d7,d6
+		cmp.w	d3,d7
+		bne.s	.Decr_74C
+		addq.w	#1,d2
+		add.w	d3,d3
+		addq.w	#1,d3
+		bra.s	.Decr_726
+
+.Decr_74C	move.w	d4,d1
+		bra.s	.Decr_760
+
+.Decr_750	moveq	#9,d1
+		moveq	#2,d6
+		bra.s	.Decr_760
+
+.Decr_756	moveq	#10,d1
+		moveq	#3,d6
+		bra.s	.Decr_760
+
+.Decr_75C	moveq	#12,d1
+		moveq	#4,d6
+.Decr_760	subq.w	#1,d1
+		moveq	#0,d7
+.Decr_764	add.b	d0,d0
+		bne.s	.Decr_770
+		move.b	-(a0),d0
+		move.b	d5,ccr
+		addx.b	d0,d0
+.Decr_770	addx.w	d7,d7
+		dbra	d1,.Decr_764
+		lea	(a1,d7.w),a2
+		subq.w	#1,d6
+.Decr_77C	move.b	-(a2),-(a1)
+		cmp.l	a3,a1
+		dbeq	d6,.Decr_77C
+		bra.s	.Decr_7B8
+
+.Decr_784	moveq	#1,d2
+		moveq	#1,d3
+		moveq	#1,d6
+.Decr_78A	move.w	d2,d1
+		subq.w	#1,d1
+		moveq	#0,d7
+.Decr_790	add.b	d0,d0
+		bne.s	.Decr_79C
+		move.b	-(a0),d0
+		move.b	d5,ccr
+		addx.b	d0,d0
+.Decr_79C	addx.w	d7,d7
+		dbra	d1,.Decr_790
+		add.w	d7,d6
+		cmp.w	d3,d7
+		bne.s	.Decr_7B0
+		addq.w	#1,d2
+		add.w	d3,d3
+		addq.w	#1,d3
+		bra.s	.Decr_78A
+
+.Decr_7B0	subq.w	#1,d6
+.Decr_7B2	move.b	-(a0),-(a1)
+		cmp.l	a3,a1
+		dbeq	d6,.Decr_7B2
+.Decr_7B8	cmp.w	d5,d6
+		beq	.Decr_6D2
+		rts
+
+;-------------------------------------------------
+
+D_MagSQ		moveq	#-1,d3
+		move.l	a1,a2
+		addq.w	#2,a0
+		move.l	(a0)+,d0
+		move.l	d0,-(a7)
+		addq.l	#7,d0
+		and.w	#$fff8,d0
+		add.l	d0,a1
+		move.l	(a0)+,d0
+		move.l	d0,d1
+		and.l	#$ffffff,d0
+		lsl.l	#2,d0
+		add.l	d0,a0
+		move.l	-(a0),d0
+		lsr.l	#8,d1
+		swap	d1
+		move.w	d1,-(a7)
+		moveq	#3,d1
+		bsr.s	.Decr_7C6
+		move.w	d7,d6
+		addq.w	#1,d6
+.Decr_810	move.w	#7,d5
+.Decr_814	move.w	d6,d1
+		bsr.s	.Decr_7C6
+		move.b	d7,-(a1)
+		cmp.l	a2,a1
+		dbeq	d5,.Decr_814
+		cmp.w	d3,d5
+		bne.s	.SkipDecr
+		moveq	#0,d4
+.Decr_822	add.l	d0,d0
+		bne.s	.Decr_82E
+		move.l	-(a0),d0
+		move.b	d3,ccr
+		addx.l	d0,d0
+.Decr_82E	bcc.s	.Decr_834
+		addq.w	#1,d4
+		bra.s	.Decr_822
+
+.Decr_834	addq.w	#1,d4
+		lsr.w	#1,d4
+		bcs.s	.Decr_83C
+		neg.w	d4
+.Decr_83C	sub.w	d4,d6
+		bra.s	.Decr_810
+
+.Decr_7C6	subq.w	#1,d1
+		moveq	#0,d7
+.Decr_7CA	add.l	d0,d0
+		bne.s	.Decr_7D6
+		move.l	-(a0),d0
+		move.b	d3,ccr
+		addx.l	d0,d0
+.Decr_7D6	addx.w	d7,d7
+		dbra	d1,.Decr_7CA
+		rts
+
+.SkipDecr	move.w	(a7)+,d1
+		move.l	(a7)+,d0
+		cmp.w	#1,d1
+		beq.s	.Decr_88E
+		cmp.w	#2,d1
+		beq.s	.Decr_85A
+		cmp.w	#3,d1
+		beq.s	.Decr_872
+
+.Decr_85A	moveq	#0,d4
+.Decr_85C	move.b	(a2),d1
+		lsr.b	#1,d1
+		bcc.s	.Decr_866
+		neg.b	d1
+		subq.b	#1,d1
+.Decr_866	add.b	d1,d4
+		move.b	d4,(a2)+
+		subq.l	#1,d0
+		bne.s	.Decr_85C
+		rts
+
+.Decr_872	moveq	#0,d4
+		moveq	#0,d5
+.Decr_876	move.b	(a2),d1
+		lsr.b	#1,d1
+		bcc.s	.Decr_880
+		neg.b	d1
+		subq.b	#1,d1
+.Decr_880	add.b	d1,d4
+		add.b	d4,d5
+		move.b	d5,(a2)+
+		subq.l	#1,d0
+		bne.s	.Decr_876
+		rts
+
+.Decr_88E	moveq	#0,d4
+.Decr_890	move.b	(a2),d1
+		lsr.b	#1,d1
+		bcc.s	.Decr_89A
+		neg.b	d1
+		subq.b	#1,d1
+.Decr_89A	move.b	d1,(a2)+
+		subq.l	#1,d0
+		bne.s	.Decr_890
+		rts
+
+		IFEQ	1
+
+;-------------------------------------------------
+
+D_MagSP		clr.w	22(a6)
+		bra.s	D_MagSCP
+
+;-------------------------------------------------
+
+D_MagSC		move.w	#1,22(a6)
+
+D_MagSCP	move.l	a1,a4
+		addq.w	#2,a0
+		move.w	(a0)+,16(a6)
+		move.l	(a0)+,8(a6)
+		move.w	16(a6),d0
+		add.w	d0,d0
+		lea	.DecrTab3-2(pc),a1
+		move.w	(a1,d0.w),20(a6)
+		lea	.DecrTab4-2(pc),a1
+		move.w	(a1,d0.w),18(a6)
+		move.l	(a0)+,d0
+		tst.w	22(a6)
+		beq.s	.Decr_394
+		moveq	#0,d1
+		move.w	16(a6),d2
+		bset	d2,d1
+		subq.w	#1,d1
+.Decr_38E	move.w	(a0)+,(a4)+
+		dbra	d1,.Decr_38E
+.Decr_394	add.l	d0,a0
+		move.l	a4,a1
+		add.l	8(a6),a4
+		subq.w	#1,16(a6)
+		move.w	16(a6),d7
+		add.w	d7,d7
+		move.l	a5,-(a7)
+		lea	.DecrTab2(pc),a5
+		add.w	(a5,d7.w),a5
+		moveq	#0,d2
+		move.w	#$4000,d4
+		move.w	#$4000,d5
+		move.l	-(a0),d0
+.Decr_3D4	moveq	#4,d1
+		bsr.s	.Decr_452
+		add.w	d7,d7
+		move.l	a1,-(a7)
+		lea	.DecrTab1(pc),a1
+		add.w	(a1,d7.w),a1
+		jsr	(a1)
+		move.l	(a7)+,a1
+.Decr_3EA	cmp.l	a4,a1
+		beq.s	.Decr_408
+		cmp.w	#$10,d2
+		bcs.s	.Decr_3D4
+		sub.w	#$10,d5
+		and.w	#$3ff0,d5
+		lea	(a2,d5.w),a3
+		sub.w	#$10,d2
+		jsr	(a5)
+		bra.s	.Decr_3EA
+
+.Decr_408	move.l	(a7)+,a5
+		rts
+
+.DecrTab1	dc.w	.Decr_46A-.DecrTab1
+		dc.w	.Decr_46E-.DecrTab1
+		dc.w	.Decr_472-.DecrTab1
+		dc.w	.Decr_476-.DecrTab1
+		dc.w	.Decr_47A-.DecrTab1
+		dc.w	.Decr_47E-.DecrTab1
+		dc.w	.Decr_482-.DecrTab1
+		dc.w	.Decr_48C-.DecrTab1
+		dc.w	.Decr_496-.DecrTab1
+		dc.w	.Decr_4A0-.DecrTab1
+		dc.w	.Decr_4AA-.DecrTab1
+		dc.w	.Decr_4B4-.DecrTab1
+		dc.w	.Decr_4F6-.DecrTab1
+		dc.w	.Decr_500-.DecrTab1
+		dc.w	.Decr_526-.DecrTab1
+		dc.w	.Decr_52A-.DecrTab1
+
+.Decr_452	subq.w	#1,d1
+		moveq	#0,d7
+.Decr_456	add.l	d0,d0
+		bne.s	.Decr_462
+		move.l	-(a0),d0
+		move.b	#$ff,ccr
+		addx.l	d0,d0
+.Decr_462	addx.w	d7,d7
+		dbra	d1,.Decr_456
+		rts
+
+.Decr_46A	moveq	#0,d6
+		bra.s	.Decr_4BC
+
+.Decr_46E	moveq	#1,d6
+		bra.s	.Decr_4BC
+
+.Decr_472	moveq	#2,d6
+		bra.s	.Decr_4BC
+
+.Decr_476	moveq	#3,d6
+		bra.s	.Decr_4BC
+
+.Decr_47A	moveq	#4,d6
+		bra.s	.Decr_4BC
+
+.Decr_47E	moveq	#5,d6
+		bra.s	.Decr_4BC
+
+.Decr_482	moveq	#1,d1
+		bsr.s	.Decr_452
+		moveq	#6,d6
+		add.w	d7,d6
+		bra.s	.Decr_4BC
+
+.Decr_48C	moveq	#1,d1
+		bsr.s	.Decr_452
+		moveq	#8,d6
+		add.w	d7,d6
+		bra.s	.Decr_4BC
+
+.Decr_496	moveq	#2,d1
+		bsr.s	.Decr_452
+		moveq	#10,d6
+		add.w	d7,d6
+		bra.s	.Decr_4BC
+
+.Decr_4A0	moveq	#3,d1
+		bsr.s	.Decr_452
+		moveq	#14,d6
+		add.w	d7,d6
+		bra.s	.Decr_4BC
+
+.Decr_4AA	moveq	#5,d1
+		bsr.s	.Decr_452
+		moveq	#$16,d6
+		add.w	d7,d6
+		bra.s	.Decr_4BC
+
+.Decr_4B4	moveq	#8,d1
+		bsr.s	.Decr_452
+		moveq	#$36,d6
+		add.w	d7,d6
+
+.Decr_4BC	add.w	20(a6),d6
+		;moveq	#1,d1
+		;bsr.s	.Decr_452
+		moveq	#14,d1
+		;tst.w	d7
+		;bne.s	.Decr_4CE
+		;moveq	#9,d1
+.Decr_4CE	bsr.s	.Decr_452
+		add.w	d4,d7
+		move.w	d7,d3
+		and.w	#$3fff,d3
+		subq.w	#1,d6
+.Decr_4DA	subq.w	#1,d3
+		and.w	#$3fff,d3
+		move.b	(a2,d3.w),d7
+		subq.w	#1,d4
+		and.w	#$3fff,d4
+		move.b	d7,(a2,d4.w)
+		addq.l	#1,d2
+		dbra	d6,.Decr_4DA
+		rts
+
+.Decr_4F6	moveq	#4,d1
+		bsr	.Decr_452
+		move.w	d7,d6
+		bra.s	.Decr_50A
+
+.Decr_500	moveq	#8,d1
+		bsr	.Decr_452
+		moveq	#$10,d6
+		add.w	d7,d6
+
+.Decr_50A	add.w	18(a6),d6
+		bsr	.Decr_1A4
+		subq.w	#1,d6
+.Decr_514	subq.w	#1,d4
+		and.w	#$3fff,d4
+		move.b	d7,(a2,d4.w)
+		addq.l	#1,d2
+		dbra	d6,.Decr_514
+		rts
+
+.Decr_526	moveq	#1,d6
+		bra.s	.Decr_534
+
+.Decr_52A	moveq	#3,d1
+		bsr	.Decr_452
+		moveq	#2,d6
+		add.w	d7,d6
+
+.Decr_534	subq.w	#1,d6
+.Decr_536	bsr.s	.Decr_1A4
+		subq.w	#1,d4
+		and.w	#$3fff,d4
+		move.b	d7,(a2,d4.w)
+		addq.l	#1,d2
+		dbra	d6,.Decr_536
+		rts
+
+.Decr_1A4	move.w	16(a6),d1
+		moveq	#0,d7
+.Decr_1AA	add.l	d0,d0
+		bne.s	.Decr_1B6
+		move.l	-(a0),d0
+		move.b	#$ff,ccr
+		addx.l	d0,d0
+.Decr_1B6	roxr.b	#1,d7
+		dbra	d1,.Decr_1AA
+		rts
+
+.DecrTab2	dc.w	.Decr_68A-.DecrTab2
+		dc.w	.Decr_664-.DecrTab2
+		dc.w	.Decr_634-.DecrTab2
+		dc.w	.Decr_5FA-.DecrTab2
+		dc.w	.Decr_5B6-.DecrTab2
+		dc.w	.Decr_568-.DecrTab2
+
+.Decr_568	movem.l	d0/d2/d4/d5,-(a7)
+		moveq	#15,d0
+.Decr_56E	move.b	(a3)+,d1
+		add.b	d1,d1
+		addx.w	d2,d2
+		add.b	d1,d1
+		addx.w	d3,d3
+		add.b	d1,d1
+		addx.w	d4,d4
+		add.b	d1,d1
+		addx.w	d5,d5
+		add.b	d1,d1
+		addx.w	d6,d6
+		add.b	d1,d1
+		addx.w	d7,d7
+		dbra	d0,.Decr_56E
+		move.l	8(a6),d1
+		move.w	d2,-(a4)
+		add.l	d1,a4
+		move.w	d3,(a4)
+		add.l	d1,a4
+		move.w	d4,(a4)
+		add.l	d1,a4
+		move.w	d5,(a4)
+		add.l	d1,a4
+		move.w	d6,(a4)
+		add.l	d1,a4
+		move.w	d7,(a4)
+		sub.l	d1,a4
+		sub.l	d1,a4
+		sub.l	d1,a4
+		sub.l	d1,a4
+		sub.l	d1,a4
+		movem.l	(a7)+,d0/d2/d4/d5
+		rts
+
+.Decr_5B6	movem.l	d0/d2/d4/d5,-(a7)
+		moveq	#15,d0
+.Decr_5BC	move.b	(a3)+,d1
+		add.b	d1,d1
+		addx.w	d2,d2
+		add.b	d1,d1
+		addx.w	d3,d3
+		add.b	d1,d1
+		addx.w	d4,d4
+		add.b	d1,d1
+		addx.w	d5,d5
+		add.b	d1,d1
+		addx.w	d6,d6
+		dbra	d0,.Decr_5BC
+		move.l	8(a6),d1
+		move.w	d2,-(a4)
+		add.l	d1,a4
+		move.w	d3,(a4)
+		add.l	d1,a4
+		move.w	d4,(a4)
+		add.l	d1,a4
+		move.w	d5,(a4)
+		add.l	d1,a4
+		move.w	d6,(a4)
+		sub.l	d1,a4
+		sub.l	d1,a4
+		sub.l	d1,a4
+		sub.l	d1,a4
+		movem.l	(a7)+,d0/d2/d4/d5
+		rts
+
+.Decr_5FA	movem.l	d0/d2/d4/d5,-(a7)
+		moveq	#15,d0
+.Decr_600	move.b	(a3)+,d1
+		add.b	d1,d1
+		addx.w	d2,d2
+		add.b	d1,d1
+		addx.w	d3,d3
+		add.b	d1,d1
+		addx.w	d4,d4
+		add.b	d1,d1
+		addx.w	d5,d5
+		dbra	d0,.Decr_600
+		move.l	8(a6),d1
+		move.w	d2,-(a4)
+		add.l	d1,a4
+		move.w	d3,(a4)
+		add.l	d1,a4
+		move.w	d4,(a4)
+		add.l	d1,a4
+		move.w	d5,(a4)
+		sub.l	d1,a4
+		sub.l	d1,a4
+		sub.l	d1,a4
+		movem.l	(a7)+,d0/d2/d4/d5
+		rts
+
+.Decr_634	movem.l	d0/d2/d4,-(a7)
+		moveq	#15,d0
+.Decr_63A	move.b	(a3)+,d1
+		add.b	d1,d1
+		addx.w	d2,d2
+		add.b	d1,d1
+		addx.w	d3,d3
+		add.b	d1,d1
+		addx.w	d4,d4
+		dbra	d0,.Decr_63A
+		move.l	8(a6),d1
+		move.w	d2,-(a4)
+		add.l	d1,a4
+		move.w	d3,(a4)
+		add.l	d1,a4
+		move.w	d4,(a4)
+		sub.l	d1,a4
+		sub.l	d1,a4
+		movem.l	(a7)+,d0/d2/d4
+		rts
+
+.Decr_664	movem.l	d0/d2,-(a7)
+		moveq	#15,d0
+.Decr_66A	move.b	(a3)+,d1
+		add.b	d1,d1
+		addx.w	d2,d2
+		add.b	d1,d1
+		addx.w	d3,d3
+		dbra	d0,.Decr_66A
+		move.l	8(a6),d1
+		move.w	d2,-(a4)
+		move.w	d3,(a4,d1.l)
+		movem.l	(a7)+,d0/d2
+		rts
+
+.Decr_68A	movem.l	d0/d2,-(a7)
+		moveq	#15,d0
+.Decr_690	move.b	(a3)+,d1
+		add.b	d1,d1
+		addx.w	d2,d2
+		dbra	d0,.Decr_690
+		move.w	d2,-(a4)
+		movem.l	(a7)+,d0/d2
+		rts
+
+.DecrTab3	dc.w	0
+		dc.w	0
+		dc.w	7
+		dc.w	5
+		dc.w	4
+		dc.w	4
+
+.DecrTab4	dc.w	0
+		dc.w	0
+		dc.w	4
+		dc.w	4
+		dc.w	3
+		dc.w	3
+
+;-------------------------------------------------
+
+D_MagSA		movem.l	d1-d7/a0-a6,-(sp)
+		move.l	a1,a4
+		move.l	a1,0(a6)
+		move.w	2(a0),16(a6)
+		move.w	4(a0),24(a6)
+		move.l	6(a0),d1
+		move.l	d1,4(a6)
+		move.w	16(a6),d0
+		add.w	d0,d0
+		lea	lbW0001BE(pc),a1
+		move.w	(a1,d0.w),20(a6)
+		lea	lbW0001CC(pc),a1
+		move.w	(a1,d0.w),18(a6)
+		move.l	10(a0),d0
+		add.w	#14,a0
+		move.w	24(a6),d2
+		asl.w	#3,d2
+		add.w	d2,a0
+		move.l	a0,a1
+		add.l	d0,a0
+		move.w	16(a6),(a4)
+		add.l	d1,a4
+		clr.w	26(a6)
+		subq.w	#1,16(a6)
+		moveq	#0,d2
+		move.w	#$4000,d4
+		move.w	#$4000,d5
+		move.l	-(a0),d0
+lbC000242	subq.l	#8,a1
+		move.l	a1,-(sp)
+		movem.l	d0-d7,-(sp)
+		move.w	(a1),d1
+		move.w	2(a1),d2
+		move.w	d1,d3
+		add.w	#15,d3
+		lsr.w	#4,d3
+		mulu	d2,d3
+		add.w	d3,d3
+		ext.l	d3
+		move.l	d3,8(a6)
+		move.l	4(a1),d7
+		move.l	d7,d6
+		bsr	lbC000316
+		move.w	d7,28(a6)
+		move.l	a4,a1
+		move.w	28(a6),d4
+		move.l	8(a6),d5
+		mulu	d5,d4
+		sub.l	d4,a1
+		move.l	a1,a4
+		add.l	8(a6),a4
+		sub.w	#10,a1
+		move.l	a4,-(sp)
+		move.l	0(a6),a4
+		move.w	24(a6),d4
+		sub.w	26(a6),d4
+		subq.w	#1,d4
+		asl.w	#2,d4
+		move.l	a1,d5
+		sub.l	a4,d5
+		move.l	d5,2(a4,d4.w)
+		move.l	(sp)+,a4
+		move.w	d1,(a1)+
+		move.w	d2,(a1)+
+		move.w	d3,(a1)+
+		move.l	d6,(a1)+
+		movem.l	(sp)+,d0-d7
+		move.w	28(a6),d7
+		add.w	d7,d7
+		;lea	lbL00054C(pc),a5
+		add.l	(a5,d7.w),a5
+lbC0002C0	moveq	#4,d1
+		;bsr	lbC000452
+		add.w	d7,d7
+		move.l	a1,-(sp)
+		;lea	lbL000412(pc),a1
+		add.l	(a1,d7.w),a1
+		jsr	(a1)
+		move.l	(sp)+,a1
+lbC0002D8	cmp.l	a4,a1
+		beq.s	lbC0002F6
+		cmp.w	#$10,d2
+		bcs.s	lbC0002C0
+		sub.w	#$10,d5
+		and.w	#$3ff0,d5
+		lea	(a2,d5.w),a3
+		sub.w	#$10,d2
+		jsr	(a5)
+		bra.s	lbC0002D8
+
+lbC0002F6	sub.w	#10,a4
+		move.l	(sp)+,a1
+		addq.w	#1,26(a6)
+		move.w	26(a6),d1
+		cmp.w	24(a6),d1
+		bne	lbC000242
+		movem.l	(sp)+,d1-d7/a0-a6
+		rts
+
+lbC000316	movem.l	d0/d2/d6,-(a7)
+		move.w	16(a6),d6
+		moveq	#-1,d2
+lbC000320	move.l	d7,d0
+		and.w	#$f,d0
+		cmp.w	#7,d0
+		bpl.s	lbC000332
+		cmp.w	d2,d0
+		bmi.s	lbC000332
+		move.w	d0,d2
+lbC000332	lsr.l	#4,d7
+		subq.w	#1,d6
+		bne.s	lbC000320
+		addq.w	#2,d2
+		move.w	d2,d7
+		movem.l	(a7)+,d0/d2/d6
+		rts
+
+lbW0001BE	dc.w	0
+		dc.w	0
+		dc.w	0
+		dc.w	7
+		dc.w	5
+		dc.w	4
+		dc.w	4
+
+lbW0001CC	dc.w	0
+		dc.w	0
+		dc.w	0
+		dc.w	4
+		dc.w	4
+		dc.w	3
+		dc.w	3
+
+		ENDC
+
+S_Magnetic_END

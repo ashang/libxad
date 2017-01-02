@@ -1,0 +1,56 @@
+.key x/a
+.bra {
+.ket }
+
+failat 21
+
+delete {x}.#? quiet force
+
+; uuencode
+uuencode {x} {x} >{x}.uu
+uuencode -m {x} {x} >{x}.uu-b64
+uuepro {x} to {x}.uu-l LINESUM
+uuepro {x} to {x}.uu-c CHECKSUM
+uuepro {x} to {x}.uu-t FILETIME
+uuepro {x} to {x}.uu-lc LINESUM CHECKSUM
+uuepro {x} to {x}.uu-h  HEADER="FILE HEADER"
+uuepro {x} to {x}.uu-m1 LINES=1 SECTION=1 HEADER="FILE HEADER" LINESUM CHECKSUM FILETIME
+uuepro {x} to {x}.uu-m2 LINES=1 SECTION=2 HEADER="FILE HEADER" LINESUM CHECKSUM FILETIME
+uuepro {x} to {x}.uu-m3 LINES=1 SECTION=3 HEADER="FILE HEADER" LINESUM CHECKSUM FILETIME
+uuepro {x} to {x}.uu-m4 LINES=1 SECTION=4 HEADER="FILE HEADER" LINESUM CHECKSUM FILETIME
+uuepro {x} to {x}.uu-m5 LINES=1 SECTION=5 HEADER="FILE HEADER" LINESUM CHECKSUM FILETIME
+uuepro {x} to {x}.uu-m6 LINES=1 SECTION=6 HEADER="FILE HEADER" LINESUM CHECKSUM FILETIME
+
+; xxencode
+xxencode {x} {x} >{x}.xx
+
+; btoa5
+btoa {x} >{x}.btoa5
+btoa -o {x} >{x}.btoa
+
+; boo
+makeboo {x} {x}.boo
+
+;binhex
+BHE {x}.hqx-amiga data={x}
+BHE {x}.hqx-amiga-mime data={x} mime
+binhex -d {x} > {x}.hqx
+binhex -r -d {x} > {x}.hqx-norle
+
+; ship
+ship {x} >{x}.ship
+
+; bcode
+bcode -b -1 {x} >{x}.bcode-b1
+bcode -b -2 {x} >{x}.bcode-b2
+bcode -h -1 {x} >{x}.bcode-h1
+bcode -h -2 {x} >{x}.bcode-h2
+bcode -u -1 {x} >{x}.bcode-u1
+bcode -u -2 {x} >{x}.bcode-u2
+
+; fscode
+FSCode {x} to {x}.fscode ENCODE
+FSCode {x} to {x}.fscode-multi ENCODE MULTI LINES=10
+
+join {x}.#? to {x}_all
+rename {x}_all {x}.all

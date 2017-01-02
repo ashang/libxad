@@ -1,0 +1,129 @@
+DImp file format (.DMP, .DEX) by kyzer@4u.net:
+
+ULONG=32 bits, unsigned, big-endian format
+UWORD=16 bits, unsigned, big-endian format
+UBYTE=8 bits, unsigned
+
+File format overview:
+HEADER
+INFOTABLE
+[TEXTMSG if there is one]
+CYLINDER
+CYLINDER
+CYLINDER
+...
+
+-------------
+HEADER
+
+struct DImp_header {
+  ULONG id;
+  ULONG infotable_len;
+};
+
+id is always "DIMP" (0x44494D50). infotable_len is the length of DImp's
+info-table. It must be between 4 and 404 bytes, inclusive.
+
+
+------------
+INFOTABLE
+
+struct DImp_infotable {
+  ULONG infotable_checksum;
+  UWORD compression_mode;
+  UBYTE disk_bitmap[10];
+  struct ExplodeTable textmsg_table;
+  struct ExplodeTable cylinder_table;
+  ULONG textmsg_packed_len;
+  ULONG textmsg_unpacked_len;
+  ULONG textmsg_checksum;
+  ULONG cylinder_info[80];
+};
+
+struct ExplodeTable {
+  UWORD dist_baseoffset[8];
+  UBYTE dist_extrabits[12];
+};
+
+Any parts of this table not stored on disk (that's when
+infotable_len < 404) must be equal to zero.
+
+infotable_checksum is a checksum of all the data in the table except the
+checksum field itself, the calculation required is stated below.
+
+compression_mode is just for show.
+
+disk_bitmap is a 80-bit bitfield stating if a cylinder is meant to be
+stored in this file or not. The test is:
+  disk_bitmap[cylinder >> 3] & (1 << (7-(cylinder & 7)))
+
+If this test gives a non-zero result, the disk is meant to be stored in
+this disk.
+
+The explosion tables are used by the decompressor. There is one table for
+the text message, and one for all the cylinders.
+
+
+-----------
+TEXTMSG
+
+If the info table field textmsg_unpacked_len is not 0, then the next part
+of the file is a text message that should be displayed while unpacking. The
+size on disk of this message is textmsg_packed_len. The checksum of these
+stored bytes is textmsg_checksum. If textmsg_packed_len is not the same as
+textmsg_unpacked_len, then decompression is required, using the
+textmsg_table as an explosion table.
+
+
+
+-----------
+CYLINDER
+
+Up to 80 cylinders, from 0 to 79 now follow. If the disk_bitmap test for a
+given cylinder is 0, then there that cylinder is certainly not included in
+the file. Otherwise, what form the cylinder takes depends on the
+cylinder_info array in the info-table.
+
+- if a cylinder_info entry is 0x00000000, then the cylinder is not stored
+on the disk, despite what the disk bitmap says. This happens when an error
+occurs in reading the cylinder at compression time.
+
+- if a cylinder_info entry is 0xFFFFFFFF, then the cylinder when read was
+nothing but zeroes. No data for this cylinder is stored in the file, you
+should write out a cylinder cleared with zeroes
+
+- otherwise, the cylinder_info entry takes two parts. The most significant
+16 bits, and the least signigicant 16 bits.
+
+- the most significant 16 bits are the number of bytes the cylinder takes
+in the file. If this value is more than the length of a cylinder (11264),
+then something is wrong (DImp would quit saying 'wierd info-table entry'
+here). If this value is exactly 11264, the cylinder is stored uncompressed.
+Otherwise, the cylinder is stored compressed.
+
+- the least significant 16 bits are the least significant 16 bits of the
+checksum on the cylinder's bytes stored in the file.
+
+
+
+-----------
+checksum method
+
+If the length of checksummed data is an odd number of bytes, add a
+pretended 0 byte to the end of the data to make the length even.
+
+Now, simply add all the 16-bit UWORDs of the data to be checksummed, then
+add 7. The least significant 32 bits of this operation are to be taken as
+the checksum value.
+
+
+-----------
+self-extracting format
+
+Just look through the file for "DIMP", and see if it passes the normal
+header test. Also, the SFX format always starts with 0x000003F3, the Amiga
+magic 'hunk header' value.
+
+-----------
+decompression code and example implementation
+see the Amiga compression page at http://zap.to/kyz

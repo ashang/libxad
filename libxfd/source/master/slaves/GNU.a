@@ -1,0 +1,387 @@
+*****************************************************************************
+*   $Id: GNU.a,v 1.2 2005/06/23 14:39:16 stoecker Exp $
+*   GNU Packer decrunching slave
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+
+S_GNU12		dc.l	S_GNU12Seg
+		dc.w	2
+		dc.w	39
+		dc.l	N_GNU12
+		dc.w	XFDPFF_ADDR
+		dc.w	0
+		dc.l	RB_GNU12
+		dc.l	DB_GNU12
+		dc.l	0
+		dc.l	0
+		dc.w	XFDID_GNUPacker12
+		dc.w	0
+		dc.l	$270+4+4
+
+N_GNU12		dc.b	'GNU Packer 1.2',0
+		even
+
+;-------------------------------------------------
+
+RB_GNU12	cmp.l	#$4bfa0232,$24(a0)
+		bne.s	.Exit
+		cmp.l	#$4dfa0246,$28(a0)
+		bne.s	.Exit
+		cmp.l	#$206d000c,$2c(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_GNU12	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a2
+
+		move.l	$268(a2),d0
+		sub.l	$264(a2),d0
+		move.l	d0,xfdbi_TargetBufSaveLen(a5)
+		ADDQ.L	#1,D0
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	$58(a2),xfdbi_JmpAddress(a5)
+		move.l	$264(a2),xfdbi_DecrAddress(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	_LVOAllocMem(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit
+
+		lea	$25c(a2),a4
+
+		lea	$270(a2),a0
+		add.l	4(a4),a0
+		move.l	xfdbi_TargetBuffer(a5),a3
+		add.l	xfdbi_TargetBufSaveLen(a5),a3
+		bsr	D_GNU11
+
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+**************************************************
+
+S_GNU12Seg	dc.l	S_GNU12Data
+		dc.w	2
+		dc.w	39
+		dc.l	N_GNU12Seg
+		dc.w	XFDPFF_ADDR
+		dc.w	0
+		dc.l	RB_GNU12Seg
+		dc.l	DB_GNU12Seg
+		dc.l	0
+		dc.l	0
+		dc.w	XFDID_GNUPacker12Seg
+		dc.w	0
+		dc.l	$294+4+4
+
+N_GNU12Seg	dc.b	'GNU Packer 1.2 Seg',0
+		even
+
+;-------------------------------------------------
+
+RB_GNU12Seg	cmp.l	#$4bfa0232,$28(a0)
+		bne.s	.Exit
+		cmp.l	#$4df90000,$2c(a0)
+		bne.s	.Exit
+		cmp.l	#$206d000c,$32(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_GNU12Seg	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a2
+
+		move.l	$26c(a2),d0
+		sub.l	$268(a2),d0
+		move.l	d0,xfdbi_TargetBufSaveLen(a5)
+		ADDQ.L	#1,D0
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	$5e(a2),xfdbi_JmpAddress(a5)
+		move.l	$268(a2),xfdbi_DecrAddress(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit
+
+		lea	$260(a2),a4
+
+		lea	$294(a2),a0
+		add.l	4(a4),a0
+		move.l	xfdbi_TargetBuffer(a5),a3
+		add.l	xfdbi_TargetBufSaveLen(a5),a3
+		bsr	D_GNU11
+
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+**************************************************
+
+S_GNU12Data
+		IFND	XFD_LASTSLAVE
+		dc.l	S_GNU_END
+		ELSE
+		dc.l	0
+		ENDIF
+		dc.w	2
+		dc.w	39
+		dc.l	N_GNU12Data
+		dc.w	XFDPFF_DATA|XFDPFF_RECOGLEN|XFDPFF_USERTARGET
+		dc.w	0
+		dc.l	RB_GNU12Data
+		dc.l	DB_GNU12Data
+		dc.l	SD_GNU12Data
+		dc.l	VD_GNU12Data
+		dc.w	XFDID_GNUPacker12Data
+		dc.w	0
+		dc.l	22+4+4
+
+N_GNU12Data	dc.b	'GNU Packer 1.2 Data',0
+		even
+
+;-------------------------------------------------
+
+RB_GNU12Data	MOVEQ	#0,D0
+		CMP.L	#'GP11',(A0)
+		BNE.B	.Exit
+		MOVE.L	4(A0),D1
+		AND.L	#$F0F0F0F0,D1
+		BNE.B	.Exit
+		MOVE.L	$10(A0),D0
+		SUB.L	$C(A0),D0
+		MOVE.L	D0,xfdrr_FinalTargetLen(A1)
+		ADDQ.L	#1,D0
+		MOVE.L	D0,xfdrr_MinTargetLen(A1)
+		MOVE.L	8(A0),xfdrr_MinSourceLen(A1)
+		MOVEQ	#1,D0
+.Exit		RTS
+
+;-------------------------------------------------
+
+SD_GNU12Data	moveq	#0,d0
+		cmp.l	#'GP11',(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+.Exit		rts
+
+;-------------------------------------------------
+
+VD_GNU12Data	move.l	4(a0),d0
+		and.l	#$f0f0f0f0,d0
+		bne.s	.Exit
+		move.l	8(a0),d1	;crlen
+		cmp.l	d0,d1		;crlen > buflen ??
+		bgt.s	.Exit
+		move.l	16(a0),d0
+		sub.l	12(a0),d0
+		sub.l	8(a0),d0	;cr > uncr ??
+		bmi.s	.Exit
+		move.l	d1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_GNU12Data	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		MOVE.L	xfdbi_SourceBuffer(A5),A0
+
+		LEA	4(A0),A4
+		ADD.L	4(A4),A0
+		MOVE.L	xfdbi_UserTargetBuf(A5),A3
+		ADD.L	xfdbi_TargetBufSaveLen(A5),A3
+		BSR.B	D_GNU11
+
+		moveq	#1,d0
+		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;=================================================
+
+* a0: source end
+* a3: target end
+* a4: parameters
+
+D_GNU11		move.l	a3,a6
+		moveq	#3,d6
+		moveq	#1,d4
+		moveq	#7,d7
+		moveq	#1,d5
+		move.l	-(a0),d1
+		tst.b	d1
+		beq.s	.lbc05c
+		lsr.l	d4,d5
+		bne.s	.lbc058
+		move.l	-(a0),d5
+		roxr.l	d4,d5
+.lbc058		sub.l	d4,d1
+		lsr.l	d1,d5
+.lbc05c		lsr.l	#8,d1
+		move.l	a3,a2
+		sub.l	d1,a2
+
+.lbc066		lsr.l	d4,d5
+		bne.s	.lbc06e
+		move.l	-(a0),d5
+		roxr.l	d4,d5
+.lbc06e		bcs.s	.lbc15a
+		moveq	#0,d2
+.lbc074		moveq	#1,d0
+		moveq	#0,d1
+.lbc078		lsr.l	d4,d5
+		bne.s	.lbc080
+		move.l	-(a0),d5
+		roxr.l	d4,d5
+.lbc080		roxl.l	d4,d1
+		dbra	d0,.lbc078
+		add.w	d1,d2
+		cmp.w	d6,d1
+		beq.s	.lbc074
+.lbc13c		moveq	#7,d0
+		moveq	#0,d1
+.lbc140		lsr.l	d4,d5
+		bne.s	.lbc148
+		move.l	-(a0),d5
+		roxr.l	d4,d5
+.lbc148		roxl.l	d4,d1
+		dbra	d0,.lbc140
+		move.b	d1,-(a3)
+		cmp.l	a2,a3
+		dbeq	d2,.lbc13c
+		tst.w	d2
+		bmi.s	.lbc15a
+		bra	.DecrByte
+
+.lbc15a		moveq	#1,d0
+		moveq	#0,d1
+.lbc15e		lsr.l	d4,d5
+		bne.s	.lbc166
+		move.l	-(a0),d5
+		roxr.l	d4,d5
+.lbc166		roxl.l	d4,d1
+		dbra	d0,.lbc15e
+		moveq	#0,d0
+		move.b	(a4,d1.w),d0
+		move.w	d1,d2
+		cmp.w	d6,d2
+		bne.s	.lbc1b2
+		lsr.l	d4,d5
+		bne.s	.lbc180
+		move.l	-(a0),d5
+		roxr.l	d4,d5
+.lbc180		bcs.s	.lbc184
+		moveq	#7,d0
+.lbc184		subq.w	#1,d0
+		moveq	#0,d1
+.lbc188		lsr.l	d4,d5
+		bne.s	.lbc190
+		move.l	-(a0),d5
+		roxr.l	d4,d5
+.lbc190		roxl.l	d4,d1
+		dbra	d0,.lbc188
+		move.w	d1,d3
+.lbc198		moveq	#2,d0
+		moveq	#0,d1
+.lbc19c		lsr.l	d4,d5
+		bne.s	.lbc1a4
+		move.l	-(a0),d5
+		roxr.l	d4,d5
+.lbc1a4		roxl.l	d4,d1
+		dbra	d0,.lbc19c
+		add.w	d1,d2
+		cmp.w	d7,d1
+		beq.s	.lbc198
+		bra.s	.lbc1c6
+
+.lbc1b2		subq.w	#1,d0
+		moveq	#0,d1
+.lbc1b6		lsr.l	d4,d5
+		bne.s	.lbc1be
+		move.l	-(a0),d5
+		roxr.l	d4,d5
+.lbc1be		roxl.l	d4,d1
+		dbra	d0,.lbc1b6
+		move.w	d1,d3
+.lbc1c6		add.w	d4,d2
+		move.l	a3,a1
+		add.w	d3,a1
+		addq.w	#1,a1
+.lbc1ea		move.b	-(a1),-(a3)
+		cmp.l	a2,a3
+		dbeq	d2,.lbc1ea
+		tst.w	d2
+		bmi	.lbc066
+
+.DecrByte	move.l	xfdbi_TargetBuffer(a5),a0
+		move.b	16(a4),d0
+		move.b	17(a4),d1
+		cmp.b	d0,d1
+		beq.s	.lbc238
+		moveq	#0,d3
+.lbc20c		cmp.l	a6,a3
+		beq.s	.lbc238
+		move.b	(a3)+,d2
+		cmp.b	d0,d2
+		beq.s	.lbc220
+		cmp.b	d1,d2
+		beq.s	.lbc228
+.lbc21c		move.b	d2,(a0)+
+		bra.s	.lbc20c
+
+.lbc220		move.b	(a3)+,d3
+		beq.s	.lbc21c
+		move.b	(a3)+,d2
+		bra.s	.lbc22e
+
+.lbc228		move.b	(a3)+,d3
+		beq.s	.lbc21c
+		moveq	#0,d2
+.lbc22e		move.b	d2,(a0)+
+		dbra	d3,.lbc22e
+		moveq	#0,d3
+		bra.s	.lbc20c
+
+.lbc238		rts
+
+S_GNU_END
+

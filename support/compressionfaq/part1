@@ -1,0 +1,3775 @@
+Path: senator-bedfellow.mit.edu!sipb-server-1.mit.edu!gatech!newsfeed.mathworks.com!oleane!teaser.fr!not-for-mail
+From: jloup@gzip.OmitThis.org (Jean-loup Gailly)
+Newsgroups: comp.compression,comp.compression.research,news.answers,comp.answers
+Subject: comp.compression Frequently Asked Questions (part 1/3)
+Supersedes: <compr1_09jan99@gzip_org>
+Followup-To: comp.compression
+Date: 5 Sep 1999 22:34:48 +0200
+Organization: none
+Lines: 3753
+Approved: news-answers-request@mit.edu
+Distribution: world
+Expires: 31 Oct 1999 16:17:20 GMT
+Message-ID: <compr1_05sep99@gzip_org>
+Reply-To: jloup@gzip.OmitThis.org
+NNTP-Posting-Host: dip208.teaser.fr
+X-Trace: feed.teaser.fr 936563455 7912 194.51.100.208 (5 Sep 1999 20:30:55 GMT)
+X-Complaints-To: usenet@feed.teaser.fr
+NNTP-Posting-Date: 5 Sep 1999 20:30:55 GMT
+Summary: *** READ THIS BEFORE POSTING ***
+Keywords: data compression, FAQ
+Xref: senator-bedfellow.mit.edu comp.compression:47321 comp.compression.research:3102 news.answers:165986 comp.answers:37554
+
+Archive-name: compression-faq/part1
+Last-modified: Sep 5th, 1999
+
+                            It is insufficiently considered that 
+                            men more often require to be reminded 
+                            than informed.
+                                                  Samuel Johnson
+
+
+This file is part 1 of a set of Frequently Asked Questions (FAQ) for
+the groups comp.compression and comp.compression.research.  If you
+can't find part 2 or 3, see item 53 below. A copy of this FAQ is available
+by ftp in ftp://rtfm.mit.edu/pub/usenet/news.answers/compression-faq/
+files part1 to part3. This FAQ is also accessible in the World Wide Web at
+http://www.faqs.org/faqs/compression-faq/part1/preamble.html or
+http://www.cis.ohio-state.edu/hypertext/faq/usenet/compression-faq/top.html
+
+Certain questions get asked time and again, and this is an attempt to
+reduce the bandwidth taken up by these posts and their associated
+replies.  If you have a question, *please* check this file before you
+post.  It may save a lot of peoples time.
+
+If you have not already read the overall Usenet introductory material
+posted to "news.announce.newusers", please do. It is also available by
+ftp in ftp://garbo.uwasa.fi/pc/doc-net/usenews.zip (see item 2 below
+about .zip).
+
+If you don't want to see this FAQ regularly, please add the subject
+line to your kill file.  If you don't know what a kill file is, get by
+ftp the file ftp://rtfm.mit.edu/pub/usenet/news.answers/killfile-faq
+If you have corrections or suggestions for this FAQ, send them to
+Jean-loup Gailly <jloup at gzip.org>. (Replace " at " with "@". This is
+a protection against junk mail. Sorry for the inconvenience.)
+
+Part 1 is oriented towards practical usage of compression programs.
+Part 2 is more intended for people who want to know how compression works.
+Part 3 is a long (but somewhat obsolete) list of image compression hardware.
+
+Main changes relative to the previous version:
+
+- LZO page moved [item 2]
+- new url for the File Format Collection [items 2 & 54]
+- new url for ACE [item 2]
+- new pkzip version [item 3]
+- fixed url for arithmetic coder [item 13]
+- add url for DjVu, an image compression library [item 15]
+- remove obsolete link [item 15]
+- new url for DCT algorithms [item 15]
+- add url for lossless image compression benchmarks [item 16]
+- added urls for the MP3 audio compression standard, and for benchmarks
+  of lossless audio compression programs [item 26]
+
+Contents
+========
+
+General questions:
+
+[1]  What are these newsgroups about?
+[2]  What is this .xxx file type?
+     Where can I find the corresponding compression program?
+[3]  What is the latest pkzip version?
+[4]  What is an archiver?
+[5]  What is the best general purpose compression program?
+[7]  Which books should I read?
+[8]  What about patents on data compression algorithms?
+[9]  Compression of random data (WEB, Gilbert and others)
+[10] Fake compression programs (OWS, WIC)
+[11] What is the V.42bis standard?
+[12] I need source for the winners of the Dr Dobbs compression contest
+[13] I need source for arithmetic coding
+
+Image and audio compression:
+
+[15] Where can I get image compression programs?
+[16] What is the state of the art in lossless image compression?
+[17] What is the state of fractal compression?
+[18] I need specs and source for TIFF and CCITT group 4 Fax.
+[19] What is JPEG?
+[20] I am looking for source of an H.261/H.263 codec and MPEG
+[25] Fast DCT (Discrete Cosine Transform) algorithms
+[26] Are there algorithms and standards for audio compression?
+
+Common problems:
+
+[30] My archive is corrupted!
+[31] pkunzip reports a CRC error!
+[32] VMS zip is not compatible with pkzip!
+[33] I have a problem with Stacker or DoubleSpace!
+
+Questions which do not really belong to comp.compression:
+
+[50] What is this 'tar' compression program?
+[51] I need a CRC algorithm
+[52] What about those people who continue to ask frequently asked questions?
+[53] Where are FAQ lists archived?
+[54] I need specs for graphics formats
+[55] Where can I find Lenna and other images?
+[56] I am looking for a message digest algorithm
+[57] I have lost my password on a .zip file
+
+
+Part 2: (Long) introductions to data compression techniques
+
+[70] Introduction to data compression (long)
+       Huffman and Related Compression Techniques
+       Arithmetic Coding
+       Substitutional Compressors
+          The LZ78 family of compressors
+          The LZ77 family of compressors
+
+[71] Introduction to MPEG (long)
+       What is MPEG?
+       Does it have anything to do with JPEG?
+       Then what's JBIG and MHEG?
+       What has MPEG accomplished?
+       So how does MPEG I work?
+       What about the audio compression?
+       So how much does it compress?
+       What's phase II?
+       When will all this be finished?
+       How do I join MPEG?
+       How do I get the documents, like the MPEG I draft?
+
+[72] What is wavelet theory?
+[73] What is the theoretical compression limit?
+[74] Introduction to JBIG
+[75] Introduction to JPEG
+[76] What is Vector Quantization?
+[77] Introduction to Fractal compression
+[78] The Burrows-Wheeler block sorting algorithm
+
+
+Part 3: (Long) list of image compression hardware
+
+[85] Image compression hardware
+[99] Acknowledgments
+
+
+Search for "Subject: [#]" to get to question number # quickly. Some news
+readers can also take advantage of the message digest format used here.
+
+If you know very little about data compression, read question 70 in
+part 2 first.
+
+------------------------------------------------------------------------------
+
+Subject: [1] What are these newsgroups about?
+
+
+comp.compression is the place to discuss about data compression, both
+lossless (for text or data) and lossy (for images, sound, etc..).
+comp.compression.research was created later to provide a forum for
+current research on data compression and data compression algorithms;
+this group is now moderated. If you are not experienced in data compression,
+please post in comp.compression only.
+
+An archive of this newsgroup since Oct 1993 is available in
+ftp://spib.rice.edu/spib/news/comp.compression/
+
+Excellent collections of compression based information are provided at
+http://www.internz.com/compression-pointers.html and
+http://www.sr3.t.u-tokyo.ac.jp/~arimura/compression_links.html
+
+If you only want to find a particular compression program for a
+particular operating system, please read first this FAQ and the
+article "How to find sources" which is regularly posted in
+news.answers.
+
+If you can't resist posting such a request, other groups are probably
+more appropriate (comp.binaries.ibm.pc.wanted, comp.os.msdos.apps,
+comp.sources.wanted, comp.sys.mac.wanted, comp.archives.msdos.d, comp.dsp,
+alt.graphics.pixutils). Please post your request in comp.compression
+only as a last resource.
+
+If your question is about graphics only (no compression), please
+post to comp.graphics.misc, *after* reading the comp.graphics FAQ (see
+item 54 below). For some unknown reason, many questions about
+graphics are incorrectly posted to comp.compression.
+For questions related to audio compression, check also comp.dsp.
+
+Please do not post any program in binary form to comp.compression.
+Very short sources can be posted, but long sources should be be posted
+to the specialized source groups, such as comp.sources.* or alt.sources.
+If the program is already available by ftp, just give the name of the
+ftp site and the full path name of the file.
+
+As for any newsgroups, do not post the same message separately to
+comp.compression and comp.compression.research.
+
+------------------------------------------------------------------------------
+
+Subject: [2] What is this .xxx file type?
+             Where can I find the corresponding compression program?
+
+
+All the programs mentioned in this section are lossless.  For most
+programs, one US and one European ftp site are given.  (ftp.simtel.net
+and garbo.uwasa.fi) Many other sites (in particular wuarchive.wustl.edu)
+have the same programs.
+
+To keep this list to a reasonable size, many programs are not mentioned
+here. When several programs can handle the same archive format, only one of
+them is given. If you don't find a particular archiver here, look also in:
+ftp://ftp.cs.tu-berlin.de/pub/msdos/mirrors/ftp.elf.stuba.sk/pc/
+ftp://garbo.uwasa.fi/pc/arcers/
+ftp://ftp.fh-koblenz.de/pub/Packers/
+
+Sources for additional lossless data compressors can be found in
+  ftp://garbo.uwasa.fi/pc/programming/lds_11.zip
+  ftp://ftp.simtel.net/pub/simtelnet/msdos/arcutils/lz-comp2.zip
+  http://wwwvms.utexas.edu/~cbloom/index.html
+  ftp://ftp.imag.fr/pub/archive/compression/codecs/codecs.tgz
+  ftp://garbo.uwasa.fi/pc/turbopas/preskit2.zip (sources in Pascal)
+  ftp://ftp.cs.uiowa.edu/pub/jones/compress/ (Splay tree compression)
+
+For Macintosh programs, look on ftp://wuarchive.wustl.edu/systems/mac/info-mac/
+  or in http://hyperarchive.lcs.mit.edu/HyperArchive.html
+For VM/CMS, look on ftp://vmd.cso.uiuc.edu/public.477
+For Atari, look on ftp://atari.archive.umich.edu
+For Amiga, look on ftp://ftp.wustl.edu/pub/aminet/util/arc
+
+A general purpose lossless data compression library is available in
+ftp://ftp.cdrom.com/pub/infozip/zlib/zlib-1.1.3.tar.gz or zlib113.zip;
+see http://infozip.cdrom.com/pub/infozip/zlib/ for more information.
+Another library favoring speed over compression ratio is available at
+http://wildsau.idv.uni-linz.ac.at/mfx/lzo.html
+
+If you don't know how to use ftp or don't have ftp access, read the
+article "How to find sources" which is regularly posted in news.answers.
+
+If you can't find a program given below, a newer version probably exists in
+the same directory.  Tell me at <jloup at gzip.org>
+
+A very short description of the compression algorithm is given for most
+programs. For the meaning of LZ77, LZ78 and LZW, see question 70 in part 2 of
+the FAQ.  If you are looking for the file format of a specific compression
+program, look at "The File Format Collection" in http://www.wotsit.org
+and/or get the sources of the decompressor. For the format of uuencode, do
+"man 5 uuencode" on a Unix box.
+
+ext:  produced by or read by
+
+.ace: ACE
+         http://members.aol.com/mlemke6413/ace.htm
+
+.arc, .ark: arc, pkarc for MSDOS. (LZW algorithm)
+	ftp://ftp.simtel.net/pub/simtelnet/msdos/arcers/pk361.exe
+	ftp://garbo.uwasa.fi/pc/arcers/pk361.exe
+
+      arc for Unix
+        ftp://ftp.ddj.com/packages/arc521e.tar.Z
+	ftp://garbo.uwasa.fi/unix/arcers/arc.tar.Z
+        Contact: Howard Chu <hyc@highlandsun.com>
+
+      arc for VMS
+	ftp://wuarchive.wustl.edu/packages/compression/vax-vms/arc.exe
+
+      for Mac
+    ftp://wuarchive.wustl.edu/systems/mac/info-mac/cmp/stuffit-expander-401.hqx
+
+      arc for Amiga
+	ftp://ftp.funet.fi/pub/amiga/fish/001-100/ff070/arc.lha
+
+.arj: arj for MSDOS (LZ77 with hashing, plus secondary static Huffman
+          encoding on a block basis)
+        Contact: Robert K Jung <robjung@world.std.com>
+        http://www.arjsoft.com
+        ftp://ftp.simtel.net/pub/simtelnet/msdos/arcers/arj250a.exe
+	ftp://garbo.uwasa.fi/pc/arcers/arj250a.exe
+
+      unarj for Unix. Decompresses only. (There is no arj compressor for Unix.
+        Don't post a request.)
+	ftp://oak.oakland.edu/pub/misc/unix/unarj241.tar.Z
+	ftp://garbo.uwasa.fi/unix/arcers/unarj241.tar.Z
+
+      unarj for Mac
+        ftp://mac.archive.umich.edu/mac/util/compression/unarjmac.cpt.hqx      
+
+      unarj for Amiga
+	ftp://ftp.funet.fi/pub/amiga/utilities/archivers/unarj-0.5.lha
+
+base64 (MIME encoding): This is *not* a compression issue but it keeps
+       coming as a question on comp.compression. So:
+          ftp://ftp.andrew.cmu.edu/pub/mpack/mpack-1.5-src.tar.Z (source)
+          ftp://ftp.andrew.cmu.edu/pub/mpack/mpack15d.zip        (MSDOS exe)
+          ftp://wuarchive.wustl.edu/systems/mac/info-mac/cmp/mpack-15.hqx (Mac)
+          ftp://garbo.uwasa.fi/pc/decode/mime64b.zip
+
+.bck: VMS BACKUP. BACKUP is *not* a compression program. Do "help backup".
+
+.bz2: bzip2 by Julian Seward (Burrows-Wheeler block sorting, see item 78)
+        http://www.muraroa.demon.co.uk/
+
+.cab: Microsoft Cabinets
+	http://www.ddj.com/ftp/1997/1997.05/cabinet.zip
+	ftp://ftp.mv.com/pub/ddj/1997/1997.05/cabinet.zip
+
+.cpt: Compact Pro for Mac and Power PC
+         ftp://wuarchive.wustl.edu/systems/mac/info-mac/cmp/compact-pro-151.hqx
+
+      For Unix:
+http://hyperarchive.lcs.mit.edu/HyperArchive/Archive/cmp/macutil-20b1-unix.shar
+        ftp://ftp.cwi.nl/pub/dik/macutil2.0b3.shar.Z
+
+      For DOS:
+        ftp://ftp.scruz.net/users/aladdin/public/SITEX10.EXE
+	ftp://garbo.uwasa.fi/pc/arcers/ext-pc.zip
+
+.ddi:  files made by DiskDupe (Pro)
+     ftp://ftp.tem.nctu.edu.tw/Msdos/arcutil/unddi11u.zip
+     ftp://ftp.tem.nctu.edu.tw/Msdos/arcutil/x2file15.zip
+
+.exe: self-extracting MSDOS executable (creates files on disk when run)
+      Run the file, or try unzip, lha or arj on it.
+
+.exe: compressed MSDOS executable (decompresses itself in memory then runs
+      the decompressed code). To get the original uncompressed .exe:
+        ftp://garbo.uwasa.fi/pc/execomp/unp411.zip
+      To create such files:
+	ftp://ftp.simtel.net/pub/simtelnet/msdos/execomp/lzexe91e.zip
+	ftp://nic.funet.fi/pub/msdos/windows/util/winlite1.zip (for Windows)
+
+.gif: gif files are images compressed with the LZW algorithm. See the
+      comp.graphics FAQ list for programs manipulating .gif files. See
+      suffix .Z below for source of LZW.
+
+.gz, .z: gzip (or pack, see .z below). gzip uses the same algorithm as
+         zip 2.0x (see below); it can also extract packed and compressed files.
+	Contact: Jean-loup Gailly <support at gzip.org>
+                 http://www.gzip.org
+
+      For Unix, MSDOS, OS/2, VMS, Atari, Amiga, Primos:
+	ftp://prep.ai.mit.edu/pub/gnu/gzip-1.2.4.tar (.shar or .tar.gz: source)
+	ftp://prep.ai.mit.edu/pub/gnu/gzip-1.2.4.msdos.exe (MSDOS self-extract)
+	ftp://ftp.simtel.net/pub/simtelnet/msdos/compress/gzip124.zip (MSDOS)
+	ftp://garbo.uwasa.fi/unix/arcers/gzip124.tar.Z          (source)
+	ftp://ftp.cdrom.com/pub/infozip/MSDOS/gzip124.exe       (MSDOS exe)
+	ftp://ftp.cdrom.com/pub/infozip/WIN32/gzip124xN.zip     (WIN95 & NT)
+        ftp://ftp.cdrom.com/pub/infozip/OS2/gz124-32.zip        (OS/2)
+	ftp://ftp.cdrom.com/pub/infozip/VMS/gzip124x.vax_exe    (VMS exe)
+        ftp://ftp.cdrom.com/pub/infozip/UNIX/SUN/gzip124x.tar.Z (Solaris 2)
+        http://www.gzip.org/gzip123mvs.zip                      (MVS exe)
+
+      For Mac:
+       ftp://ivo.cps.unizar.es//Graficos/Public/SPDsoft/MacGzip_FAT_1.1.cpt.hqx
+       http://persephone.cps.unizar.es/general/gente/spd/gzip/ (MacGzip page)
+
+.ha: ha 0.99 (improved PPMC - 4th order Markov modeling)
+	Contact: Harri Hirvola <harri.hirvola@vaisala.infonet.com>
+	ftp://garbo.uwasa.fi/pc/arcers/ha098.zip
+	ftp://ftp.nl.net/gopher/NLnet-connected/aipnl/ha0999.exe
+        ftp://sunsite.unc.edu/pub/Linux/utils/compress/ha0999p-linux.tar.gz
+
+.hap: Hamarsoft HAP archiver (Markov modeling + arithmetic coding)
+      Contact: feldmann@xs4all.nl or feldmann@pi.net
+        ftp://garbo.uwasa.fi/pc/arcers/hap305bp.com
+        http://www.xs4all.nl/~feldmann
+
+.hpk: hpack (archiver with strong encryption)
+      Contact: Peter Gutmann <pgut1@cs.aukuni.ac.nz>
+        ftp://src.doc.ic.ac.uk/computing/archiving/compress/hpack/
+
+.hqx: Macintosh BinHex format.. (BinHex is *not* a compression program,
+	  it is similar to uuencode but handles multiple forks.)
+       for Mac:
+        ftp://mac.archive.umich.edu/mac/util/compression/binhex4.0.bin
+
+       for Unix:
+     http://hyperarchive.lcs.mit.edu/HyperArchive/Archive/cmp/mcvert-216.shar
+
+       for MSDOS:
+	 ftp://ftp.simtel.net/pub/simtelnet/msdos/mac/xbin23.zip
+         ftp://garbo.uwasa.fi/pc/unix/xbin23.zip
+
+.jam: JAM real-time compressor for MSDOS
+       ftp://garbo.uwasa.fi/pc/arcers/jam125sw.zip
+
+.lha:
+.lzh: lha for MSDOS (LZ77 with a trie data structure, plus secondary static
+          Huffman coding on a block basis)
+	ftp://ftp.simtel.net/pub/simtelnet/msdos/arcers/lha255e.exe
+	ftp://garbo.uwasa.fi/pc/arcers/lha255b.exe
+
+      lharc for Unix. (LZ77 with hash table and binary trees, plus secondary
+          Huffman coding).  See lha for Unix below.
+           Warning: lharc can extract .lzh files created by
+           lharc 1.xx but not those created by lha.
+
+      lharc for VMS. Same warning as for Unix lharc.
+	ftp://wuarchive.wustl.edu/packages/compression/vax-vms/lharc.exe
+
+      lha for Unix.
+	ftp://oak.oakland.edu/pub/misc/unix/lha101u.tar.Z
+	ftp://garbo.uwasa.fi/unix/arcers/lha101u.tar.Z
+          Contact: lha-admin@oki.co.jp or oki@fs.telcom.oki.ac.jp
+
+      lha for Mac
+       ftp://wuarchive.wustl.edu/systems/mac/info-mac/cmp/lha-expander-103.hqx
+
+      lha for Amiga
+	ftp://ftp.funet.fi/pub/amiga/utilities/archivers/LhA_e138.run
+      lha for OS/2:
+        ftp://hobbes.nmsu.edu/pub/os2/util/archiver/lh2_222.zip
+
+MIME: see base64 above
+
+.pak: pak for MSDOS (LZW algorithm)
+        ftp://ftp.simtel.net/pub/simtelnet/msdos/arcers/pak251.exe
+	ftp://garbo.uwasa.fi/pc/arcers/pak251.exe
+
+.pit: PackIt (Macintosh)
+       for Mac:
+   http://hyperarchive.lcs.mit.edu/HyperArchive/Archive/cmp/stuffit-lite-35.hqx
+
+       for Unix:
+     http://hyperarchive.lcs.mit.edu/HyperArchive/Archive/cmp/mcvert-216.shar
+         ftp://garbo.uwasa.fi/mac/arcers/mcvert-215.shar
+
+.pp: PowerPacker (Amiga)
+	ftp://ftp.funet.fi/pub/amiga/fish/501-600/ff561/PPLib.lha
+
+.rar: RAR Contact: Eugene Roshal <roshal@creabel.com>
+          or Andrey Spasibozhko <as@hq.icb.chel.su>
+          http://www.creabel.com/softronic/
+      MSDOS:
+        ftp://ftp.simtel.net/pub/simtelnet/msdos/arcers/ rar*.exe
+        ftp://garbo.uwasa.fi/pc/arcers/ rar*.exe
+        ftp://ftp.kiae.su/msdos/arcers/ rar*.exe
+        ftp://ftp.elf.stuba.sk/pub/pc/pack/ *rar2*.exe
+      Unix:
+	ftp://ftp.kiae.su/pub/unix/arcers/ rar*.exe
+      Mac
+        ftp://wuarchive.wustl.edu/systems/mac/info-mac/cmp/mac-unrar-11.hqx
+        ftp://ftp.creabel.com/pub/rar/MacUnRAR12b3_sit.hqx
+      Amiga (Unrar):
+        ftp://ftp.creabel.com/pub/rar/rar_amy.lha
+
+.sea: self-extracting archive (Macintosh)
+         Run the file to extract it. The self-extraction code can be
+         removed with:
+   ftp://mac.archive.umich.edu/mac/utilities/compressionapps/desea1.11.cpt.hqx
+   ftp://ftp.scruz.net/users/aladdin/public/SITEX10.EXE (MS Windows, .sit only)
+
+.sdn: used by the Shareware Distribution Network.
+      Try the decompressors for .pak or .arj (see above)
+
+.shar:  Shell archive. This is not a compression program. Use "sh foo.shar"
+        to extract on Unix.
+	ftp://garbo.uwasa.fi/pc/unix/unshar.zip  (MSDOS)
+        ftp://wuarchive.wustl.edu/systems/mac/info-mac/cmp/unshar-111.hqx (Mac)
+
+.sit: Stuffit for Macintosh
+       for Mac:
+   http://hyperarchive.lcs.mit.edu/HyperArchive/Archive/cmp/stuffit-lite-35.hqx
+
+       for Amiga:
+	 ftp://ftp.funet.fi/pub/amiga/utilities/archivers/unsit-1.5c2.lha
+
+       for MSDOS:
+	 ftp://ftp.scruz.net/users/aladdin/public/SITEX10.EXE
+	 ftp://garbo.uwasa.fi/pc/arcers/unsit30.zip
+
+.?q?: Squeeze for MSDOS (do not confuse with other 'squeeze' below).
+      Static Huffman coding.
+       ftp://ftp.simtel.net/pub/simtelnet/msdos/starter/sqpc12a.com (squeeze)
+       ftp://ftp.simtel.net/pub/simtelnet/msdos/starter/nusq110.com (unsqueeze)
+
+.sqz: Squeeze for MSDOS (do not confuse with other 'squeeze' above)
+      LZ77 with hashing.
+        ftp://ftp.simtel.net/pub/simtelnet/msdos/arcers/sqz1083e.exe
+        ftp://garbo.uwasa.fi/pc/arcers/sqz1083e.exe
+
+.tar: tar is *not* a compression program. However, to be kind for you:
+      for MSDOS
+	ftp://ftp.simtel.net/pub/simtelnet/msdos/starter/tarread.exe
+	ftp://garbo.uwasa.fi/pc/unix/tar4dos.zoo
+
+      for Unix
+        tar (you have it already. To extract: tar xvf file.tar)
+
+      for VMS
+	ftp://wuarchive.wustl.edu/packages/compression/vax-vms/tar.exe
+
+      for Macintosh
+        ftp://wuarchive.wustl.edu/systems/mac/info-mac/cmp/tar-40b.hqx
+
+      for Amiga:
+	ftp://ftp.funet.fi/pub/amiga/fish/401-500/ff445/Tar.lha
+
+.tar.Z, .tar-z, .taz: tar + compress
+      For Unix:     zcat file.tar.Z | tar xvf -
+      with GNU tar: tar xvzf file.tar.Z
+      for MSDOS:
+        ftp://garbo.uwasa.fi/pc/unix/tar320g.zip  (MSDOS exe)
+        ftp://ftp.kiae.su/msdos/arcers/tar*sr.zip (sources)
+        ftp://ftp.kiae.su/msdos/arcers/tar*_p.zip (MSDOS exe)
+      Other OS: first uncompress (see .Z below) then untar (see .tar above)
+
+.tar.gz, .tgz, .tar-gz, .tar.z: tar + gzip
+      For Unix: gzip -cd file.tar.gz | tar xvf -
+        with GNU tar: tar xvzf file.tar.gz
+      for MSDOS:
+        ftp://ftp.simtel.net/pub/simtelnet/msdos/arcers/tar320g.zip
+        ftp://garbo.uwasa.fi/pc/unix/tar320g.zip
+      for MSDOS, Windows 95, NT & OS/2:
+        ftp://garbo.uwasa.fi/pc/unix/untgz095.zip
+         or http://till.home.ml.org/untgz.htm
+      for Windows 95 & Windows NT:
+         ftp://ftp.winzip.com/winzip/ or http://www.winzip.com
+
+      Other OS: first uncompress (see .gz above) then untar (see .tar above)
+
+.td0: (compressed MS-DOS floppy image produced by TeleDisk)
+      ftp://ftp.simtel.net/pub/simtelnet/msdos/diskutil/teled212.zip
+
+.uc2: UC2 for MSDOS and OS/2. (LZ77 with secondary static Huffman encoding on
+	 a block basis, and dynamic dictionaries shared among files.)
+	Contact: desk@aip.nl
+      ftp://garbo.uwasa.fi/pc/arcers/uc2r3.exe  (or uc2pro.exe)
+
+.z:   pack or gzip (see .gz above). pack uses static Huffman coding.
+      To extract, see .gz above.
+
+.zip: pkzip 2.04g for MSDOS. (LZ77 with hashing, plus secondary static
+           Huffman coding on a block basis). Contact: support@pkware.com
+           or http://www.pkware.com/
+	ftp://ftp.simtel.net/pub/simtelnet/msdos/zip/pkz204g.exe
+        ftp://garbo.uwasa.fi/pc/arcers/pkz204g.exe
+        ftp://ftp.simtel.net/pub/simtelnet/win95/compress/pk250w32.exe (WIN95)
+
+      arcutil 2.0 for VM/CMS (unzip only, not yet compatible with pkzip 2.04)
+         ftp://vmd.cso.uiuc.edu/public.477/arcutil.*
+
+      zip 1.1 for Unix, MSDOS, VMS, OS/2, ... (compatible with pkzip 1.10.
+	 For corresponding unzip, see unzip 5.32 below).
+	 ftp://ftp.cdrom.com/pub/infozip/src/zip11.zip
+
+      zip 2.2 and unzip 5.32 for Unix, MSDOS, VMS, OS/2, Amiga, ...
+          Compatible with pkzip 2.04g (LZ77 with hashing, plus secondary static
+          Huffman coding on a block basis). Contact: zip-bugs@lists.wku.edu
+          See also http://infozip.cdrom.com/pub/infozip/
+          (On SGI, do not confuse with the editor also named 'zip'.)
+
+	 ftp://ftp.cdrom.com/pub/infozip/src/zip22.zip      (source)
+	 ftp://ftp.cdrom.com/pub/infozip/src/unzip532.*     (source)
+	 ftp://ftp.cdrom.com/pub/infozip/MSDOS/zip22x.zip   (MSDOS exe)
+	 ftp://ftp.cdrom.com/pub/infozip/MSDOS/unz532x*.exe (MSDOS exe)
+	 ftp://ftp.cdrom.com/pub/infozip/WIN32/zip22xN.zip  (Win95 & NT)
+	 ftp://ftp.cdrom.com/pub/infozip/WIN32/unz532xN.exe (Win95 & NT)
+         [The Win95 version supports long file names; MSDOS version doesn't]
+	 ftp://ftp.cdrom.com/pub/infozip/OS2/          (OS/2 exe 16&32 bit)
+          See also AMIGA, ATARI, MAC, UNIX, RISCOS, VMS... subdirectories.
+
+         ftp://ftp.icce.rug.nl/infozip/src/zcrypt27.zip    (encryption source)
+
+       for Macintosh:
+         http://members.sitec.net/maczip/download/
+         ftp://mac.archive.umich.edu/mac/util/compression/unzip2.01.cpt.hqx
+	 ftp://mac.archive.umich.edu/mac/util/compression/zipit1.31.cpt.hqx
+	 ftp://ftp.cdrom.com/pub/infozip/MAC/unz512x.hqx
+    ftp://wuarchive.wustl.edu/systems/mac/info-mac/cmp/stuffit-expander-401.hqx
+
+       WinZip by Nico Mak <support@winzip.com> (uses Info-ZIP compress. code):
+         ftp://ftp.winzip.com/winzip/ or http://www.winzip.com   (MS Windows)
+
+.zoo: zoo 2.10 for MSDOS (algorithm copied from that of lha, see lha above)
+	 ftp://ftp.simtel.net/pub/simtelnet/msdos/arcers/zoo210.exe
+	 ftp://garbo.uwasa.fi/pc/arcers/zoo210.exe
+
+      zoo 2.10 for Unix, VMS
+         ftp://oak.oakland.edu/pub/misc/unix/zoo210.tar.Z
+	 ftp://garbo.uwasa.fi/unix/arcers/zoo210.tar.Z
+
+      zoo for Mac
+       ftp://mac.archive.umich.edu/mac/utilities/compressionapps/maczoo.sit.hqx
+
+      zoo for Amiga
+	ftp://ftp.funet.fi/pub/amiga/utilities/archivers/Zoo-2.1.lha
+
+.??_: Microsoft compress.exe and expand.exe. compress.exe is available
+	in the Windows SDK (Software Development Kit) and in
+       ftp://ftp.microsoft.com/softlib/mslfiles/CP0982.EXE
+
+.F: freeze for Unix (LZ77 with hashing, plus secondary dynamic Huffman
+         encoding)
+ftp://wuarchive.wustl.edu/usenet/comp.sources.misc/volume35/freeze/part0[1-3].Z
+     ftp://ftp.inria.fr/system/arch-compr/freeze-2.5.tar.Z
+     Contact: Leonid A. Broukhis <leo@zycad.com>
+
+.Y: yabba for Unix, VMS, ... (Y coding, a variant of LZ78)
+  ftp://wuarchive.wustl.edu/usenet/comp.sources.unix/volume24/yabbawhap/part*.Z
+  ftp://ftp.inria.fr/system/arch-compr/yabba.tar.Z
+  Contact: Dan Bernstein <djb@silverton.berkeley.edu>
+
+.Z: compress for Unix ('the' LZW algorithm)
+      It is likely that your Unix system has 'compress' already. Otherwise:
+	ftp://wuarchive.wustl.edu/packages/compression/compress-4.1.tar
+        (not in .Z format to avoid chicken and egg problem)
+
+    compress for MSDOS
+	ftp://ftp.simtel.net/pub/simtelnet/msdos/compress/comp430d.zip
+	ftp://garbo.uwasa.fi/pc/unix/comp430d.zip
+	ftp://garbo.uwasa.fi/pc/source/comp430s.zip
+
+    compress for Macintosh
+    ftp://wuarchive.wustl.edu/systems/mac/info-mac/cmp/stuffit-expander-401.hqx
+
+    compress for Amiga
+	ftp://ftp.funet.fi/pub/amiga/utilities/archivers/compress-4.1.lha
+
+    compress for VAX/VMS
+	ftp://wuarchive.wustl.edu/packages/compression/vax-vms/lzcomp.exe
+	ftp://wuarchive.wustl.edu/packages/compression/vax-vms/lzdcmp.exe
+
+------------------------------------------------------------------------------
+
+Subject: [3]  What is the latest PKZIP version?
+
+The latest official DOS version is 2.04g. The latest command line version
+for Windows 95 is 2.50. The latest Windows 95 version is 2.70.
+See http://www.pkware.com for more information.
+
+Be warned that there are countless bogus PKZIP 1.20, 2.0, 2.02, 3.00B,
+3.05, 4.1 and whatever scams floating around.  They usually are hacks
+of PKZIP 1.93A beta test version.  Some of them are trojans and / or
+carry computer viruses.
+
+Note about pkzip 2.06 from a PKware employee:
+
+    Version 2.06 was released as an INTERNAL use only IBM version.
+    It is identical to 2.04G, but it has IBM names in the help
+    screens and such. That release is meant for IBM only.
+
+If pkunzip indicates that you need version 2.8 to extract an
+archive, your archive has been corrupted by a transfer not
+made in binary mode (see item 30 below).
+------------------------------------------------------------------------------
+
+Subject: [4] What is an archiver?
+
+
+There is a distinction between archivers and other compression
+programs:
+
+- an archiver takes several input files, compresses them and produces
+  a single archive file. Examples are arc, arj, lha, zip, zoo.
+
+- other compression programs create one compressed file for each
+  input file. Examples are freeze, yabba, compress, gzip. Such programs
+  are often combined with tar to create compressed archives (see
+  question 50: "What is this tar compression program?").
+
+For a comparison of zip and gzip, see the gzip README file. (In short:
+zip is an archiver, gzip is not; only zip is compatible with pkzip.)
+
+------------------------------------------------------------------------------
+
+Subject: [5] What is the best general purpose compression program?
+
+
+The answer is: it depends. (You did not expect a definitive answer,
+did you?)
+
+It depends whether you favor speed, compression ratio, a standard and
+widely used archive format, the number of features, etc...  Just as
+for text editors, personal taste plays an important role. compress has
+4 options, arj 2.30 has about 130 options; different people like
+different programs. *Please* do not start or continue flame wars on
+such matters of taste.
+
+Several benchmarks of MSDOS archivers are available:
+- ftp://ftp.simtel.net/pub/simtelnet/msdos/arcers/actest*.zip
+  and http://www.geocities.com/SiliconValley/Park/4264/act.html
+  by Jeff Gilchrist <jeffg@cips.ca>
+- ftp://garbo.uwasa.fi/pc/arcers/act-*.zip
+  by Jonathan Burt <jonathan@jaburt.demon.co.uk>
+
+Please do not post your own benchmarks made on your own files that
+nobody else can access. If you think that you must absolutely post yet
+another benchmark, make sure that your test files are available by
+anonymous ftp.
+
+Since all other benchmarks are for MSDOS only, here is one mainly for
+Unix, on a 33Mhz Compaq 386.  All programs have been run on Unix SVR4,
+except pkzip and arj which only run on MSDOS.
+
+The programs compared here were chosen because they are the most
+popular or because they run on Unix and source is available.  For ftp
+information, see above. Three programs (hpack, comp-2 and ha) have
+been added because they achieve better compression (at the expense of
+speed) and one program (lzrw3-a) has been added because it favors
+speed at the expense of compression:
+
+- comp-2 is in ftp://ftp.coast.net/pub/Coast/disk2/msdos/ddjmag/ddj9102.zip
+  (inner zip file nelson.zip),
+- hpack is in ftp://garbo.uwasa.fi/unix/arcers/hpack78src.tar.Z
+- ha 0.98 is in ftp://garbo.uwasa.fi/pc/arcers/ha098.zip
+- lzrw3-a is in http://wwwvms.utexas.edu/~cbloom/src/lzrw.zip
+
+The 14 files used in the comparison are from the standard Calgary
+Text Compression Corpus, available in
+ftp://ftp.cpsc.ucalgary.ca/pub/projects/text.compression.corpus/
+
+The whole corpus includes 18 files, but the 4 files paper[3-6] are
+generally omitted in benchmarks. It contains several kinds of file
+(ascii, binary, image, etc...) but has a bias towards large files.
+You may well get different ratings on the typical mix of files that
+you use daily, so keep in mind that the comparisons given below are
+only indicative.
+
+The programs are ordered by decreasing total compressed size. For a
+fair comparison between archivers and other programs, this size is
+only the size of the compressed data, not the archive size.
+
+The programs were run on an idle machine, so the elapsed time
+is significant and can be used to compare Unix and MSDOS programs.
+
+[Note: These benchmarks are now *very* old. I have to do them again
+on more recent hardware with the latest programs. For recent results
+on MSDOS, check http://www.geocities.com/SiliconValley/Park/4264/act.html ]
+
+       size     lzrw3a   compress    lharc    yabba     pkzip    freeze 
+version:                   4.0       1.02      1.0       1.10     2.3.5
+options:                                    -m300000                    
+       ------    -----    ------    ------    ------    ------   ------
+bib    111261    49040     46528     46502     40456     41354    41515 
+book1  768771   416131    332056    369479    306813    350560   344793 
+book2  610856   274371    250759    252540    229851    232589   230861 
+geo    102400    84214     77777     70955     76695     76172    68626 
+news   377109   191291    182121    166048    168287    157326   155783 
+obj1    21504    12647     14048     10748     13859     10546    10453 
+obj2   246814   108040    128659     90848    114323     90130    85500 
+paper1  53161    24522     25077     21748     22453     20041    20021 
+paper2  82199    39479     36161     35275     32733     32867    32693 
+pic    513216   111000     62215     61394     65377     63805    53291 
+progc   39611    17919     19143     15399     17064     14164    14143 
+progl   71646    24358     27148     18760     23512     17255    17064 
+progp   49379    16801     19209     12792     16617     11877    11686 
+trans   93695    30292     38240     28092     31300     23135    22861 
+    3,141,622  1,400,105 1,259,141 1,200,580 1,159,340 1,141,821 1,109,290
+real             0m35s     0m59s     5m03s     2m40s              5m27s
+user             0m25s     0m29s     4m29s     1m46s              4m58s
+sys              0m05s     0m10s     0m07s     0m18s              0m08s
+MSDOS:                                                   1m39s
+                        
+
+         zoo       lha       arj      pkzip    zip      hpack   comp-2    ha
+        2.10    1.0(Unix)   2.30      2.04g    1.9      0.75a            0.98
+         ah    2.13(MSDOS)   -jm       -ex      -6                        a2
+       ------    ------    ------    ------  -------   ------   ------  ------
+bib     40742     40740     36090    35126    34950    35619    29840   26927
+book1  339076    339074    318382   312490   312619   306876   237380  235733
+book2  228444    228442    210521   206513   206306   208486   174085  163535
+geo     68576     68574     69209    68706    68418    58976    64590   59356
+news   155086    155084    146855   144545   144395   141608   128047  123335
+obj1    10312     10310     10333    10306    10295    10572    10819    9799
+obj2    84983     84981     82052    81132    81336    80806    85465   80381
+paper1  19678     19676     18710    18531    18525    18607    16895   15675
+paper2  32098     32096     30034    29568    29674    29825    25453   23956
+pic     52223     52221     53578    52409    55051    51778    55461   51639
+progc   13943     13941     13408    13341    13238    13475    12896   11795
+progl   16916     16914     16408    16122    16175    16586    17354   15298
+progp   11509     11507     11308    11200    11182    11647    11668   10498
+trans   22580     22578     20046    19462    18879    20506    21023   17927
+    1,096,166 1,096,138 1,036,934 1,019,451 1,021,043 1,005,367 890,976 845,854
+real    4m07s     6m03s                        1m49s   1h22m17s  27m05s
+user    3m47s     4m23s                        1m43s   1h20m46s  19m27s
+sys     0m04s     0m08s                        0m02s      0m12s   2m03s
+MSDOS:            1m49s     2m41s     1m43s                              14m43s
+
+Notes:
+
+- the compressed data for 'zoo ah' is always two bytes longer than for
+  lha. This is simply because both programs are derived from the same
+  source (ar002, written by Haruhiko Okumura, available by ftp in
+  ftp://ftp.simtel.net/pub/simtelnet/msdos/arcers/ar002.zip).
+
+- hpack 0.75a gives slightly different results on SunOS. (To be checked
+  with latest version of hpack).
+
+- the MSDOS versions are all optimized with assembler code and were run
+  on a RAM disk. So it is not surprising that they often go faster than
+  their Unix equivalent.
+
+------------------------------------------------------------------------------
+
+Subject: [7] Which books should I read?
+
+
+[BWC 1989] Bell, T.C, Cleary, J.G. and Witten, I.H, "Text Compression",
+    Prentice-Hall 1989. ISBN: 0-13-911991-4. Price: approx. US$60
+    The reference on text data compression.
+
+[Nel 1996] Mark Nelson & Jean-loup Gailly, "The Data Compression Book",
+    2nd edition. M&T Books, New York, NY 1996. ISBN 1-55851-434-1
+    541 pages. List price in the US is $39.95 including one PC-compatible
+    disk bearing all the source code printed in the book.
+    A practical introduction to data compression.
+    The book is targeted at a person who is comfortable reading C code but
+    doesn't know anything about data compression.  Its stated goal is to get
+    you up to the point where you are competent to program standard
+    compression algorithms.
+
+[Will 1990] Williams, R.  "Adaptive Data Compression", Kluwer Books, 1990.
+    ISBN: 0-7923-9085-7. Price: US$75.
+    Reviews the field of text data compression and then addresses the
+    problem of compressing rapidly changing data streams.
+
+[Stor 1988] Storer, J.A.  "Data Compression: Methods and Theory", Computer
+    Science Press, Rockville, MD. ISBN: 0-88175-161-8.
+    A survey of various compression techniques, mainly statistical
+    non-arithmetic compression and LZSS compression.  Includes complete Pascal
+    code for a series of LZ78 variants.
+
+[Stor 1992] Storer, J.A. "Image and Text Compression", Kluwer Academic
+    Publishers, 1992, ISBN 0-7923-9243-4
+
+[Say 1996] Sayood, Khalid. "Introduction to Data Compression",
+  San Francisco:  Morgan Kaufmann Publishers, 1996. ISBN 1-55860-346-8;
+  US&Canada $64.95. More info in http://www.mkp.com/pages/3468/index.html
+  The book covers both lossy and lossless compression techniques and their
+  applications to image, speech, text, audio, and video compression.
+
+[HHJ 1997] Darrel Hankerson, Greg A. Harris, and Peter D. Johnson Jr.
+ "Introduction to Information Theory and Data Compression", 1997.
+  ISBN 0-8493-3985-5   http://www.dms.auburn.edu/compression/
+
+[DS 1997] David Salomon, "Data Compression: The Complete Reference"
+ Springer, 1997, ISBN 0-387-98280-9. Price: US$ 39.95.
+
+[BK 95] Bhaskaran V. and Konstantinides K., "Image and Video Compression
+    Standards: Algorithms and Architectures", Kluwer Academic Publishers, 1995.
+    ISBN 0-7923-9591-3
+
+[ACG 1991] Advances in Speech Coding, edited by Atal, Cuperman, and Gersho,
+    Kluwer Academic Press, 1991.
+
+[GG 1991] Vector Quantization and Signal Compression, by Gersho and Gray,
+    Kluwer Acad. Press, 1991, ISBN 0-7923-9181-0.
+
+[CT 1991] Elements of Information Theory, by T.M.Cover and J.A.Thomas
+     John Wiley & Sons, 1991. ISBN 0-471-06259-6.
+
+Review papers:
+
+[BWC 1989] Bell, T.C, Witten, I.H, and Cleary, J.G.  "Modeling for Text
+    Compression", ACM Computing Surveys, Vol.21, No.4 (December 1989), p.557
+    A good general overview of compression techniques (as well as modeling for
+    text compression); the condensed version of "Text Compression".
+
+[Lele 1987] Lelewer, D.A, and Hirschberg, D.S.  "Data Compression", ACM
+    Computing Surveys, Vol.19, No.3 (September 1987), p.261.
+    A survey of data compression techniques which concentrates on Huffman
+    compression and makes only passing mention of other techniques.
+
+
+Bibliographies for Image Compression are available at
+http://www.dip.ee.uct.ac.za/~brendt/bibliographies/
+
+
+------------------------------------------------------------------------------
+
+Subject: [8] What about patents on data compression algorithms?
+
+
+[Note: the appropriate group for discussing software patents is
+comp.patents or misc.legal.computing, not comp.compression.]
+
+Only a very small subset of all patents on data compression are mentioned
+here; there are several hundred patents on lossless data compression alone.
+All patents mentioned here are US patents, and thus probably not applicable
+outside the US.  The abstracts and claims of all recent US patents can be
+obtained from http://patent.womplex.ibm.com/
+See item 70, "Introduction to data compression" for the
+meaning of LZ77, LZ78 or LZW.
+
+
+(a) Run length encoding
+
+- Tsukiyama has two patents on run length encoding: 4,586,027 and 4,872,009
+  granted in 1986 and 1989 respectively. The first one covers run length
+  encoding in its most primitive form: a length byte followed by the
+  repeated byte. The second patent covers the 'invention' of limiting the
+  run length to 16 bytes and thus the encoding of the length on 4 bits.
+  Here is the start of claim 1 of patent 4,872,009, just for pleasure:
+
+    1. A method of transforming an input data string comprising a plurality
+    of data bytes, said plurality including portions of a plurality of
+    consecutive data bytes identical to one another, wherein said data
+    bytes may be of a plurality of types, each type representing different
+    information, said method comprising the steps of: [...]
+
+- O'Brien has patented (4,988,998) run length encoding followed by LZ77.
+
+
+(b) LZ77
+
+- Waterworth patented (4,701,745) the algorithm now known as LZRW1,
+  because Ross Williams reinvented it later and posted it on
+  comp.compression on April 22, 1991. (See item 5 for the ftp site
+  with all LZRW derivatives.) The *same* algorithm has later been
+  patented by Gibson & Graybill (see below). The patent office failed
+  to recognize that the same algorithm was patented twice, even though
+  the wording used in the two patents is very similar.
+
+  The Waterworth patent is now owned by Stac Inc, which won a lawsuit
+  against Microsoft, concerning the compression feature of MSDOS 6.0.
+  Damages awarded were $120 million. (Microsoft and Stac later
+  settled out of court.)
+
+- Fiala and Greene obtained in 1990 a patent (4,906,991) on all
+  implementations of LZ77 using a tree data structure. Claim 1 of the
+  patent is much broader than the algorithms published by Fiala and
+  Greene in Comm.ACM, April 89. The patent covers the algorithm
+  published by Rodeh and Pratt in 1981 (J. of the ACM, vol 28, no 1,
+  pp 16-24).  It also covers the algorithms used in lharc, lha and zoo.
+
+- Notenboom (from Microsoft) 4,955,066 uses three levels of
+  compression, starting with run length encoding.
+
+- The Gibson & Graybill patent 5,049,881 covers the LZRW1 algorithm
+  previously patented by Waterworth and reinvented by Ross Williams.
+  Claims 4 and 12 are very general and could be interpreted as
+  applying to any LZ algorithm using hashing (including all variants
+  of LZ78):
+
+     4. A compression method for compressing a stream of input data into
+     a compressed stream of output data based on a minimum number of
+     characters in each input data string to be compressed, said
+     compression method comprising the creation of a hash table, hashing
+     each occurrence of a string of input data and subsequently searching
+     for identical strings of input data and if such an identical string
+     of input data is located whose string size is at least equal to the
+     minimum compression size selected, compressing the second and all
+     subsequent occurrences of such identical string of data, if a string
+     of data is located which does not match to a previously compressed
+     string of data, storing such data as uncompressed data, and for each
+     input strings after each hash is used to find a possible previous
+     match location of the string, the location of the string is stored
+     in the hash table, thereby using the previously processed data to
+     act as a compression dictionary.
+
+  Claim 12 is identical, with 'method' replaced with 'apparatus'.  Since
+  the 'minimal compression size' can be as small as 2, the claim could
+  cover any dictionary technique of the LZ family. However the text of the
+  patent and the other claims make clear that the patent should cover the
+  LZRW1 algorithm only. (In any case the Gibson & Graybill patent is likely
+  to be invalid because of the prior art in the Waterworth patent.)
+
+- Phil Katz, author of pkzip, also has a patent on LZ77 (5,051,745)
+  but the claims only apply to sorted hash tables, and when the hash
+  table is substantially smaller than the window size.
+
+- IBM patented (5,001,478) the idea of combining a history buffer (the
+  LZ77 technique) and a lexicon (as in LZ78).
+
+- Stac Inc patented (5,016,009 and 5,126,739) yet another variation of LZ77
+  with hashing. The '009 patent was used in the lawsuit against Microsoft
+  (see above). Stac also has a patent on LZ77 with parallel lookup in
+  hardware (5,003,307).
+
+- Robert Jung, author of 'arj', has been granted patent 5,140,321 for one
+  variation of LZ77 with hashing.  This patent is very close to the
+  LZRW3-A algorithm, also previously discovered by Ross Williams. LZRW3-A was
+  posted on comp.compression on July 15, 1991. The patent was filed two months
+  later on Sept 4, 1991. Microsoft has patented a similar idea (two level
+  table with pseudo-LRU managment of slots inside the level-2 table) in
+  5,455,577 (filed in 1993).
+
+- Chambers 5,155,484 is yet another variation of LZ77 with hashing.
+  The hash function is just the juxtaposition of two input bytes,
+  this is the 'invention' being patented. The hash table is named
+  'direct lookup table'.
+
+
+(c) LZ78
+
+- One form of the original LZ78 algorithm was patented (4,464,650) by
+  its authors Lempel, Ziv, Cohn and Eastman. This patent is owned
+  by Unisys.
+
+
+- The LZW algorithm used in 'compress' is patented by IBM (4,814,746)
+  and Unisys (4,558,302). It is also used in the V.42bis compression
+  standard (see question 11 on V.42bis below), in Postscript Level 2, in
+  GIF and TIFF.  Unisys sells the license to modem manufacturers for a
+  onetime fee (contact: Welch Patent Desk, Unisys Corp., P.O. Box 500,
+  Bluebell, PA 19424 Mailcode C SW 19). CompuServe is licensing the
+  usage of LZW in GIF products for 1.5% of the product price, of which
+  1% goes to Unisys; usage of LZW in non-GIF products must be licensed
+  directly from Unisys. For more information, see http://www.unisys.com/
+  or email to lzw_info@unisys.com.
+
+     The IBM patent application was first filed three weeks before that of
+  Unisys, but the US patent office failed to recognize that they
+  covered the same algorithm. (The IBM patent is more general, but its
+  claim 7 is exactly LZW.)
+
+- Klaus Holtz also claims that patent 4,366,551 for his "autosophy"
+  data compression method covers LZ78 and LZW. According to Holtz, most of
+  the largest V.42bis modem manufacturers have paid for patent licenses.
+
+- AP coding is patented by Storer (4,876,541). (Get the yabba package
+  for source code, see question 2 above, file type .Y) Storer also
+  claims that his patent covers V.42bis.
+
+
+(d) arithmetic coding
+
+- IBM holds many patents on arithmetic coding (4,122,440 4,286,256 4,295,125
+  4,463,342 4,467,317 4,633,490 4,652,856 4,792,954 4,891,643 4,901,363
+  4,905,297 4,933,883 4,935,882 5,045,852 5,099,440 5,142,283 5,210,536
+  5,414,423 5,546,080). It has patented in particular the Q-coder
+  implementation of arithmetic coding.  The JBIG standard, and the arithmetic
+  coding option of the JPEG standard requires use of the patented algorithm.
+  No JPEG-compatible method is possible without infringing the patent, because
+  what IBM actually claims rights to is the underlying probability model (the
+  heart of an arithmetic coder). (See item 75 for details.)
+
+  See also below details on many other patents on arithmetic coding (4,973,961
+  4,989,000 5,023,611 5,025,258 5,272,478 5,307,062 5,309,381 5,311,177
+  5,363,099 5,404,140 5,406,282 5,418,532). The list is not exhaustive.
+
+
+(e) predictor
+
+- The 'predictor' algorithm was first described in the paper
+
+    Raita, T. and Teuhola, J. (1987), "Predictive text compression by hashing",
+    ACM Conference on Information Retrieval
+
+  This algorithm has been patented (5,229,768) by K. Thomas in 1993. It
+  is used in the Internet Draft "PPP Predictor Compression Protocol" (see
+  ftp://venera.isi.edu/internet-drafts/draft-ietf-pppext-predictor-00.txt).
+
+(f) compression of random data
+
+- The US patent office no longer grants patents on perpetual motion machines,
+  but has recently granted a patent on a mathematically impossible process
+  (compression of truly random data): 5,533,051 "Method for Data Compression".
+  See item 9.5 of this FAQ for details.
+
+
+As can be seen from the above list, some of the most popular compression
+programs (compress, pkzip, zoo, lha, arj) are now covered by patents.
+(This says nothing about the validity of these patents.)
+
+Here are some references on data compression patents. Some of them are
+taken from the list ftp://prep.ai.mit.edu/pub/lpf/patent-list.
+
+3,914,586
+Data compression method and apparatus
+filed 10/25/73, granted 10/21/75
+General Motors Corporation, Detroit MI
+Duane E. McIntosh, Santa Ynez CA
+Data compression apparatus is disclosed is operable in either a bit
+pair coding mode of a word coding mode depending on the degree of
+redundancy of the data to be encoded.
+
+3,976,844
+Data communication system for transmitting data in compressed form
+filed Apr. 4, 1975, granted Aug. 24, 1976
+inventor  Bernard K. Betz, assignee Honeywell Information Systems, Inc.
+[encode differences with previous line]
+
+4,021,782
+Data compaction system and apparatus
+inventor Hoerning
+filed 04/30/1975, granted 05/03/1977
+[A primitive form of LZ77 with implicit offsets (compare with previous record)]
+
+4,054,951
+Data expansion apparatus
+inventor R.D. Jackson, assignee IBM
+filed Jun. 30, 1976, granted Oct. 18, 1977
+[Covers only decompression of data compressed with a variant of LZ77.]
+
+4,087,788
+Data compression system
+filed 1/14/77, granted 5/2/78
+NCR Canada LTD - NCR Canada Ltee, Mississauga CA
+Brian J. Johannesson, Waterloo CA
+A data compression system is disclosed in which the left hand boundary
+of a character is developed in the form of a sequence of Freeman
+direction codes, the codes being stored in digital form within a
+processor.
+
+4,122,440
+Method and means for arithmetic string coding
+assignee IBM
+filed 1977/03/04, granted 1978/10/24
+[This is the basic idea of arithmetic coding. Note that the patent is
+expired now.]
+
+4,286,256
+Method and means for arithmetic coding using a reduced number of operations.
+granted Aug 25, 1981
+assignee IBM
+
+4,295,125
+A method and means for pipeline decoding of the high to low order pairwise
+combined digits of a decodable set of relatively shifted finite number of
+strings
+granted Oct 13, 1981
+assignee IBM
+
+4,366,551
+Associative Memory Search System
+filed June 16, 1975, granted Dec. 28, 1982.
+inventor Klaus Holtz, assignee Omni Dimensional Networks.
+
+4,412,306
+System for minimizing space requirements for storage and transmission of
+digital signals
+filed May 14, 1981, granted Oct. 25, 1983
+inventor  Edward W. Moll
+
+4,463,342
+A method and means for carry-over control in a high order to low order
+combining of digits of a decodable set of relatively shifted finite number
+strings.
+granted Jul 31, 1984
+assignee IBM
+
+4,491,934
+Data compression process
+filed May 12, 1982, granted Jan. 1, 1985
+inventor  Karl E. Heinz
+
+4,464,650
+Apparatus and method for compressing data signals and restoring the
+compressed data signals
+inventors Lempel, Ziv, Cohn, Eastman
+assignee Sperry Corporation (now Unisys)
+filed 8/10/81, granted 8/7/84
+A compressor parses the input data stream into segments where each
+segment comprises a prefix and the next symbol in the data stream
+following the prefix. [This is the original LZ78 algorithm.]
+
+4,467,317
+High-speed arithmetic compression using using concurrent value updating.
+granted Aug 21, 1984
+assignee IBM
+
+4,494,108
+Adaptive source modeling for data file compression within bounded memory
+filed Jun. 5, 1984, granted Jan. 15, 1985
+invntors Glen G. Langdon, Jorma J. Rissanen
+assignee IBM
+order 1 Markov modeling
+
+4,558,302
+High speed data compression and decompression apparatus and method
+inventor Welch
+assignee Sperry Corporation (now Unisys)
+filed 6/20/83, granted 12/10/85
+re-examined: filed 12/14/92, granted 4/1/94.
+The text of the original 1985 patent can be ftped from
+ftp://ftp.uni-stuttgart.de/pub/doc/comp-patents/US4558302.Z
+There is also a European Patent 0,129,439  1/2/89 for DE, FR, GB, IT
+and patent pending for Japan.
+
+4,560,976
+Data compression
+filed 6/5/84, granted 12/24/85
+Codex Corporation, Mansfield MA
+Steven G. Finn, Framingham, MA
+A stream of source characters, which occur with varying relative
+frequencies, is encoded into a compressed stream of codewords, each
+having one, two or three subwords, by ranking the source characters by
+their current frequency of appearance, encoding the source characters
+having ranks no higher than a first number as one subword codewords,
+source characters having ranks higher than the first number but no
+higher than a second number as two subword codewords, and the
+remaining source characters as three subword codewords.
+
+4,586,027
+Method and system for data compression and restoration
+inventor Tsukimaya et al.
+assignee Hitachi
+filed 08/07/84, granted 04/29/86
+patents run length encoding
+
+4,597,057
+System for compressed storate of 8-bit ascii bytes using coded strings
+of 4-bit nibbles.
+inventor Snow, assignee System Development corporation.
+filed 12/31/1981, granted 06/24/1986.
+Compression using static dictionary of common words, prefixes and suffixes.
+
+4,612,532
+Data compression apparatus and method
+inventor Bacon, assignee Telebyte Corportion
+filed Jun. 19, 1984, granted Sep. 16, 1986
+[Uses followsets as in the pkzip 0.92 'reduce' algorithm, but the
+followsets are dynamically updated. This is in effect a sort of order-1
+Markov modeling.]
+
+4,622,545
+Method and apparatus for image compression and Manipulation
+inventor William D. Atkinson
+assignee Apple computer Inc.
+filed 9/30/82
+granted 11/11/86
+
+4,633,490
+Symmetrical adaptive data compression/decompression system.
+granted Dec 30, 1985
+assignee IBM
+
+4,652,856
+A multiplication-free multi-alphabet arithmetic code.
+granted Feb  4, 1986
+assignee IBM
+
+4,667,649
+Data receiving apparatus
+filed 4/18/84, granted 6/30/87
+inventors Kunishi et al.
+assignee Canon Kabushiki Kaisha, Tokyo Japan
+compression of Fax images.
+
+4,682,150
+Data compression method and apparatus
+inventors Mathes and Protheroe, 
+assignee NCR Corporation, Dayton OH
+A system and apparatus for compressing redundant and nonredundant
+binary data generated as part of an operation of a time and attendance
+terminal in which the data represents the time an employee is present
+during working hours.
+
+4,701,745
+Data compression system
+inventor Waterworth John R
+assignee Ferranti PLC GB, patent rights now acquired by Stac Inc.
+filed 03/03/1986 (03/06/1985 in GB), granted 10/20/1987
+Algorithm now known as LZRW1 (see above)
+I claim:
+1. A data compression system comprising an input store for receiving
+and storing a plurality of bytes of uncompressed data from an outside
+source, and data processing means for processing successive bytes of
+data from the input store;
+the data processing means including circuit means operable to check
+whether a sequence of successive bytes to be processed identical with
+a sequence of bytes already processed, and including hash generating
+means responsive to the application of a predetermined number of
+bytes in sequence to derive a hash code appropriate to those bytes, a
+temporary store in which the hash code may represent the address of a
+storage location, and a pointer counter operable to store in the
+temporary store at said address a pointer indicative of the position
+in the input store of one of the predetermined number of bytes;
+output means operable to apply to a transfer medium each byte of data
+not forming part of such an identical sequence; and
+encoding means responsive to the identification of such a sequence to
+apply to the transfer medium an identification signal which identifies
+both the location in the input store of the previous occurrence of the
+sequence of bytes and the number of bytes contained in the sequence.
+
+4,730,348
+Adaptive data compression system
+inventor MacCrisken, assignee Adaptive Computer Technologies
+filed Sep. 19, 1986, granted Mar. 8, 1988
+[order-1 Markov modeling + Huffman coding + LZ77]
+
+4,758,899
+Data compression control device
+inventor Tsukiyama, assignee Hitachi
+filed 11/20/1985, granted 07/19/1988
+Limits compression to ensure that tape drive stays busy.
+
+4,792,954
+Concurrent detection of errors in arithmetic data compression coding
+assignee IBM
+filed 1986/10/31, granted 1988/12/20
+
+4,809,350
+Data compression system
+filed Jan. 30, 1987, granted Feb. 28, 1989
+inventor Yair Shimoni & Ron Niv
+assignee Elscint Ltd., Haifa, Israel
+[Image compression via variable length encoding of differences with
+predicted data.]
+
+4,814,746
+Data compression method
+inventors Victor S. Miller, Mark N. Wegman
+assignee IBM
+filed 8/11/86, granted 3/21/89
+A previous application was filed on 6/1/83, three weeks before the
+application by Welch (4,558,302)
+Communications between a Host Computing System and a number of remote
+terminals is enhanced by a data compression method which modifies the
+data compression method of Lempel and Ziv by addition of new character
+and new string extensions to improve the compression ratio, and
+deletion of a least recently used routine to limit the encoding tables
+to a fixed size to significantly improve data transmission efficiency.
+
+4,841,092
+continued in 5,003,307
+
+4,853,696
+Code converter for data compression/decompression
+filed 4/13/87, granted 8/1/89
+inventor Amar Mukherjee, Maitland FL
+assignee University of Central Florida, Orlando FL
+Another hardware Huffman encoder:
+A code converter has a network of logic circuits connected in reverse
+binary tree fashion with logic paths between leaf nodes and a common
+root node.
+
+4,872,009
+Method and apparatus for data compression and restoration
+inventor Tsukimaya et al.
+assignee Hitachi
+filed 12/07/87, granted 10/03/89
+This patent on run length encoding covers the 'invention' of limiting
+the run length to 16 bytes and thus the encoding of the length on 4 bits.
+
+4,876,541
+Stem [sic] for dynamically compressing and decompressing electronic data
+filed 10/15/87, granted 10/24/89
+inventor James A. Storer
+assignee Data Compression Corporation
+A data compression system for encoding and decoding textual data,
+including an encoder for encoding the data and for a decoder for
+decoding the encoded data.
+
+4,891,643
+Arithmetic coding data compression/de-compression by selectively
+employed, diverse arithmetic encoders and decoders.
+file 1986/09/15, granted 1990/01/02
+assignee IBM
+
+4,901,363
+System for compressing bi-level data
+assignee IBM
+[arithmetic coding]
+
+4,905,297
+Arithmetic coding encoder and decoder system.
+granted Feb 27, 1990
+assignee IBM
+
+4,906,991
+Textual substitution data compression with finite length search window
+filed 4/29/1988, granted 3/6/1990
+inventors Fiala,E.R., and Greene,D.H.
+assignee Xerox Corporation
+extended in 5,058,144
+
+4,933,883
+Probability adaptation for arithmetic coders.
+granted Jun 12, 1990
+assignee IBM
+
+4,935,882
+Probability adaptation for arithmetic coders.
+granted Jun 19, 1990
+assignee IBM
+
+4,941,193
+Barnsley, fractal compression.
+
+4,943,869
+Compression Method for Dot Image Data
+filed 1988-05-04, granted 1990-07-24
+assignee Fuji Photo Film Co.
+Lossy and lossless image compression schemes.
+
+4,955,066
+Compressing and Decompressing Text Files
+filed  10/13/89, granted 09/04/90
+inventor Notenboom, L.A.
+assignee Microsoft
+Now extended as 5,109,433
+[Noted in signon screen of Word 5.5 and on the outside of the MS-DOS 5.0
+Upgrade.]
+A method of compressing a text file in digital form is disclosed.
+A full text file having characters formed into phrases is provided by an
+author.  The characters are digitally represented by bytes.  A first pass
+compression is sequentially followed by a second pass compression of the
+text which has previously been compressed.  A third or fourth level of
+compression is serially performed on the compressed text.  For example, in
+a first pass, the text is run-length compressed.  In a second pass, the
+compressed text is further compressed with key phrase compression.  In a
+third pass, the compressed text is further compressed with Huffman
+compression.  The compressed text is stored in a text file having a Huffman
+decode tree, a key phrase table, and a topic index.  The data is
+decompressed in a single pass and provided one line at a time as an output.
+Sequential compressing of the text minimizes the storage space required for
+the file.  Decompressing of the text is performed in a single pass.  As a
+complete line is decompressed, it is output rapidly, providing full text to
+the user.
+
+4,973,961
+Method and apparatus for carry-over control in arithmetic coding.
+granted Nov 27, 1990
+assignee AT&T
+
+4,988,998
+Data compression system for successively applying at least two data
+compression methods to an input data stream.
+inventor O'Brien
+assignee Storage Technology Corporation, Louisville, Colorado
+filed Sep 5, 1989, granted Jan 29, 1991.
+Run length encoding followed by LZ77.
+
+4,989,000
+Data string compression using arithmetic encoding with simplified probability
+subinterval estimation
+filed 1989/06/19, granted 1991/01/29]
+[shift & add instead of multiply]
+
+5,001,478
+Method of Encoding Compressed Data
+filed 12/28/89, granted 03/19/91
+inventor Michael E. Nagy
+assignee IBM
+1. A method of encoding a compressed data stream made up of a sequence of
+literal references, lexicon references and history references, which
+comprises the steps of:
+assigning to each literal reference a literal identifier;
+assigning to each history reference a history identifier;
+assigning to each lexicon reference a lexicon identifier;
+and emitting a data stream with said identifiers assigned to said references.
+Gordon Irlam <gordoni@cs.adelaide.edu.au> says:
+The invention can probably be best understood by considering the
+decompressor.  It consists of a history buffer, and a lexicon buffer, both
+of which are initially empty.  The history buffer contains the last n
+symbols emitted.  Whenever a history buffer reference is to be output the
+string so referenced is subsequently moved to the lexicon buffer for future
+reference.  Thus the history buffer keeps track of strings that may be
+repeated on a very short term basis, while the lexicon buffer stores items
+for a longer time.  Furthermore a history reference involves specifying
+both the offset and length within the history buffer, whereas a lexicon
+reference simply specifies a number denoting the string.  Both buffers have
+a finite size.
+
+5,003,307
+Data compression apparatus with shift register search means
+filed Oct. 6, 1989, granted Mar. 26, 1991
+inventors George Glen A, Ivey Glen E, Whiting Douglas L
+assignee Stac Inc
+continuation of 4,841,092
+
+5,016,009
+Data compression apparatus and method
+filed 01/13/1989, granted 05/14/1991
+inventors George Glen A, Ivey Glen E, Whiting Douglas L
+assignee Stac Inc
+LZ77 with offset hash table (extended in 5,126,739)
+
+5,023,611
+Entropy encoder/decoder including a context extractor.
+granted Jun 11, 1991
+assignee AT&T
+
+5,025,258
+Adaptive probability estimator for entropy encoder/decoder.
+granted Jun 18, 1991
+assignee AT&T
+
+5,045,852
+Dynamic model selection during data compression
+assignee IBM
+[arithmetic coding]
+
+5,049,881
+Apparatus and method for very high data rate-compression incorporating
+lossless data compression and expansion utilizing a hashing technique
+inventors Dean K. Gibson, Mark D. Graybill
+assignee Intersecting Concepts, Inc.
+filed 6/18/90, granted 9/17/91
+[covers lzrw1, almost identical with Waterworth 4,701,745]
+
+5,051,745
+String searcher, and compressor using same
+filed  8/21/90, granted 9/24/91
+inventor  Phillip W. Katz (author of pkzip)
+In the string search method and apparatus pointers to the string to be
+searched are indexed via a hashing function and organized according to the
+hashing values of the string elements pointed to. The hashing function is
+also run on the string desired to be found, and the resulting hashing value
+is used to access the index. If the resulting hashing value is not in the
+index, it is known that the target string does not appear in the string
+being searched. Otherwise the index is used to determine the pointers which
+correspond to the target hashing value, these pointers pointing to likely
+candidates for matching the target string. The pointers are then used to
+sequentially compare each of the locations in the string being searched to
+the target string, to determine whether each location contains a match to
+the target string.
+In the method and apparatus for compressing a stream of data symbols, a
+fixed length search window, comprising a predetermined contiguous portion
+of the symbol stream, is selected as the string to be searched by the
+string searcher. If a string to be compressed is found in the symbol
+stream, a code is output designating the location within the search window
+of the matching string and the length of the matching string.
+
+5,065,447 (continued in 5,347,600)
+Method and apparatus for processing digital data
+filed Jul. 5, 1989, granted Nov. 12, 1991
+inventors Michael F. Barnsley and Alan D. Sloan
+[Patents image compression with the "Fractal Transform"]
+
+5,099,440
+Probability adaptation for arithmetic coders
+
+5,109,433
+Compressing and decompressing text files
+inventor Notenboom
+assignee Microsoft
+extension of 4,955,066
+
+5,126,739
+Data Compression Apparatus and Method
+filed Nov. 27, 1990, granted June 30, 1992.
+inventor Whiting et. al
+assignee Stac Inc
+LZ77 with offset hash table (extension of 5,016,009)
+
+5,140,321
+Data compression/decompression method and apparatus
+filed 9/4/91, granted 8/18/92
+inventor Robert Jung
+assignee Prime Computer
+
+5,142,283
+Arithmetic compression coding using interpolation for ambiguous symbols
+filed 1990/07/10, granted 1992/08/25
+assignee IBM
+
+5,155,484
+Fast data compressor with direct lookup table indexing into history buffer
+filed 9/13/1991, granted 10/13/1992
+inventor Chambers, IV, Lloyd L., Menlo Park, California
+assignee Salient Software, Inc., Palo Alto, California (02)
+Uses a 64K hash table indexed by the first two characters of
+the input string. Includes several claims on the LZ77 file format
+(literal or pair offset,length).
+
+5,179,378
+file Jul. 30, 1991, granted Jan. 12, 1993
+inventor Ranganathan
+assignee University of South Florida
+Method and apparatus for the compression and decompression of data
+using Lempel-Ziv based techniques.
+[This covers LZ77 hardware compression with a systolic array of
+processors working in parallel.]
+
+5,210,536
+Data compression/coding method and device for implementing said method
+assignee IBM
+[PPM + arithmetic coding]
+
+5,229,768
+Adaptive data compression system
+granted Jul. 20, 1993
+inventor Kasman E. Thomas
+assignee Traveling Software, Inc. 
+  A system for data compression and decompression is disclosed. A series of
+fixed length overlapping segments, called hash strings, are formed from an
+input data sequence. A retrieved character is the next character in the input
+data sequence after a particular hash string. A hash function relates a
+particular hash string to a unique address in a look-up table (LUT). An
+associated character for the particular hash string is stored in the LUT at
+the address. When a particular hash string is considered, the content of the
+LUT address associated with the hash string is checked to determine whether
+the associated character matches the retrieved character following the hash
+string. If there is a match, a Boolean TRUE is output; if there is no match,
+a Boolean FALSE along with the retrieved character is output. Furthermore, if
+there is no match, then the LUT is updated by replacing the associated
+character in the LUT with the retrieved character. [...]
+[This algorithm is used in the Internet draft
+"PPP Predictor Compression Protocol".]
+
+5,272,478
+Method and apparatus for entropy coding
+assignee Ricoh
+[arithmetic coding with finite state machine]
+
+5,307,062
+Coding system
+filed 1992/12/15, granted 1994/04/26
+assignee Mitsubishi
+[binary arithmetic coding, see also 5,404,140]
+
+5,309,381
+Probability estimation table apparatus
+filed 1992/04/08, granted 1994/05/03
+assignee Ricoh
+[arithmetic coding]
+
+5,311,177
+Code transmitting apparatus with limited carry propagation
+filed 1992/06/19, granted 1994/05/10
+assignee Mitsubishi
+[arithmetic coding]
+
+5,347,600 (continuation of 5,065,447)
+Method and apparatus for compression and decompression of digital image
+filed 10/23/1991, granted 09/13/1994
+inventors Barnsley and Sloan
+
+5,363,099
+Method and apparatus for entropy coding
+[arithmetic coding with state machine]
+
+5,384,867 (continued in 5,430,812)
+filed 10/23/1991, granted 01/24/1995
+Fractal transform compression board
+inventors Barnsley et al.
+
+5,404,140
+Coding system
+filed 1994/01/13, granted 1995/04/04
+assignee Mitsubishi
+[binary arithmetic coding, see also 5,307,062]
+
+5,406,282
+Data coding and decoding with improved efficiency
+assignee Ricoh
+[PPM & arithmedic coding]
+
+5,414,423
+Stabilization of probability estimates by conditioning on prior decisions
+  of a given context
+assignee IBM
+arithmetic coding]
+
+5,416,856
+Method of encoding a digital image using iterated image transformations
+  to form an eventually contractive map
+filed 1992/03/30, granted 1995/05/16
+inventors Jacobs, Boss and Fisher
+
+5,418,532
+Method and system for efficient, multiplication-free arithmetic coding
+filed 1993/05/13, granted 1995/05/23.
+inventors Lei & Shaw-Min
+assignee Bell Communications Research, Inc. (Livingston, NJ). 
+
+5,430,812 (continuation of 5,384,867)
+Fractal transform compression board
+filed 1994/05/18, granted 1995/07/04
+inventors Barnsley et al.
+
+5,455,577
+Method and system for data compression
+filed 1993/03/12, granted 1995/10/03
+inventors Slivka & Rashid, assignee Microsoft
+LZ77 with two-level search data structure
+
+5,533,051
+Method for Data Compression
+filed 1993/03/12, granted 1996/07/02
+inventor David C. James, assignee The James Group
+This is a patent on compression of random data, see item 9.5 below.
+
+Japan 2-46275
+Coding system
+granted Feb 26, 1990
+[Patents one form of arithmetic coding.]
+
+
+------------------------------------------------------------------------------
+
+Subject: [9]  Compression of random data (WEB, Gilbert and others)
+
+
+[Note from the FAQ maintainer: this topic has generated and is still generating
+the greatest volume of news in the history of comp.compression. Read this
+before posting on this subject.
+
+I intended to remove the WEB story from the FAQ, but similar affairs come up
+regularly on comp.compression.  The advertized revolutionary methods have all
+in common their supposed ability to compress random or already compressed data.
+I will keep this item in the FAQ to encourage people to take such claims with
+great precautions.]
+
+
+9.1 Introduction
+
+It is mathematically impossible to create a program compressing without loss
+*all* files by at least one bit (see below and also item 73 in part 2 of this
+FAQ). Yet from time to time some people claim to have invented a new algorithm
+for doing so. Such algorithms are claimed to compress random data and to be
+applicable recursively, that is, applying the compressor to the compressed
+output of the previous run, possibly multiple times. Fantastic compression
+ratios of over 100:1 on random data are claimed to be actually obtained.
+
+Such claims inevitably generate a lot of activity on comp.compression, which
+can last for several months. Large bursts of activity were generated by WEB
+Technologies and by Jules Gilbert. Premier Research Corporation (with a
+compressor called MINC) made only a brief appearance but came back later with a
+Web page at http://www.pacminc.com.  The Hyper Space method invented by David
+C. James is another contender with a patent obtained in July 96. Another large
+burst occured in Dec 97 and Jan 98: Matthew Burch <apoc@pipeline.com> applied
+for a patent in Dec 97, but publicly admitted a few days later that his method
+was flawed; he then posted several dozen messages in a few days about another
+magic method based on primes, and again ended up admitting that his new method
+was flawed. (Usually people disappear from comp.compression and appear again 6
+months or a year later, rather than admitting their error.)
+
+Other people have also claimed incredible compression ratios, but the programs
+(OWS, WIC) were quickly shown to be fake (not compressing at all). This topic
+is covered in item 10 of this FAQ.
+
+
+9.2 The counting argument
+
+[This section should probably be called "The counting theorem" because some
+people think that "argument" implies that it is only an hypothesis, not a
+proven mathematical fact. The "counting argument" is actually the proof of the
+theorem.]
+
+The WEB compressor (see details in section 9.3 below) was claimed to compress
+without loss *all* files of greater than 64KB in size to about 1/16th their
+original length. A very simple counting argument shows that this is impossible,
+regardless of the compression method. It is even impossible to guarantee
+lossless compression of all files by at least one bit. (Many other proofs have
+been posted on comp.compression, please do not post yet another one.)
+
+Theorem:
+  No program can compress without loss *all* files of size >= N bits, for
+  any given integer N >= 0.
+
+Proof:
+  Assume that the program can compress without loss all files of size >= N
+  bits.  Compress with this program all the 2^N files which have exactly N
+  bits.  All compressed files have at most N-1 bits, so there are at most
+  (2^N)-1 different compressed files [2^(N-1) files of size N-1, 2^(N-2) of
+  size N-2, and so on, down to 1 file of size 0]. So at least two different
+  input files must compress to the same output file. Hence the compression
+  program cannot be lossless.
+
+The proof is called the "counting argument". It uses the so-called pigeon-hole
+principle: you can't put 16 pigeons into 15 holes without using one of the
+holes twice.
+
+Much stronger results about the number of incompressible files can be obtained,
+but the proofs are a little more complex. (The MINC page http://www.pacminc.com
+uses one file of strictly negative size to obtain 2^N instead of (2^N)-1
+distinct files of size <= N-1 .)
+
+This argument applies of course to WEB's case (take N = 64K*8 bits).  Note that
+no assumption is made about the compression algorithm.  The proof applies to
+*any* algorithm, including those using an external dictionary, or repeated
+application of another algorithm, or combination of different algorithms, or
+representation of the data as formulas, etc... All schemes are subject to the
+counting argument.  There is no need to use information theory to provide a
+proof, just very basic mathematics. [People interested in more elaborate proofs
+can consult http://wwwvms.utexas.edu/~cbloom/news/nomagic.html ]
+
+In short, the counting argument says that if a lossless compression program
+compresses some files, it must expand others, *regardless* of the compression
+method, because otherwise there are simply not enough bits to enumerate all
+possible output files. Despite the extreme simplicity of this theorem and its
+proof, some people still fail to grasp it and waste a lot of time trying to
+find a counter-example.
+
+This assumes of course that the information available to the decompressor is
+only the bit sequence of the compressed data. If external information such as a
+file name, a number of iterations, or a bit length is necessary to decompress
+the data, the bits necessary to provide the extra information must be included
+in the bit count of the compressed data.  Otherwise, it would be sufficient to
+consider any input data as a number, use this as the file name, iteration count
+or bit length, and pretend that the compressed size is zero.  For an example of
+storing information in the file name, see the program lmfjyh in the 1993
+International Obfuscated C Code Contest, available on all comp.sources.misc
+archives (Volume 39, Issue 104).
+
+A common flaw in the algorithms claimed to compress all files is to assume that
+arbitrary bit strings can be sent to the decompressor without actually
+transmitting their bit length. If the decompressor needs such bit lengths
+to decode the data (when the bit strings do not form a prefix code), the
+number of bits needed to encode those lengths must be taken into account
+in the total size of the compressed data.
+
+Another common (but still incorrect) argument is to assume that for any file,
+some still to be discovered algorithm might find a seed for a pseudo-random
+number generator which would actually generate the whole sequence of bytes
+contained in the file. However this idea still fails to take into account the
+counting argument. For example, if the seed is limited to 64 bits, this
+algorithm can generate at most 2^64 different files, and thus is unable to
+compress *all* files longer than 8 bytes. For more details about this
+"magic function theory", see http://www.dogma.net/markn/FAQ.html#Q19
+
+Yet another popular idea is to split the input bit stream into a sequence of
+large numbers, and factorize those numbers. Unfortunately, the number of bits
+required to encode the factors and their exponents is on average not smaller
+than the number of bits of the original bit stream, so this scheme too cannot
+compress all data. Another idea also related to primes is to encode each
+number as an index into a table of primes and an offset relative to the indexed
+prime; this idea doesn't work either because the number of bits required to
+encode the index, the offset and the separation between index and offset
+is on average not smaller than the number of bits of the original bit stream.
+
+Steve Tate <srt@cs.unt.edu> suggests a good challenge for programs
+that are claimed to compress any data by a significant amount:
+ 
+    Here's a wager for you: First, send me the DEcompression algorithm.  Then I
+    will send you a file of whatever size you want, but at least 100k.  If you
+    can send me back a compressed version that is even 20% shorter (80k if the
+    input is 100k) I'll send you $100.  Of course, the file must be able to be
+    decompressed with the program you previously sent me, and must match
+    exactly my original file.  Now what are you going to provide
+    when... er... if you can't demonstrate your compression in such a way?
+
+So far no one has accepted this challenge (for good reasons).
+
+Mike Goldman <whig@by.net> makes another offer:
+
+    I will attach a prize of $5,000 to anyone who successfully meets this
+    challenge.  First, the contestant will tell me HOW LONG of a data file to
+    generate.  Second, I will generate the data file, and send it to the
+    contestant.  Last, the contestant will send me a decompressor and a
+    compressed file, which will together total in size less than the original
+    data file, and which will be able to restore the compressed file to the
+    original state.
+
+    With this offer, you can tune your algorithm to my data.  You tell me the
+    parameters of size in advance.  All I get to do is arrange the bits within
+    my file according to the dictates of my whim.  As a processing fee, I will
+    require an advance deposit of $100 from any contestant.  This deposit is
+    100% refundable if you meet the challenge.
+
+
+9.3 The WEB 16:1 compressor
+
+9.3.1 What the press says
+
+April 20, 1992  Byte Week Vol 4. No. 25:
+
+   "In an announcement that has generated high interest - and more than a
+   bit of skepticism - WEB Technologies (Smyrna, GA) says it has
+   developed a utility that will compress files of greater than 64KB in
+   size to about 1/16th their original length.  Furthermore, WEB says its
+   DataFiles/16 program can shrink files it has already compressed."
+   [...]
+   "A week after our preliminary test, WEB showed us the program successfully
+   compressing a file without losing any data.  But we have not been able
+   to test this latest beta release ourselves."
+   [...]
+   "WEB, in fact, says that virtually any amount of data can be squeezed 
+   to under 1024 bytes by using DataFiles/16 to compress its own output
+   multiple times."
+
+June 1992 Byte, Vol 17 No 6:
+
+   [...] According to Earl Bradley, WEB Technologies' vice president of
+   sales and marketing, the compression algorithm used by DataFiles/16
+   is not subject to the laws of information theory. [...]
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+9.3.2 First details, by John Wallace <buckeye@spf.trw.com>
+
+I called WEB at (404)514-8000 and they sent me some product
+literature as well as chatting for a few minutes with me on the phone.
+Their product is called DataFiles/16, and their claims for it are
+roughly those heard on the net.
+
+According to their flier:
+
+"DataFiles/16 will compress all types of binary files to approximately
+one-sixteenth of their original size ... regardless of the type of
+file (word processing document, spreadsheet file, image file,
+executable file, etc.), NO DATA WILL BE LOST by DataFiles/16."
+(Their capitalizations; 16:1 compression only promised for files >64K
+bytes in length.)
+
+"Performed on a 386/25 machine, the program can complete a
+compression/decompression cycle on one megabyte of data in less than
+thirty seconds"
+
+"The compressed output file created by DataFiles/16 can be used as the 
+input file to subsequent executions of the program.  This feature of 
+the utility is known as recursive or iterative compression, and will 
+enable you to compress your data files to a tiny fraction of the 
+original size.  In fact, virtually any amount of computer data can 
+be compressed to under 1024 bytes using DataFiles/16 to compress its 
+own output files muliple times.  Then, by repeating in reverse the 
+steps taken to perform the recusive compression, all original data 
+can be decompressed to its original form without the loss of a single 
+bit."
+
+Their flier also claims: 
+
+"Constant levels of compression across ALL TYPES of FILES"
+"Convenient, single floppy DATA TRANSPORTATION"
+
+From my telephone conversation, I was assured that this is an
+actual compression program.  Decompression is done by using only the 
+data in the compressed file; there are no hidden or extra files.
+
+
+9.3.3 More information, by Rafael Ramirez <rafael.ramirez@channel1.com>:
+
+   Today (Tuesday, 28th) I got a call from Earl Bradley of Web
+who now says that they have put off releasing a software version of
+the algorithm because they are close to signing a major contract with
+a big company to put the algorithm in silicon.  He said he could not
+name the company due to non-disclosure agreements, but that they had
+run extensive independent tests of their own and verified that the
+algorithm works. [...]
+
+He said the algorithm is so simple that he doesn't want anybody
+getting their hands on it and copying it even though he said they
+have filed a patent on it. [...] Mr. Bradley said the silicon version
+would hold up much better to patent enforcement and be harder to copy.
+
+   He claimed that the algorithm takes up about 4K of code, uses only
+integer math, and the current software implementation only uses a 65K
+buffer.  He said the silicon version would likely use a parallel
+version and work in real-time. [...]
+
+
+9.3.4 No software version
+
+Appeared on BIX, reposted by Bruce Hoult <Bruce.Hoult@actrix.gen.nz>:
+
+tojerry/chaos #673, from abailey, 562 chars, Tue Jun 16 20:40:34 1992
+Comment(s). 
+----------
+TITLE: WEB Technology
+I promised everyone a report when I finally got the poop on WEB's
+16:1 data compression. After talking back and forth for a year
+and being put off for the past month by un-returned phone calls,
+I finally got hold of Marc Spindler who is their sales manager.
+ 
+_No_ software product is forth coming, period!
+ 
+He began talking about hardware they are designing for delivery
+at the end of the year. [...]
+
+
+9.3.5 Product cancelled
+
+Posted by John Toebes <toebes@bnr.ca> on Aug 10th, 1992:
+
+[Long story omitted, confirming the reports made above about the
+original WEB claims.]
+
+10JUL92 - Called to Check Status.  Was told that testing had uncovered a
+          new problem where 'four numbers in a matrix were the same
+          value' and that the programmers were off attempting to code a
+          preprocessor to eliminate this rare case.  I indicated that he
+          had told me this story before.  He told me that the
+          programmers were still working on the problem.
+
+31JUL92 - Final Call to Check Status.  Called Earl in the morning and
+          was told that he still had not heard from the programmers. [...]
+          Stated that if they could not resolve the problem then there would
+          probably not be a product.
+
+03AUG92 - Final Call.  Earl claims that the programmers are unable to
+          resolve the problem.  I asked if this meant that there would
+          not be a product as a result and he said yes.
+
+
+9.3.6 Byte's final report
+
+Extract from the Nov. 95 issue of Byte, page 42:
+
+Not suprisingly, the beta version of DataFiles/16 that reporter Russ Schnapp
+tested didn't work. DataFiles/16 compressed files, but when decompressed, those
+files bore no resemblance to their originals. WEB said it would send us a
+version of the program that worked, but we never received it.
+
+When we attempted to follow up on the story about three months later, the
+company's phone had been disconnected. Attempts to reach company officers
+were also unsuccessful. [...]
+
+
+9.4 Jules Gilbert
+
+As opposed to WEB Technologies, Jules Gilbert <jules@aasp.net> does not
+claim to compress *all* files, but only "random or random-appearing" files.
+Here are some quotes from a few of Mr Gilbert's articles, which can be helpful
+to get a better idea of his claims. No comments or conclusions are given; if
+you need more information contact Mr. Gilbert directly.
+
+  From: coffee@spock.ici.net (Jules Gilbert)
+  Newsgroups: comp.compression
+  Subject: Re: No Magic Compressors, No Factoring Compressors, Jules Gilbert
+    is a liar
+  Date: 14 May 1996 03:13:31 -0400
+  Message-ID: <4n9bqr$89k@spock.ici.net>
+
+  [...]
+  I will, in front of several Boston area computer scientists ('monitors'),
+  people I choose but generally known to be fair and competent, under
+  conditions which are sufficient to prevent disclosure of the method and fully
+  protect the algorithm and other aspects of the underlying method from
+  untoward discovery, use two computers, (which I am permitted to examine but
+  not alter) with both machine's running Linux, and with the file-systems and
+  Linux OS freshly restored from commercial CD-ROM's do the following:
+
+  On one machine (the 'src-CPU') will be loaded a copy of the CALGARY-CORPUS.
+  (Or other agreed on '.ZIP' or '.ARJ' file.)
+
+  I will compress the CALGARY-CORPUS for transfer from the src-CPU onto 3.5"
+  disks and transfer it (by sneaker-net) to the other machine for decompression
+  and produce a perfect copy of the CORPUS file on the 'dst-CPU'.
+
+  The CORPUS archive contents will not be 'cracked', ie', the original CORPUS
+  can be encrypted and the password kept from me.  All I care about is that the
+  input file is highly random-aprearing.
+
+  I claim that I can perform this process several times, and each iteration
+  will reduce the overall file by at least 50%, ie., a ratio of 2:1.  An
+  'iteration' will constitute copying, using compression, from the src-CPU to
+  the dst-CPU, and then reversing the direction to achieve another iteration.
+
+  For example, for say a 4M input file, it is reasonable to expect an
+  approximately 1M output file, after two complete iterations.
+  [...]
+  ONLY RANDOM OR RANDOM-APPEARING DATA INPUT CAN BE COMPRESSED BY MY METHOD.
+  [...]
+  If one iteration (of the compression 'sandwich') consists of two parts, say
+  an LZ phase followed by a JG phase, the LZ method will compression by
+  perhaps a ration of 2:1 (at the first iteration), perhaps much better if the
+  input is text, and the JG phase will do 3-4:1, but slowly!!  During
+  subsequent iterations, the LZ phase will do perhaps 1.25:1 and the JG phase
+  will continue to do about 3-4:1.
+
+  Experimentally, I have achieved compression results of nearly 150:1, overall,
+  ^^^^^^^^^^^^^^                                                ^^^^^
+  for a 60M file.  (I started with a '.arj' archive of a large DOS partition.)
+  [...]
+  ----------------------------------------------------------------------------
+  From: coffee@spock.ici.net (Jules Gilbert)
+  Newsgroups: comp.compression
+  Subject: Re: Explanation: that uh, alg thing...
+  Date: 15 May 1996 16:38:18 -0400
+  Message-ID: <4ndfbq$cf3@spock.ici.net>
+
+  [...]
+  One more thing, I am preparing a short technical note to deal with the reason
+  most programmers' and computer scientists' think it's impossible to (further)
+  compress random input.  (Many people think that because you can't get more
+  than 2^N messages from a N-bit compressed msg, that it means that you can't
+  compress random input.  (Lot's of folks have told me that.)  The short story
+  is:
+
+  I agree that you can not get more than 2^N messages from N bits.  No question
+  about it.  BUT THAT STATMENT HAS NOTHING TO DO WHATSOEVER WITH THE
+  INTERPRETATION OF WHAT THOSE BITS 'MEAN'.
+  [...]
+  ----------------------------------------------------------------------------
+  From: coffee@spock.ici.net (Jules Gilbert)
+  Newsgroups: comp.compression
+  Subject: Seeing is believing!
+  Date: 9 Jun 1996 03:20:52 -0400
+  Message-ID: <4pdu0k$otg@spock.ici.net>
+
+  [...]
+  If your firm needs industrial-strength compression, contact 'coffee@ici.net'
+  and ask us for an on-site demonstration of our MR2 compressors.  Each can
+  compress large files of 'random-appearing' information, whether RSA-encrypted
+  blocks, or files already compressed using LZ-techniques.
+
+  Our demonstration will give you the opportunity to observe compression of
+  'random-appearing' files of at least 100MB by at least 3:1 per iteration.
+  Usually, several iterations are possible.  (These are minimum figures easily
+  exceeded.)
+  [...]
+  ----------------------------------------------------------------------------
+  From: coffee@spock.ici.net (Jules Gilbert)
+  Newsgroups: comp.compression
+  Subject: Re: My remarks on Jules Gilbert
+  Date: 24 Jul 1996 18:05:44 -0400
+  Message-ID: <4t66no$9qq@spock.ici.net>
+
+  [...]
+  My claims can not possibly be true IF I'M PLAYING BY THE 'RULES' THAT YOU
+  ASSUME APPLY TO ME.  (Sorry to shout).
+
+  Clearly, anyone sending a signal (in the Shannon context), is constrained by
+  limits which make it impossible to compress RAD ('random-appearing data')
+  input.
+  [...]
+  1)  I can't compress bits any better than the next guy.  Maybe not as well,
+      in fact.  
+
+  2)  I have designed an engine that accepts RAD input and emits far too little
+      data to reconstitute the original data, based on conventional
+      assumptions. Okay!   I know this.
+
+  3)  But, I none-the-less reconstitute the original data.
+  [...]
+  ----------------------------------------------------------------------------
+  From: coffee@soran.ici.net (Jules Gilbert)
+  Newsgroups: comp.compression
+  Subject: Re: Jules Gilbert's New Compresssion Technology
+  Date: 12 Aug 1996 08:11:10 -0400
+  Message-ID: <4un70u$a2r@soran.ici.net>
+
+  I have multiple methods for compressing RAD.  Watch carefully:
+
+  MR1 does 3:1, on large buffers and is repeatable until the volume of input
+  data falls below 128k or so.  (This figure is under user control, but
+  compreesion quality will suffer as the buffer size is decreased).  Recent
+  changes make this method about as fast as any conventional compressor.
+
+  MR2 does at least 6:1, with a minimum buffer size of perhaps 32k.  It is also
+  repeatable.  MR2 does not actually compress, though.  Instead, it translates
+  an input buffer into an output buffer of roughly equivalent size.  This
+  output buffer contains mostly constants, and other things, such as simple
+  sequences: 28,29,31,32,33,35,40,41,42,43,44,45.  (An actual sequence of
+  bytes).  Obviously, this kind of information is readily compressed, and that
+  is why I claim that MR2 can achieve a minimum of 6:1.  Again, like MR1, this
+  process can be re-applied over it's own output.
+
+  When, I've said, "No, it's impossible to compress by 100:1" I was trying to
+  get this audience to see this as realistic.  But I can compress RAD files
+  100:1 if allowed to re-process the output through the same process.  I first
+  actually achieved a 100:1 compression level in March of this year using tools
+  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  designed for experimenting in RAD issues.  But now I have C programs which
+  have been written to be easy to understand and are intended to be part of my
+  technology transfer process for clients.
+  [...]
+  So, can someone compress by 100:1 or even 1000:1?  Yes! But ONLY if the input
+  file is sufficiently large.  A 1000:1 compression ratio would require a very
+  large input file, and, at least for PC users, archive files of this size are
+  almost never produced.
+  ----------------------------------------------------------------------------
+  From: coffee@soran.ici.net (Jules Gilbert)
+  Newsgroups: comp.compression
+  Subject: Re: Gilbert's RAD compression product
+  Date: 18 Aug 1996 08:40:28 -0400
+  Message-ID: <4v72vs$quc@soran.ici.net>
+
+  [...]
+  (In my original remarks), I am quoted above as claiming that a 3,152,896 byte
+  'tar 'file (conventionally compressed to 1,029,790 bytes) can be compressed
+  to 50*1024 bytes.  It's an accurate quote.
+
+  Now how can that be possible?
+
+  If a gzip compressed version of the Corpus requires roughly a 1MB, what do I
+  do with the 950k bytes I don't store in the compressed intermediate file?
+
+  Well, that's certainly a puzzler!
+
+  For now, all I will say is that it does not go into the compressed
+  intermediate file.  And because it doesn't, Shannons' channel capacity axioms
+  apply only to the 50k component.
+  ----------------------------------------------------------------------------
+  From: coffee@soran.ici.net (Jules Gilbert)
+  Newsgroups: comp.compression
+  Subject: Some answers about MR1
+  Date: 22 Aug 1996 23:45:54 -0400
+  Message-ID: <4vj9hi$pkb@soran.ici.net>
+
+  [...]
+  However, arrangements are being made to do another demo in September at MIT. 
+
+  One of the files compressed and decompressed will be the Corpus, after it's
+  already been compressed using ARJ, a good quality conventional compressor.
+  (It should be about a 1MB at that point).  My program has made the corpus
+  as small as 6k, although that requires SEVERAL separate physical passes.
+  ^^^^^^^^^^^^^^
+  Because we will only have a few minutes to spend on this single file, I'll
+  likely stop at 250k or so.
+
+  Under Linux, the total size of the compressor and decompressor load modules
+  is about 50k bytes.  And under DOS, using the Intel C compiler (a great
+  product, but sadly, not sold anymore), the same files total about 300k bytes.
+
+  MR1 contains code that is highly dependent on the particularities of a host
+  computer's floating point processor, or more correctly, architectural differ-
+  ences existing between the source machine and the target machine would likely
+  cause failure to de-compress.
+  [...]
+
+
+9.5 Patents on compression of random data or recursive compression
+
+9.5.1 David C. James
+
+On July 2, 1996, David C. James was granted patent 5,533,051 "Method for data
+compression" for a method claimed to be effective even on random data.
+
+  From: u137@aol.com (Peter J. Cranstone)
+  Newsgroups: comp.compression
+  Subject: Re: Jules Gilbert's Compression Technology
+  Date: Sun Aug 18 12:48:11 EDT 1996
+
+  Wh have just been issued a patent (US. #5,533,051) and have several more
+  pending on a new method for data compression. It will compess all types of
+  data, including "random", and data containing a uniform distribution of
+  "0's" and "1's".
+  [...]
+
+The first line of the patent abstract is:
+
+  Methods for compressing data including methods for compressing highly
+  randomized data are disclosed.
+
+Page 3, line 34 of the patent states:
+
+  A second aspect of the present invention which further enhances its ability
+  to achieve high compression percentages, is its ability to be applied to
+  data recursively. Specifically, the methods of the present invention are
+  able to make multiple passes over a file, each time further compressing the
+  file. Thus, a series of recursions are repeated until the desired
+  compression level is achieved.
+
+Page 27, line 18 of the patent states that the claimed method can compress
+without loss *all* files by at least one bit:
+
+  the direct bit encode method of the present invention is effective for
+  reducing an input string by one bit regardless of the bit pattern of the
+  input string.
+
+The counting argument shows that this is mathematically impossible (see section
+9.2) above. If the method were indeed able to shrink any file by at least one
+bit, applying it recursively would shrink gigabytes down to a few bits.
+
+The patent contains evasive arguments to justify the impossible claims:
+
+Page 12, line 22:
+
+  Of course, this does not take into account any overhead registers or other
+  "house-keeping" type information which must be tracked. However such
+  overhead tends to be negligible when processing the large quantities of
+  data typically encountered in data compression applications.
+
+Page 27, line 17:
+
+  Thus, one skilled in the art can see that by keeping the appropriate
+  counters, the direct bit encode method of the present invention is
+  effective for reducing an input string by one bit regardless of the bit
+  pattern of the input string. Although a certain amount of "loss" is
+  necessary in keeping and maintaining various counters and registers, for
+  files which are sufficiently large, this overhead is insignificant compared
+  to the savings obtained by the direct bit encode method.
+
+The flaw in these arguments is that the the "house-keeping" type information
+is *not* negligible. If it is properly taken it into account, it cancels any
+gains made elsewhere when attempting to compress random data.
+
+The patent contains even more evasive arguments:
+
+Page 22, line 31:
+
+  It is commonly stated that perfectly entropic data streams cannot be
+  compressed. This misbelief is in part based on the sobering fact that for a
+  large set of entropic data, calculating the number of possible bit pattern
+  combinations is unfathomable. For example, if 100 ones and 100 zeros are
+  randomly distributed in a block 200 bits long, there are
+     200C100 = 9.055 10^58
+  combinations possible. The numbers are clearly unmanageable and hence the
+  inception that perfectly entropic data streams cannot be compressed. The
+  key to the present compression method under discussion is that it makes no
+  attempt to deal with such large amounts of data and simply operates on
+  smaller portions.
+
+The actual claims of the patent are harmless since they only describe
+methods which cannot work (they actually expand random data instead of
+compressing it). For example, claims 6 and 7 are:
+
+ 6. A method of compressing a stream of binary data, comprising the steps of:
+  A) parsing n-bits from said stream of binary data;
+  B) determining the value of said parsed n-bits;
+  C) based on the results of step B, coding said values of said n-bits in at
+     least one of a first, second, and third target string, wherein coding
+     said value includes generating a plurality of code strings and
+     correlating said value with one of said code strings and dividing said
+     correlated code string variable length codes and dividing at least some
+     of said into at least first and second segments, and assigning at least
+     one of said correlated code string segments to at least one of said
+     first, second, and third target strings, wherein at least one of said
+     plurality of codes is not greater than n-1 bits long.
+
+ 7. The method of compressing a stream of binary data of claim 6, wherein n=2.
+
+Making abstraction of the legalese, claim 7 says in short that you can
+compress an arbitrary sequence of two bits down to one bit.
+
+9.5.2 Michael L. Cole
+
+Patent 5,488,364 "Recursive data compression", granted Jan. 30, 1996,
+also claims that recursive compression of random data is possible. See
+http://www.teaser.fr/~jlgailly/05488364.html for the text and a short
+analysis of this patent.
+
+9.5.3 John F. Remillard
+
+Patent 5,486,826 "Method and apparatus for iterative compression of
+digital data" uses methods very similar to those of the "magic
+function theory" (see section 9.2 above).  The patent is available at
+http://patent.womplex.ibm.com/details?patent_number=5486826
+
+See also from the same person patent 5,594,435 "Permutation-based data
+compression" http://patent.womplex.ibm.com/details?patent_number=5594435 
+The assignee for this patent is Philosophers' Stone LLC. (The Philosopher's
+Stone is the key to all the riches in the universe; an LLC is a Limited
+Liability Corporation.)
+
+------------------------------------------------------------------------------
+
+Subject: [10] Fake compression programs (OWS, WIC)
+
+
+Some programs claimed to achieve incredible compression ratios are completely
+fake: they do not compress at all but just stored the uncompressed data in
+hidden files on the hard disk or keep it in unused clusters. Needless to say,
+such programs are dangerous and should never be used because there is a
+significant risk of losing all the data.
+
+The OWS program just remembers which clusters contained the data on the hard
+disk. The data can be recovered only if those clusters are not used again for
+another file.
+
+The WIC program searches for the first directory in drive C: and creates a
+hidden file called WINFILE.DLL containing a copy of all the original files.
+If you copy the compressed file to another computer (which doesn't have the
+file WINFILE.DLL), WIC reports a CRC error.
+
+------------------------------------------------------------------------------
+
+Subject: [11] What is the V.42bis standard?
+
+
+A description of the V.42bis standard is given in "The V.42bis
+standard for data-compressing modems," by Clark Thomborson
+<cthombor@theory.lcs.mit.edu>, IEEE Micro, Oct 1992, pp. 41-53. 
+
+If you are looking for freeware source of V.42bis, please read the note
+below by Peter Gutman explaining why there is no such source code.
+
+Short introduction, by Alejo Hausner <hausner@qucis.queensu.ca>:
+
+  The V.42bis Compression Standard was proposed by the International
+  Consultative Committee on Telephony and Telegraphy (CCITT, now ITU-T) as
+  an addition to the v.42 error-correction protocol for modems. Its purpose
+  is to increase data throughput, and uses a variant of the
+  Lempel-Ziv-Welch (LZW) compression method.  It is meant to be
+  implemented in the modem hardware, but can also be built into the
+  software that interfaces to an ordinary non-compressing modem.
+
+  V.42bis can send data compressed or not, depending on the
+  data.  There are some types of data that cannot be
+  compressed.  For example, if a file was compressed first,
+  and then sent through a V.42bis modem, the modem would not
+  likely reduce the number of bits sent.  Indeed it is likely
+  that the amount of data would increase somewhat.
+
+  To avoid this problem, the algorithm constantly monitors the
+  compressibility of the data, and if it finds fewer bits
+  would be necessary to send it uncompressed, it switches to
+  transparent mode.  The sender informs the receiver of this
+  transition through a reserved code word.  Henceforth the
+  data is passed as plain bytes.
+
+  While transmitting in transparent mode, the sender maintains
+  the LZW trees of strings, and expects the receiver to do
+  likewise.  If it finds an advantage in returning to
+  compressed mode, it will do so, first informing the receiver
+  by a special escape code.  Thus the method allows the
+  hardware to adapt to the compressibility of the data.
+
+  The choice of escape code is clever.  Initially, it is a
+  zero byte.  Any occurrence of the escape code is replaced,
+  as is customary, by two escape codes.  In order to prevent a
+  string of escape codes from temporarily cutting throughput
+  in half, the escape code is redefined by adding 51 mod 256
+  each time it is used.
+
+
+A note from Peter Gutman <pgut01@cs.auckland.ac.nz> about V.42bis
+implementations:
+ 
+  V.42bis is covered by patents, and the licensing terms are rather complex
+  because you need to license it from multiple organisations.  At one point
+  British Telecom were charging something like 30,000 pounds for a license
+  (this was a few years ago, things may have changed since then). Because of
+  this, noone has ever implemented a freely-available version of V.42bis as
+  you'd find in a modem.  There is a Unix implementation (called "compact") of
+  a V.42bis-like algorithm which comes with a great many disclaimers that it
+  can only be used for research purposes. [Note from FAQ maintainer: "compact"
+  is available in
+ftp://ftp.sunet.se/pub/usenet/ftp.uu.net/comp.sources.misc/volume15/compact_sv/part01.gz
+  The 'shrink' method of zip 1.1 (see item 2 above) is also similar to V.42bis]
+
+  If you've ever wondered why noone other than modem manufacturers ever use
+  V.42bis for anything, this is it.  
+
+
+Some CCITT (ITU-T) standards documents are available by ftp in
+ftp://ftp.fdn.org/pub/Library/Ccitt-standards/ccitt/
+
+A mail server for CCITT (ITU-T) documents is available at teledoc@itu.arcom.ch
+or itudoc@itu.ch. A Gopher server is also available at gopher://info.itu.ch
+
+The V42bis standard is also in
+ftp://ftp.std.com/obi/Standards/Telcom/CCITT/v42bis.asc.Z
+
+For ISO documents, try http://www.iso.ch/
+
+See also item 20 below for other sites with standards documents.
+
+------------------------------------------------------------------------------
+
+Subject: [12] I need source for the winners of the Dr Dobbs compression contest
+
+
+The source of the top 6 programs of the Feb 91 Dr Dobbs data compression
+contest are available by ftp on
+  ftp://ftp.simtel.net/pub/simtelnet/msdos/compress/ddjcompr.zip
+  ftp://garbo.uwasa.fi/pc/source/ddjcompr.zip
+
+The sources are in MSDOS end-of-line format, one directory per
+program.  Unix or VMS users, use "unzip -a ddjcompr" to get correct
+end-of-lines (add -d to recreate the directory structure if you are
+using an obsolete version of unzip such as 4.1). Three of the 6
+programs are not portable and only run on MSDOS. compact and urban
+work on Unix, sixpack only requires minor modifications.
+
+------------------------------------------------------------------------------
+
+Subject: [13] I need source for arithmetic coding
+
+
+(See question 70 for an introduction to arithmetic coding.)
+
+The source for the arithmetic coder described in Chap.5 of Bell, Cleary, and
+Witten's book "Text Compression" (see question 7 above) (or, equivalently, in:
+Witten, Neal, and Cleary's article "Arithmetic Coding for data Compression"
+from Communications of the Association for Computing Machinery, 30 (6),
+pp.520-540, June, 1987) is in ftp://ftp.cpsc.ucalgary.ca/pub/projects/ar.cod/
+It only comes with a simple order-0 model but it's set up so that adding your
+own more sophisticated one is straightforward. Look also in
+ftp://munnari.mu.oz.au/pub/arith_coder
+
+C language source code for adaptive arithmetic coding based on the
+Witten-Neal-Cleary source code is in http://www.cipr.rpi.edu/wheeler/ac/
+This version uses structures for the coder, decoder and data model instead of
+global variables.  This object oriented approach allows you to simultaneously
+use several arithmetic coders, each streaming bits to a different file and to
+have several adaptive models for each coder, each with a different number of
+symbols and frequncy table.  Written by Fred Wheeler <wheeler@cipr.rpi.edu>
+
+A low precision arithmetic coding implementation avoiding hardware
+division is available on the same site in
+ftp://ftp.cpsc.ucalgary.ca/pub/projects/arithmetic.coding/low.precision.version
+file low.precision.version.shar
+
+Kris Popat <popat@image.mit.edu> has worked on "Scalar Quantization
+with Arithmetic Coding."  It describes an arithmetic coding technique
+which is quite general and computationally inexpensive.  The
+documentation and example C code are available in
+ftp://ftp.media.mit.edu/pub/k-arith-code/
+
+The program 'urban' in ddjcompr.zip (see item 12 above) is a high order
+arithmetic coder working at the bit level. It is written by Urban Koistinen
+<md85-epi@nada.kth.se>.
+
+The DMC program is available in ftp://plg.uwaterloo.ca/pub/dmc/
+It implements the algorithm described in "Data Compression using Dynamic
+Markov Modelling", by Gordon Cormack and Nigel Horspool, Computer
+Journal 30:6 (December 1987).  This program uses Guazzo's version of
+arithmetic coding.
+
+An implementation of Moffat's arithmetic coder is available in
+http://www.cs.dartmouth.edu/~jmd/ArithCoder.tar.gz
+
+Michael Schindler <michael@compressconsult.com> provides a page on Range
+Coding http://www.compressconsult.com/rangecoder/ which includes an article
+and source code. According to Michael Schindler, the performance of that
+coder is a lot faster than the A. Moffat et al. CACAM coder or even the
+Moffat Data Compression Conference 1995 coder, at least for machines
+supporting a fast integer multipy and divide.
+
+------------------------------------------------------------------------------
+
+Subject: [15] Where can I get image compression programs?
+
+
+JPEG:
+    Source code for most any machine (Independent JPEG Group):
+    http://www.ijg.org/
+    ftp://ftp.uu.net/graphics/jpeg/jpegsrc.v6a.tar.gz
+    ftp://nic.funet.fi/pub/graphics/packages/jpeg/jpegsrc.v6.tar.gz
+    Contact: jpeg-info@uunet.uu.net 
+
+    ftp://havefun.stanford.edu/pub/jpeg/JPEGv1.2.1.tar.Z   (has lossless mode)
+    Contact: Andy Hung <achung@cs.stanford.edu> (see item 20 below)
+
+    ftp://ftp.cs.cornell.edu/pub/multimed/ljpg.tar.Z (lossless jpeg)
+
+    http://idt.net/~dclunie/jpegls.html  (lossless jpeg by David Clunie)
+
+    xv, an image viewer which can read JPEG pictures, is available in
+    ftp://ftp.cis.upenn.edu/pub/xv/xv-3.10a.tar.Z
+
+JPEG-LS (LOCO-I):
+    http://www.hpl.hp.com/loco/
+
+MPEG: If you don't find here what you are looking for, check also
+  http://www.mpeg.org and http://www.powerweb.de/mpeg/
+
+    ftp://havefun.stanford.edu/pub/mpeg/MPEGv1.2.1.tar.Z
+    Contact: Andy Hung <achung@cs.stanford.edu> (see item 20 below)
+
+    ftp://mm-ftp.cs.berkeley.edu/pub/multimedia/mpeg/play/
+                                               mpeg_play-2.3-patched-src.tar.gz
+    Contact: mpeg-bugs@cs.berkeley.edu
+
+    ftp://flash.bu.edu/pub/code/mpeg_system/mpeg_system_source_v1.0.tar.gz
+    (MPEG-I Multi-Stream System Layer encoder/player; includes an
+     enhanced version of mpeg_play)
+    Contact: Jim Boucher <jboucher@spiderman.bu.edu> or Ziv Yaar <zyaar@bu.edu>
+
+    http://www.bic.mni.mcgill.ca/~greg/mpeglib/  [MPEG library]
+    ftp://ftp.bic.mni.mcgill.ca/pub/mpeg/
+    Contact: Gregory Ward <greg@bic.mni.mcgill.ca>
+
+    ftp://nvr.com/pub/NVR-software/Product-1.0.4.tar.Z
+    (free demo copy of NVR's software toolkit for SPARCstations)
+    Contact: Todd Brunhoff <toddb@nvr.com>
+
+    ftp://havefun.stanford.edu/pub/mpeg/MPEGv1.2.1.tar.Z
+    Contact: Andy Hung <achung@cs.stanford.edu> (see item 20 below)
+
+    ftp://mm-ftp.cs.berkeley.edu/pub/multimedia/mpeg/play/
+                                               mpeg_play-2.3-patched-src.tar.gz
+    Contact: mpeg-bugs@cs.berkeley.edu
+
+    ftp://flash.bu.edu/pub/code/mpeg_system/mpeg_system_source_v1.0.tar.gz
+    (MPEG-I Multi-Stream System Layer encoder/player; includes an
+     enhanced version of mpeg_play)
+    Contact: Jim Boucher <jboucher@spiderman.bu.edu> or Ziv Yaar <zyaar@bu.edu>
+
+    ftp://ftp.mni.mcgill.ca/pub/mpeg/mpeg_lib-1.2.tar.gz [MPEG library]
+    Contact: Gregory Ward <greg@pet.mni.mcgill.ca>
+
+    ftp://nvr.com/pub/NVR-software/Product-1.0.4.tar.Z
+    (free demo copy of NVR's software toolkit for SPARCstations)
+    Contact: Todd Brunhoff <toddb@nvr.com>
+
+    http://www.mpeg.org/MSSG or ftp://ftp.mpeg.org/pub/mpeg/mssg/
+      Contacts:  MPEG Software Simulation Group <mssg@mpeg.org>
+      Concerning VMPEG: Stefan Eckart <stefan@chromatic.com>
+
+    http://www.mpegtv.com (MPEGTV Software MPEG Video Player for Unix)
+    Contact: Tristan Savatier <tristan@mpeg.org>
+
+H.261(P*64):
+    havefun.stanford.edu:pub/p64/P64v1.2.tar.Z
+    Contact: Andy Hung <achung@cs.stanford.edu> (see item 20 below)
+
+    ftp://zenon.inria.fr/rodeo/ivs/last_version/ivs*-src.tar.gz
+    (Inria videoconference system)
+    Contact: Thierry Turletti <turletti@sophia.inria.fr> (see item 20 below).
+
+    http://www.angelfire.com/in/H261/index.html
+    H.261 player for Windows95. Contact: kmitl@usa.net
+
+H.263:
+    http://www.nta.no/brukere/DVC/h263_software (Telenor Research)
+
+    http://huizen.dds.nl/~roalt/h263.html (Roalt Aalmoes)
+
+JBIG:
+    ftp://nic.funet.fi/pub/graphics/misc/test-images/jbig.tar.gz.
+
+    ftp://ftp.informatik.uni-erlangen.de/pub/doc/ISO/JBIG/jbigkit-0.9.tar.gz
+    Contact: Markus Kuhn <mskuhn@cip.informatik.uni-erlangen.de>
+
+PNG: For code and sample images, see:
+    http://www.wco.com/~png/
+    ftp://ftp.uu.net/graphics/png/
+    ftp://swrinde.nde.swri.edu/pub/png/
+
+mg: (the MG system for compressing and indexing text and images, see item 16)
+    ftp://munnari.oz.au/pub/mg/
+    Contact: Stuart Inglis <singlis@cs.waikato.ac.nz>
+
+BTPC: Binary Tree Predictive Coding
+    http://www.engr.mun.ca/~john/btpc.html
+    Contact: John Robinson <john@monet.uwaterloo.ca>
+
+epic: (Efficient Pyramid Wavelet Coder, see item 72)
+    http://www.cis.upenn.edu/~eero/epic.html
+    Contact: Eero P. Simoncelli <eero.simoncelli@nyu.edu>
+    C source code provided. The "Lenna" test image is available as part of
+    the EPIC package, where it is named "test_image".
+
+hcompress: (wavelet image compression, see item 72)
+    ftp://stsci.edu/software/hcompress/hcompress.tar.Z
+
+wavethresh: (wavelet software for the language S)
+    http://www.stats.bris.ac.uk/pub/software/wavethresh/wavethresh2.2/
+    Contact: gpn@maths.bath.ac.uk
+
+rice-wlet: (wavelet software, see item 72)
+    ftp://cml.rice.edu/pub/dsp/software/rice-wlet-tools.tar.Z
+
+Wavelet Transform Coder Construction Kit:
+    http://www.cs.dartmouth.edu/~gdavis/wavelet/wavelet.html
+    Contact: Geoff Davis <gdavis@cs.dartmouth.edu>
+
+scalable: (2 & 3 dimensional subband transformation)
+    ftp://robotics.eecs.berkeley.edu/pub/multimedia/scalable2.tar.Z
+    Contact: scalable@robotics.eecs.berkeley.edu
+
+SPIHT: (Set Partitioning in Hierarchical Trees, wavelet-based)
+    http://ipl.rpi.edu/SPIHT/
+
+DjVu: Image compression library from AT&T Labs (includes a wavelet-based
+   image compressor)   http://www.djvu.att.com/open/
+   Contact: djvu@www.anything.com
+
+compfits:
+    ftp://ftp.cfht.hawaii.edu/pub/compfits/CompFITS-20Nov96.tar.Z
+    Contact: Jim Wright <jwright@cfht.hawaii.edu>
+
+fitspress:
+    ftp://cfata4.harvard.edu/pub/fitspress08.tar.Z
+
+tiff:
+    For source and sample images, see question 18 below.
+
+DCT algorithms used to be in:
+    ftp://etro.vub.ac.be/pub/transfer/COMPRESSION/DCT_ALGORITHMS/
+    Contact: Charilos Christopoulos <chchrist@etro2.vub.ac.be> for the sources
+
+xanim: (X11 animation viewer, supports Quicktime and several other formats)
+    ftp://ftp.x.org/contrib/applications/xanim2683.tar.Z
+    ftp://ftp.shell.portal.com/pub/podlipec/xanim26978.tar.gz
+
+A demo of image compression using neural networks is available in
+http://www.ee.duke.edu/~cec/index.html.
+
+For fractal compression programs, see item 17 below.
+For Vector Quantization software, see item 76 in part 2 of this FAQ.
+For image compression hardware, see item 85 in part 3 of this FAQ.
+
+------------------------------------------------------------------------------
+
+Subject: [16] What is the state of the art in lossless image compression?
+
+
+The JBIG algorithm is one of the best available for lossless image
+compression.  For an introduction to JBIG, see question 74 in part 2.
+
+JBIG works best on bi-level images (like faxes) and also works well on
+Gray-coded grey scale images up to about six or so bits per pixel.  You
+just apply JBIG to the bit planes individually.  For more bits/pixel,
+lossless JPEG provides better performance, sometimes. (For JPEG, see
+question 19 below.)
+
+You can find the specification of JBIG in International Standard
+ISO/IEC 11544 or in ITU-T Recommendation T.82. You can order a copy
+directly from ISO (www.iso.ch) or ITU (www.itu.ch) or from your
+National Standards Body. In the USA, call ANSI at (212) 642-4900.
+
+
+See also the MG system containing an implementation of the 'FELICS'
+algorithm of P.G. Howard and J.S. Vitter.  FELICS usually gives better
+and faster compression than lossless JPEG, at least for 8-bit
+grayscale images. (See item 15 above for ftp location). From the MG
+README file:
+
+  The MG system is a suite of programs for compressing and
+  indexing text and images. Most of the functionality implemented
+  in the suite is as described in the book ``Managing Gigabytes:
+  Compressing and Indexing Documents and Images'', I.H. Witten, A.
+  Moffat, and T.C. Bell; Van Nostrand Reinhold, New York, 1994, ISBN
+  0-442-01863-0; US $54.95; call 1 (800) 544-0550 to order.
+
+  These features include:
+
+  -- text compression using a Huffman-coded semi-static word-based
+     scheme
+  -- two-level context-based compression of bi-level images
+  -- FELICS lossless compression of gray-scale images
+  -- combined lossy/lossless compression for textual images
+  -- indexing algorithms for large volumes of text in limited main
+     memory
+  -- index compression
+  -- a retrieval system that processes Boolean and ranked queries
+  -- an X windows interface to the retrieval system
+
+Paul Howard's PhD thesis, which among other things describes FELICS,
+is available in ftp://ftp.cs.brown.edu/pub/techreports/93/cs93-28.ps.Z
+
+
+JPEG-LS is the emerging ISO standard for lossless/near-lossless 
+compression of continuous-tone images. Marcelo Weinberger
+<marcelo@hplwein.hpl.hp.com> says about it:
+
+  JPEG-LS is being developed by ISO/IEC JTC1/SC29/WG1 (final committee
+  draft document FCD14495-1 as of July 1997), and it is based on HP's
+  LOCO-I algorithm (reference: M. Weinberger, G. Seroussi, G. Sapiro,
+  "LOCO-I: A Low Complexity, Context-Based, Lossless Image Compression
+  Algorithm," Proc.  IEEE Data Compression Conference, Snowbird, Utah,
+  March-April 1996). [...]
+
+  The main feature of JPEG-LS is its superior placement in the
+  compression/complexity trade-off curve. Tested over a wide variety of
+  image types, it was shown to be, on the average, within about 4% of the
+  best available lossless image compression at a fraction of the
+  complexity.  In particular, JPEG-LS significantly outperforms FELICS
+  and lossless JPEG Huffman at similar levels of complexity (it also
+  outperforms lossless JPEG arithmetic, which is of significantly higher
+  complexity). [...]
+
+  A software implementation of JPEG-LS, is now available at:
+		http://www.hpl.hp.com/loco/
+  There, the DCC'96 paper on LOCO-I is also available. The standard draft
+  is also available through a link to the official JPEG Web site.
+
+
+Benchmarks of some lossless image compression programs are in
+http://www.geocities.com/SiliconValley/Bay/1995/artest11.html
+
+------------------------------------------------------------------------------
+
+Subject: [17] What is the state of fractal compression?
+
+You may want to read first item 77 in part 2 of this FAQ:
+"Introduction to Fractal compression".
+
+
+from Tal Kubo <kubo@zariski.harvard.edu>:
+
+According to Barnsley's book 'Fractals Everywhere', this method is
+based on a measure of deviation between a given image and its
+approximation by an IFS code.  The Collage Theorem states that there is
+a convergent process to minimize this deviation.  Unfortunately,
+according to an article Barnsley wrote for BYTE a few years ago, this
+convergence was rather slow, about 100 hours on a Cray, unless assisted by
+a person.
+
+Barnsley et al are not divulging any technical information beyond the
+meager bit in 'Fractals Everywhere'.  The book explains the idea of IFS
+codes at length, but is vague about the application of the Collage theorem
+to specific compression problems.
+
+There is reason to believe that Barnsley's company has
+*no algorithm* which takes a given reasonable image and achieves
+the compression ratios initially claimed for their fractal methods.
+The 1000-to-1 compression advertised was achieved only for a 'rigged'
+class of images, with human assistance. The best unaided
+performance I've heard of is good lossy compression of about 80-1.
+
+Steve Tate <srt@duke.cs.duke.edu> confirms:
+
+Compression ratios (unzoomed) seem to range from 20:1 to 60:1...  The
+quality is considerably worse than wavelets or JPEG on most of the
+non-contrived images I have seen.
+
+But Yuval Fisher <fisher@inls1.ucsd.edu> disagrees:
+
+Their performance has improved dramatically beyond what they were
+talking about in BYTE a few years ago.  Human assistance to the
+compression is no longer needed and the compression time is
+reasonable, although the more time and compute power you throw at the
+compression, the smaller the resulting file for the same level of
+quality.
+
+Geoffrey A Stephenson <ketlux@ketlux.demon.co.uk> adds:
+
+Iterated systems are shipping a general purpose compressor at about
+300 Pounds in the UK that claims "640x480 24 bit colour compression of
+about 1 min at 922k -> 10k on a 486/50 software only, decomp. to 8
+bits in 3 secs, etc." At a recent multimedia conference in London they
+handed out free demo disks that show the decomp. in action. The
+package runs under both DOS anf WIN (DLLs provided for use in
+applications). They also sell a board to speed up compression and
+offer versions supporting full motion video (but not apparently at all
+SVGA sizes like the static picture version). I have not yet got my
+hands on a full version to test different types of pictures, but
+friends have a and claim it looks good.
+
+
+Thomas W. Colthurst <thomasc@athena.mit.edu> clarifies the distinction
+between IFS and the Fractal Transform:
+
+It is time, once and for all, to put to death the Barnsley myth that
+IFSs are good for image compression.  They are not.  Various algorithms
+have been proposed for this "inverse problem" ranging from the trendy
+(genetic algorithms) to the deep (moment methods) to the ad hoc (the
+hungry algorithm) to the absurd (the so-called "graduate student
+algorithm", consisting of locking up a grad student in a tiny office
+with a SGI workstation and not letting them out until they come up
+with a good IFS for your image).  They are all useless for practical
+image compression.
+
+In fact, there are even good theoretical reasons for believing that
+IFSs will never be useful for image compression.  For example, even
+if you have an IFS for object A and an IFS for object B, there is no
+way to combine these IFSs to get an IFS for object A union B or
+object A intersect B.
+
+Even Barnsley himself admits, in his latest book, that he doesn't use
+IFS image compression.  Instead, he uses the so-called "fractal
+transform," which is really just a variant of vector quantization
+where you use the image itself, sampled at a higher scale, as the
+VQ codebook.  To be fair, the fractal transform can be analyzed using
+local IFSs, but local IFSs are immensely more complicated and general
+than normal IFSs, to the point where one feels suspect even using the
+word "IFS" to describe them.
+
+It should be emphasized that the fractal transform is a real, working
+method that performs about as well as other existing methods like VQ
+or the discrete cosine transform. The fractal transform will probably
+never beat vector quantization (VQ) as for size of the compressed
+image, but does have the advantage that you don't need to carry your
+codebook around.  The latest results have it slightly winning over
+the discrete cosine transform; only time and more research will tell
+if this advantage persists.  Just like VQ, the fractal transform
+takes a while to compress, but is quick at decompression (Barnsley's
+company has hardware to do this in realtime).
+
+In short, IFSs are good for just about everything fractals are (and
+more!), but are absolutely horrid for image compression.
+
+
+Programs:
+
+Check http://links.uwaterloo.ca/ for pointers to some fractal compression
+programs and lots of papers on fractal compression.
+
+The Waterloo BragZone (http://links.uwaterloo.ca/bragzone.base.html
+or ftp://links.uwaterloo.ca/pub/BragZone/ ) compares the results of
+various image compression schemes against a 32 element test suite.
+Numerous rate-distortion graphs, data tables, and sample images are available.
+
+A fractal image compression program is available by ftp in
+ftp://inls.ucsd.edu/pub/young-fractal/yuvpak20.zip ; it contains source for
+compression and decompression, source for X-windows decompression,
+MSDOS executables and images. [Note from FAQ maintainer: Fisher's
+program (see below) implements the same algorithm but is more general;
+see http://inls.ucsd.edu/y/Fractals/ for the source code.]
+
+A fractal image decompression program (note: decompression only) is
+available in ftp://inls.ucsd.edu/pub/inls-ucsd/fractal-2.0.tar
+In the same directory, fractal_paper.ps.Z is the paper "Fractal image
+compression" by Yuval Fisher, Siggraph 92.  Reading this paper is
+required to understand how the Young compression programs (see above) works.
+
+A note from Yuval Fisher <yfisher@ucsd.edu>:
+
+    Connect to http://inls.ucsd.edu/y/Fractals/ .  There is
+    information there on my new book of contributed articles on
+    fractal image compression, as well as the book's table of
+    contents, some C code to encode and decode raw byte files of any
+    size using a quadtree method, a manual explaining the use of the
+    code, a fractal image compression bibliography (not guaranteed to
+    be complete or close to it), some better executable code with
+    sample encodings, and the SIGGRAPH '92 course notes on fractal
+    image compression (these are based on appendix A of Chaos and
+    Fractals by Peitgen et al., Springer Verlag). [The C code is also
+    available in ftp://inls.ucsd.edu/pub/inls-ucsd/frac_comp.tar.Z ]
+
+Another fractal compression program is available by ftp in
+ftp://vision.auc.dk/pub/Limbo/Limbo*.tar.Z. It is also based on quadtrees,
+as yuvpak20 and frac_comp.
+
+The source code for the program published in the Oct 93 issue of
+Byte is in ftp://ftp.uu.net/published/byte/93oct/fractal.exe. This is
+a self-extractible arc file (must be run on MSDOS for extraction).
+The source code is for a TARGA video board. [Note from FAQ maintainer:
+this code is taken from Barnsley's book "Fractal Image Compression";
+it implements the brute force method and is thus very slow.]
+
+Iterated Systems have released a beta version of their fractal imager.
+It will let you view a number of formats including JPG and do
+conversions to their fractal format.  The program can be downloaded
+from http://www.iterated.com
+
+"The Data Compression Book" (see [NEL 1996] in item 7 above) contains
+a chapter on fractal compression; it includes source code for a simple
+fractal compression program. The source is also available at
+http://www.teaser.fr/~jlgailly/frac-1.0.tar.gz
+
+Several fractal compression programs, including a volume coder, are available
+at http://www.eecs.wsu.edu/~wcochran/
+
+Several papers on fractal image compression are available on
+ftp.informatik.uni-freiburg.de in directory /documents/papers/fractal . A
+biliography is in ftp://schmance.uwaterloo.ca/pub/Fractal/fractal.biblio.ps.Z
+
+References:
+  A. Jacquin, 'Fractal image coding based on a theory of iterated
+    contractive image transformations', Proc. SPIE Visual Communications
+    and Image Processing, 1990, pages 227-239.  (The best paper that explains
+    the concept in a simple way.)
+
+  A. Jacquin, "A Fractal Theory of Iterated Markov Operators with
+    Applications to Digital Image Coding", PhD Thesis, Georgia Tech, 1989.
+  It can be obtained from university microfilms for $35, phone 1-800-521-0600.
+
+  M. Barnsley, L. Anson, "Graphics Compression Technology, SunWorld,
+    October 1991, pp. 42-52.
+  M.F. Barnsley, A. Jacquin, F. Malassenet, L. Reuter & A.D. Sloan,
+    'Harnessing chaos for image synthesis', Computer Graphics,
+    vol 22 no 4 pp 131-140, 1988.
+  M.F. Barnsley, A.E. Jacquin, 'Application of recurrent iterated
+    function systems to images', Visual Comm. and Image Processing,
+    vol SPIE-1001, 1988.
+  A. Jacquin, "Image Coding Based on a Fractal Theory of Iterated Contractive
+    Image Transformations" p.18, January 1992 (Vol 1 Issue 1) of IEEE Trans
+    on Image Processing.
+  A.E. Jacquin, 'A novel fractal block-coding technique for digital
+    images', Proc. ICASSP 1990.
+  G.E. Oien, S. Lepsoy & T.A. Ramstad, 'An inner product space
+    approach to image coding by contractive transformations',
+    Proc. ICASSP 1991, pp 2773-2776.
+  D.S. Mazel, Fractal Modeling of Time-Series Data, PhD Thesis,
+    Georgia Tech, 1991.    (One dimensional, not pictures)
+  S. A. Hollatz, "Digital image compression with two-dimensional affine
+    fractal interpolation functions", Department of Mathematics and
+    Statistics, University of Minnesota-Duluth, Technical Report 91-2.
+    (a nuts-and-bolts how-to-do-it paper on the technique)
+  Stark, J., "Iterated function systems as neural networks",
+    Neural Networks, Vol 4, pp 679-690, Pergamon Press, 1991.
+  Monro D M and Dudbridge F, "Fractal block coding of images",
+    Electronics Letters 28(11):1053-1054 (1992)
+  Beaumont J M, "Image data compression using fractal techniques",
+    British Telecom Technological Journal 9(4):93-108 (1991)
+  Fisher Y, "Fractal image compression", Siggraph 92
+  Graf S, "Barnsley's Scheme for the Fractal Encoding of Images",
+    Journal Of Complexity, V8, 72-78 (1992).
+  Monro D.M. 'A hybrid fractal transform', Proc ICASSP 93, pp. V: 169-72
+  Monro D.M. & Dudbridge F. 'Fractal approximation of image blocks',
+    Proc ICASSP 92, pp. III: 485-488
+  Monro D.M., Wilson D., Nicholls J.A. 'High speed image coding with the Bath
+    Fractal Transform', IEEE International Symposium on Multimedia Technologies
+    Southampton, April 1993
+  Jacobs, E.W., Y. Fisher and R.D. Boss.  "Image Compression:  A study
+    of the Iterated Transform Method."  _Signal Processing 29_  (1992) 25-263
+  Vrscay, Edward R.  "Iterated Function Systems:  Theory, Applications,
+    and the Inverse Problem."  _Fractal Geometry and Analysis_,
+    J. Belair and S. Dubuc (eds.)  Kluwer Academic, 1991.  405-468.
+
+Books:
+    Fractal Image Compression: Theory and Application, Yuval Fisher (ed.),
+    Springer Verlag, New York, 1995.
+    To order the book, call 1-800-SPRINGER and ask for the book with
+    ISBN number 0-387-94211-4 or check http://www.springer-ny.com/
+
+    Fractal Image Compression
+    Michael F. Barnsley and Lyman P. Hurd
+    ISBN 0-86720-457-5, ca. 250 pp., $49.95
+    Copies can be ordered directly from the publisher by sending a message
+    to kpeters@math.harvard.edu with name, address and a Mastercard or
+    Visa card number with expiration date.
+
+Barnsley's company is:
+
+Iterated Systems, Inc.
+5550A Peachtree Parkway, Suite 650
+Norcross, GA  30092
+tel: 404-840-0310 or 1-800-4FRACTL
+fax: 404-840-0806
+In UK: Phone (0734) 880261, Fax (0734) 880360
+
+------------------------------------------------------------------------------
+
+Subject: [18] I need specs and source for TIFF and CCITT group 4 Fax
+
+
+Specs for Group 3 and 4 image coding (group 3 is very similar to group 4)
+are in CCITT (1988) volume VII fascicle VII.3. They are recommendations
+T.4 and T.6 respectively. There is also an updated spec contained in 1992
+recommendations T.1 to T.6.
+
+CCITT (now ITU-T) specs are available by anonymous ftp (see above answer on
+V.42bis).  The T.4 and T.6 specs are in
+ftp://sunsite.doc.ic.ac.uk/computing/ccitt/ccitt-standards/1988/7_3_01.ps.gz
+ftp://sunsite.doc.ic.ac.uk/computing/ccitt/ccitt-standards/1988/7_3_02.ps.gz
+
+The following paper covers T.4, T.6 and JBIG:
+
+  "Review of standards for electronic imaging for facsimile systems"
+  in Journal of Electronic Imaging, Vol. 1, No. 1, pp. 5-21, January 1992.
+
+
+Source code can be obtained as part of a TIFF toolkit - TIFF image
+compression techniques for binary images include CCITT T.4 and T.6:
+
+    ftp://ftp.sgi.com/graphics/tiff/tiff-v3.4beta035-tar.gz
+    Contact: sam@engr.sgi.com
+
+There is also a companion compressed tar file (v3.0pics.tar.Z) that
+has sample TIFF image files. A draft of TIFF 6.0 is in TIFF6.ps.Z.
+Concerning JPEG compression in TIFF 6.0, Tom Lane <tgl@sss.pgh.pa.us> adds:
+
+  TIFF 6.0's scheme for incorporating JPEG compression (spec section 22) has
+  a bunch of serious deficiencies.  Don't use it.  A revised design is given
+  by TIFF Technical Note #2, ftp://ftp.sgi.com/graphics/tiff/TTN2.draft.txt
+  The revised design will replace section 22 in TIFF 7.0, and is implemented
+  in Sam Leffler's libtiff.  See also item 75 of this FAQ for more JPEG info.
+
+Software for reading and writing CCITT Group 3 and 4 images is
+also available in directory ftp://merry.cs.monash.edu.au/pub/alanf/TIFF_FAX
+Contact: Alan Finlay <alanf@bruce.cs.monash.edu.au>.
+
+
+See also question 54 below.
+
+------------------------------------------------------------------------------
+
+Subject: [19] What is JPEG?
+
+
+JPEG (pronounced "jay-peg") is a standardized image compression mechanism.
+JPEG stands for Joint Photographic Experts Group, the original name of the
+committee that wrote the standard.  JPEG is designed for compressing either
+full-color or gray-scale digital images of "natural", real-world scenes.
+It does not work very well on non-realistic images, such as cartoons or
+line drawings.
+
+JPEG does not handle black-and-white (1-bit-per-pixel) images, nor does it
+handle motion picture compression.  Related standards for compressing those
+types of images exist, and are called JBIG and MPEG respectively.
+
+Regular JPEG is "lossy", meaning that the image you get out of decompression
+isn't quite identical to what you originally put in.  The algorithm achieves
+much of its compression by exploiting known limitations of the human eye,
+notably the fact that small color details aren't perceived as well as small
+details of light-and-dark.  Thus, JPEG is intended for compressing images that
+will be looked at by humans.  If you plan to machine-analyze your images, the
+small errors introduced by JPEG may be a problem for you, even if they are
+invisible to the eye.  The JPEG standard includes a separate lossless mode,
+but it is rarely used and does not give nearly as much compression as the
+lossy mode.
+
+Question 75 "Introduction to JPEG" (in part 2 of this FAQ) gives an overview
+of how JPEG works and provides references for further reading.  Also see the
+JPEG FAQ article, which covers JPEG software and usage hints.  The JPEG FAQ
+http://www.faqs.org/faqs/jpeg-faq/part1/preamble.html is
+posted regularly in news.answers by Tom Lane <tgl@netcom.com>.
+(See also question 53 "Where are FAQ lists archived".)
+
+For JPEG software, see item 15 above.  For JPEG hardware, see item 85
+in part 3 of this FAQ.  The ISO JPEG standards committee's home page
+is http://www.jpeg.org/public/welcome.htm
+
+------------------------------------------------------------------------------
+
+Subject: [20] I am looking for source of an H.261/H.263 codec and MPEG
+
+Many standards and draft recommendations (including H.261, H.263,
+H.320, H.324), are available in http://www.imtc.org/imtc/
+
+The H.261 spec is available in
+ftp://ftp.fdn.org/pub/Library/Ccitt-standards/ccitt/1992/h/h261.doc.z
+
+For H.261 hardware, see item 85 in part 3 of this FAQ.
+
+Current drafts of H.324 and related recommendations including H.263 are
+available in ftp://ftp.std.com/vendors/PictureTel/h324/
+
+Telenor Research have made available a complete simulation of
+H.263. See http://www.nta.no/brukere/DVC/h263_software
+
+An H.263 encoder library is available at http://huizen.dds.nl/~roalt/h263.html
+
+
+from Thierry TURLETTI <turletti@sophia.inria.fr>:
+
+     IVS (INRIA VIDEOCONFERENCING SYSTEM)
+      - X11-based videoconferencing tool for SPARC, HP,  DEC  and
+     Silicon Graphic workstations.
+
+     ivs allows users  to  conduct  multi-host  audio  and  video
+     conferences  over  the  Internet. ivs requires a workstation
+     with a screen with 1, 4, 8 or  24  bits  depth.   Multi-host
+     conferences  require  that  the  kernel support multicast IP
+     extensions (RFC 1112).
+
+     On video input, video frames are grabbed  by  the  VideoPix,
+     SunVideo or Parallax boards for SparcStations or Raster Rops
+     board for HP stations or the IndigoVideo board for SGI  IRIS
+     Indigo workstations.  or the VIDEOTX board for DEC stations.
+     No special hardware apart from  the  workstation's  build-in
+     audio hardware is required for audio conference.
+
+     Video encoding is done according to the H.261 standard.
+     The video stream can be encoded in either Super CIF 
+     (704x576 pixels) format or  CIF  (352x288  pixels) format or 
+     QCIF (176x144 pixels). Default format is CIF.
+
+     Sources, binaries & manuals are freely available by anonymous 
+     ftp from zenon.inria.fr in the rodeo/ivs directory. An INRIA
+     report describing this application is also available in the 
+     same directory.
+
+     If you ftp & use this package, please send all remarks or 
+     modifications made to <turletti@sophia.inria.fr>. If you want 
+     to be added or deleted to the ivs-users mailing list, please send 
+     e-mail to ivs-users-request@sophia.inria.fr.
+
+
+from Andy Hung <achung@cs.stanford.edu>:
+
+Public domain UNIX C source code to do both image and image sequence
+compression and decompression is available by anonymous ftp:
+
+MPEG-I			ftp://havefun.stanford.edu/pub/mpeg/MPEGv*.tar.Z
+CCITT H.261(P*64)	ftp://havefun.stanford.edu/pub/p64/P64v*.tar.Z
+JPEG			ftp://havefun.stanford.edu/pub/jpeg/JPEGv*.tar.Z
+
+These codecs operate on raw raster scanned images.
+
+A software program to display raw raster-scanned YUV images and image
+sequences on X grayscale or color monitors is provided by a program in
+ftp://havefun.stanford.edu/pub/cv/CVv*.tar.Z
+If you are using the codecs above, we recommend that you ftp this file
+over as well.
+
+The source code has been compiled on DEC and SUN workstations.
+Caution: the P64 codec has not been tested compliant (any available
+p64 video streams would be much appreciated - please let us know at
+achung@cs.stanford.edu).  The other codecs have been tested with
+streams from other encoders.
+
+We also have some IPB MPEG-I video coded streams in pub/mpeg/*.mpg;
+and P64 video streams in pub/p64/*.p64 that we have generated using
+our codecs.
+
+For a more complete description see the file
+havefun.stanford.edu:pub/README.
+
+------------------------------------------------------------------------------
+
+Subject: [25] Fast DCT (Discrete Cosine Transform) algorithms
+
+
+Many image compression methods, including the JPEG, MPEG, and H.261 standards,
+are based on the discrete cosine transform.  A good overall introduction to
+DCT is the book "Discrete Cosine Transform---Algorithms, Advantages,
+Applications" by K.R. Rao and P. Yip (Academic Press, London, 1990),
+ISBN 0-12-580203-X. This has an extensive, though already dated, bibliography.
+
+Here are some references mostly provided by Tom Lane <tgl@sss.pgh.pa.us>.
+(This list is now rather dated.)
+Most of these are in IEEE journals or conference proceedings, notably
+ICASSP = IEEE Intl. Conf. on Acoustics, Speech, and Signal Processing.
+ICCAS = IEEE Intl. Conf. on Circuits and Systems.
+DCC = Data Compression Conference.
+
+Polynomial Transform Computation of the 2-D DCT, Duhamel & Guillemot,
+  ICASSP '90 p. 1515.
+A Forward-Mapping Realization of the Inverse DCT, McMillan & Westover,
+  DCC '92 p. 219.
+A Fast Algorithm for 2-D DCT, Cho, Yun & Lee, ICASSP '91 p. 2197.
+Fast Algorithm and Implementation of 2-D DCT, Cho & Lee, Tr. CAS v38 p. 297.
+A DCT Chip based on a new Structured and Computationally Efficient DCT
+  Algorithm, Duhamel, Guillemot & Carlach, ICCAS '90 p. 77.
+Trade-offs in the Computation of Mono- and Multi-dimensional DCTs,
+  Vetterli, Duhamel & Guillemot, ICASSP '89 p. 999.
+Practical Fast 1-D DCT Algorithms with 11 Multiplications,
+  Loeffler, Ligtenberg & Moschytz, ICASSP '89 p. 988.
+New Scaled DCT Algorithms for Fused Multiply/Add Architectures,
+  Linzer & Feig, ICASSP '91 p. 2201.
+Fast Algorithms for the 2-D Discrete Cosine Transform, Kamangar & Rao,
+  IEEE Tr. Computers, v C-31 p. 899.
+Fast 2-D Discrete Cosine Transform, Vetterli, ICASSP '85 p. 1538.
+A Two-Dimensional Fast Cosine Transform, Haque, Tr. ASSP v ASSP-33 p. 1532.
+Real-Time Parallel and Fully Pipelined 2-D DCT Lattice Structures with
+  Application to HDTV Systems, Chiu & Liu, Tr. CAS for Video Tech, v 2 p. 25.
+J.F. Blinn, "What's the Deal with the DCT", IEEE Computer Graphics and
+  Applications, July 1993, pp.78-83.
+A C Hung and TH-Y Meng, "A Comparison of fast DCT algorithms, Multimedia 
+  Systems", No. 5 Vol. 2, Dec 1994
+
+For actual implementations, try the JPEG and MPEG software listed
+in item 15.
+
+------------------------------------------------------------------------------
+
+Subject: [26] Are there algorithms and standards for audio compression?
+
+
+Yes. See the introduction to MPEG given in part 2 of this FAQ.
+
+A lossless compressor for 8bit and 16bit audio data (.au) is available
+in ftp://svr-ftp.eng.cam.ac.uk/pub/comp.speech/coding/shorten.tar.gz
+or http://www.softsound.com/ShortenDownload.html
+Shorten works by using Huffman coding of prediction residuals.
+Compression is generally better than that obtained by applying general
+purpose compression utilities to audio files. Also supports lossy
+compression.  Contact: Tony Robinson <ajr@eng.cam.ac.uk>.
+
+Benchmarks of shorten and other lossless audio compression programs
+are in http://www.firstpr.com.au/audiocomp/lossless/
+
+Audio software is available in subdirectories of
+ftp://sunsite.unc.edu/pub/electronic-publications/IUMA/audio_utils/ :
+- An MPEG audio player is in mpeg_players/Workstations/maplay1_2.tar.Z.
+- The sources of the XING MPEG audio player for Windows is in
+  mpeg_players/Windows/mpgaudio.zip.
+- An encoder/decoder is in converters/source/mpegaudio.tar.Z.
+
+MSDOS audio software is available in
+ftp://ftp.simtel.net/pub/simtelnet/msdos/sound/
+In particular, MPEG-2 audio software is in ampegsrc.zip and ampeg43.zip.
+
+MPEG audio files are available in ftp://ftp.iuma.com and http://www.iuma.com/
+
+The site http://www.mp3tech.com is dedicated to the MP3 audio compression
+standard. It has information about the MP3 standard, audio compression
+techniques, tests, sources, etc...
+
+Copied from the comp.dsp FAQ posted by guido@cwi.nl (Guido van Rossum):
+
+  Strange though it seems, audio data is remarkably hard to compress
+  effectively.  For 8-bit data, a Huffman encoding of the deltas between
+  successive samples is relatively successful.  For 16-bit data,
+  companies like Sony and Philips have spent millions to develop
+  proprietary schemes.
+
+  Public standards for voice compression are slowly gaining popularity,
+  e.g. CCITT G.721 and G.723 (ADPCM at 32 and 24 kbits/sec).  (ADPCM ==
+  Adaptive Delta Pulse Code Modulation.)  Free source code for a *fast*
+  32 kbits/sec ADPCM (lossy) algorithm is available by ftp from ftp.cwi.nl
+  as /pub/audio/adpcm.shar.  (** NOTE: if you are using v1.0, you should get
+  v1.1, released 17-Dec-1992, which fixes a serious bug -- the quality
+  of v1.1 is claimed to be better than uLAW **)
+
+  (Note that U-LAW and silence detection can also be considered
+  compression schemes.)
+
+Information and source code for adpcm are available in
+http://www.rss.rockwell.com/techinfo/pc/adpcm/adpcm.html
+
+Source for Sun's free implementation of CCITT compression types G.711,
+G.721 and G.723 is in ftp://ftp.cwi.nl/pub/audio/ccitt-adpcm.tar.gz
+
+You can get a G.721/722/723 package by email to teledoc@itu.arcom.ch, with
+GET ITU-3022
+as the *only* line in the body of the message.
+
+
+A note on u-law from Markus Kuhn <mskuhn@immd4.informatik.uni-erlangen.de>:
+
+  u-law (more precisely (greek mu)-law or 5-law if you have an 8-bit
+  ISO terminal) is more an encoding then a compression method,
+  although a 12 to 8 bit reduction is normally part of the encoding.
+  The official definition is CCITT recommendation G.711. If you want
+  to know how to get CCITT documents, check the Standards FAQ
+  posted to news.answers or get the file standards-faq by ftp in
+  directory ftp://rtfm.mit.edu/pub/usenet/news.answers/
+
+
+See also the comp.dsp FAQ for more information on:
+
+- The U.S. DoD's Federal-Standard-1016 based 4800 bps code excited linear
+  prediction voice coder version 3.2a (CELP 3.2a)
+- The U.S. DoD's Federal-Standard-1015/NATO-STANAG-4198 based 2400 bps
+  linear prediction coder version 53 (LPC-10e v53)
+- Realtime DSP code and hardware for FS-1015 and FS-1016
+
+The comp.dsp FAQ is in comp.dsp with subject "FAQ: Audio File Formats" and in
+ftp://rtfm.mit.edu/pub/usenet/news.answers/audio-fmts/part1
+
+
+CELP C code for Sun SPARCs is in ftp://ftp.super.org/pub/speech/celp_3.2a.tar.Z
+An LPC10 speech coder is in ftp://ftp.super.org/pub/speech/lpc10-1.0.tar.gz ;
+a derived version is available from http://www.arl.wustl.edu/~jaf/lpc/
+
+Source code for ITU-T (CCITT) G.728 Low Delay CELP speech compression
+is in ftp://svr-ftp.eng.cam.ac.uk/pub/comp.speech/sources/ldcelp-2.0.tar.gz
+
+
+Recommended reading:
+  Digital Coding of Waveforms: Principles and Applications to Speech and
+  Video.  N. S. Jayant and Peter Noll.  Prentice-Hall, 1984, ISBN
+  0-13-211913-7.
+
+Information on GSM sound compression is available at
+http://ccnga.uwaterloo.ca/~jscouria/gsm.html
+
+
+from Markus Kuhn <mskuhn@immd4.informatik.uni-erlangen.de>:
+
+  One highest quality sound compression format is called ASPEC and has
+  been developed by a team at the Frauenhofer Institut in Erlangen (Germany)
+  and others.
+
+  ASPEC produces CD like quality and offers several bitrates, one is
+  128 kbit/s. It is a lossy algorithm that throws away frequencies that
+  aren't registered in the human cochlea in addition to sophisticated
+  entropy coding. The 64 kbit/s ASPEC variant might soon bring hifi
+  quality ISDN phone connections. It has been implemented on standard DSPs.
+
+  The Layer 3 MPEG audio compression standard now contains what is officially
+  called the best parts of the ASPEC and MUSICAM algorithms. A reference is:
+
+    K.Brandenburg, G.Stoll, Y.F.Dehery, J.D.Johnston, L.v.d.Kerkhof,
+    E.F.Schroeder: "The ISO/MPEG-Audio Codec: A Generic Standard for Coding
+    of High Quality Digital Audio",
+    92nd. AES-convention, Vienna 1992, preprint 3336
+
+
+from Jutta Degener <jutta@cs.tu-berlin.de> and Carsten Bormann
+<cabo@cs.tu-berlin.de>:
+
+  GSM 06.10 13 kbit/s RPE/LTP speech compression available
+  --------------------------------------------------------
+
+  The Communications and Operating Systems Research Group (KBS) at the
+  Technische Universitaet Berlin is currently working on a set of
+  UNIX-based tools for computer-mediated telecooperation that will be
+  made freely available.
+
+  As part of this effort we are publishing an implementation of the
+  European GSM 06.10 provisional standard for full-rate speech
+  transcoding, prI-ETS 300 036, which uses RPE/LTP (residual pulse
+  excitation/long term prediction) coding at 13 kbit/s.
+
+  GSM 06.10 compresses frames of 160 13-bit samples (8 kHz sampling
+  rate, i.e. a frame rate of 50 Hz) into 260 bits; for compatibility
+  with typical UNIX applications, our implementation turns frames of 160
+  16-bit linear samples into 33-byte frames (1650 Bytes/s).
+  The quality of the algorithm is good enough for reliable speaker
+  recognition; even music often survives transcoding in recognizable 
+  form (given the bandwidth limitations of 8 kHz sampling rate).
+
+  Version 1.0 of the implementation is available per anonymous ftp from
+  ftp.cs.tu-berlin.de in the directory /pub/local/kbs/tubmik/gsm/ ;
+  more information about the library can be found on the World-Wide Web
+  at http://www.cs.tu-berlin.de/~jutta/toast.html .
+  Questions and bug reports should be directed to jutta@cs.tu-berlin.de
+  and cabo@informatik.uni-bremen.de .
+
+
+from Nicola Ferioli <ser1509@cdc835.cdc.polimi.it>:
+
+  ftp://ftp.simtel.net/pub/simtelnet/msdos/sound/vocpak20.zip
+    Lossless 8-bit sound file compressor
+
+  VOCPACK is a compressor/decompressor for 8-bit digital sound using a
+  lossless algorithm; it is useful to save disk space without degrading
+  sound quality.  It can compress signed and unsigned data, sampled at any
+  rate, mono or stereo.  Since the method used is not lossy, it isn't
+  necessary to strip file headers before compressing.
+
+  VOCPACK was developed for use with .VOC (SoundBlaster) and .WAV (Windows)
+  files, but any 8-bit sound can be compressed since the program takes no
+  assumptions about the file structure.
+
+  The typical compression ratio obtained goes from 0,8 for files sampled at
+  11 KHz to 0,4 for 44 Khz files.  The best results are obtained with 44 KHz
+  sounds (mono or stereo): general-purpose archivers create files that can be
+  twice longer than the output of VOCPACK.  You can obtain smaller values
+  using lossy compressors but if your goal is to keep the sound quality
+  unaltered you should use a lossless program like VOCPACK.
+
+from Harald Popp <popp@iis.fhg.de>:
+
+  new version 1.0 of ISO/MPEG1 Audio Layer 3 Shareware available
+
+  major improvements of the new version:
+       - encoder works twice as fast
+       - improved file handling for encoder including .WAV files
+
+  You may download the shareware from fhginfo.fhg.de (153.96.1.4)
+  from the directory /pub/layer3
+
+  The source code for the MPEG1 audio decoder layer 1, 2 and 3 is
+  now available on fhginfo.fhg.de (153.96.1.4) in /pub/layer3/public_c.
+
+  There are two files:
+     mpeg1_iis.tar.Z     (Unix: lines seperated by line feed only)
+     mpeg1iis.zip        (PC: lines seperated by carriage return and line feed)
+
+For more information about this product and MPEG Audio Layer 3, see
+the document "Informations about MPEG Audio Layer-3" maintained by
+Juergen Zeller <zeller@iis.fhg.de>, available in
+ftp://fhginfo.fhg.de/pub/layer3/MPEG_Audio_L3_FAQ.html
+
+from Monty <xiphmont@athena.mit.edu>:
+
+  OggSquish is a compression package designed to reduce the file size of
+  digitized 8 and 16 bit audio samples (or samples of any periodic
+  data).  OggSquish will operate on files sampled at any speed, but it is
+  designed to work with very high quality samples, for example, CD
+  quality samples.
+
+  [OggSquish is now at http://www.xiph.com/OggSquish/index.html or
+   http://world.std.com/~xiph/OggSquish/ or
+   http://web.mit.edu/afs/sipb/user/xiphmont/OggSquish/html-pages/ ]
+
+from Dmitrij V. Schmunk <shmunk@csd.inp.nsk.su>:
+
+  Take a look at http://www.inp.nsk.su/~shmunk/
+  This compressor gives you about 2-3 times better compression
+  for 44.1kHz stereo sound then MPEG layer-3.
+
+from Dennis Lee <denlee@ecf.utoronto.ca>
+
+  WA incorporates lossless audio codecs (similar to SHORTEN and OggSquish)
+  into an easy to use archiver program.  WA only supports compression of the
+  popular ".WAV" audio format.  To the author's knowledge, WA can compress
+  waveform data better than any existing software.  With default settings, WA
+  also compresses faster than PKZIP, so it is convenient to use.  This
+  software can be found at http://www.ecf.utoronto.ca/~denlee/software.html
+
+from Jack Berlin <jberlin@jpg.com>:
+
+  Pegasus has a new lossless sound compressor based on our patent pending
+  arithmetic coder. Currently beats Shorten in all cases. Trial app for
+  Windows: ftp://207.69.208.43/jpg.com/SPSEXE.ZIP  ($39 to register)
+  http://www.pegasusimaging.com/sound.html
+
+------------------------------------------------------------------------------
+
+Subject: [30] My archive is corrupted!
+
+
+The two most common reasons for this are
+
+(1) failing to use the magic word "tenex" (when connected to SIMTEL20 and
+    other TOPS20 systems) or "binary" (when connected to UNIX systems) when
+    transferring the file from an ftp site to your host machine.  The
+    reasons for this are technical and boring.  A synonym for "tenex" is
+    "type L 8", in case your ftp doesn't know what "tenex" means.
+
+(2) failing to use an eight-bit binary transfer protocol when transferring
+    the file from the host to your PC.  Make sure to set the transfer type
+    to "binary" on both your host machine and your PC.
+
+gopher is also known to corrupt binary files. In particular, if gzip
+complains about a multi-part file, it's likely that the .gz file
+has been corrupted by gopher. Use ftp in binary mode instead.
+
+------------------------------------------------------------------------------
+
+Subject: [31] pkunzip reports a CRC error!
+
+
+The portable zip 1.1 contains many workarounds for undocumented restrictions
+in pkunzip. Compatibility is ensured for pkunzip 1.10 only. All previous
+versions (pkunzip 1.0x) have too many bugs and cannot be supported. This
+includes Borland unzip.
+
+So if your pkunzip reports a CRC error, check that you are not using
+an obsolete version. Get either pkzip 2.04g or unzip 5.12 (see question
+2 above for ftp sites). To generate zip files compatible with pkunzip 1.10,
+use zip 1.1 (see item 2 above for ftp site).
+
+------------------------------------------------------------------------------
+
+Subject: [32] VMS zip is not compatible with pkzip!
+
+
+The problem is most likely in the file transfer program.
+
+Many use kermit to transfer zipped files between PC and VMS VAX.  The
+following VMS kermit settings make VMS-ZIP compatible with PKZIP:
+
+                                             VMS kermit        PC kermit
+                                           ---------------   --------------
+
+Uploading PKZIPped file to be UNZIPped:    set fi ty fixed    set fi ty bi
+Downloading ZIPped file to be PKUNZIPped:  set fi ty block    set fi ty bi
+
+If you are not using kermit, transfer a file created by pkzip on MSDOS
+to VMS, transfer it back to your PC and check that pkunzip can extract it.
+
+------------------------------------------------------------------------------
+
+Subject: [33] I have a problem with Stacker or DoubleSpace!
+
+
+The newsgroup comp.compression is *not* the appropriate place to
+discuss about one specific program on one specific operating system.
+Since you have bought a legal copy of Stacker or MSDOS 6.x, you have
+the documentation of your product; please read it. If you can't find
+the answer in the documentation, please report the problem to the Stac
+or Microsoft customer support. (For Stac, use one of StacTec@aol.com,
+StacMacTec@aol.com or StacOS2tec@aol.com.)  If you really feel that the
+net has to know about your problem, please post in one of the MSDOS
+newsgroups, such as comp.os.msdos.apps or comp.binaries.ibm.pc.d.
+
+------------------------------------------------------------------------------
+
+Subject: [50] What is this 'tar' compression program?
+
+
+tar is not a compression program. It just combines several files
+into one, without compressing them. tar file are often compressed with
+'compress', resulting in a .tar.Z file. See question 2, file type .tar.Z.
+GNU tar has the capability to (de)compress files as well.
+
+When you have to archive a lot of very small files, it is often preferable to
+create a single .tar file and compress it, than to compress the individual
+files separately as in a zip archive. The compression program can thus take
+advantage of redundancy between separate files.  The disadvantage is that you
+must uncompress the whole .tar file to extract any member. You can also
+improve compression by grouping files by type, as in:
+
+  tar cvf - `ls | sort -t. +1` | gzip > file.tar.gz
+
+------------------------------------------------------------------------------
+
+Subject: [51] I need a CRC algorithm
+
+
+As its name implies (Cyclic Redundancy Check) a crc adds redundancy whereas
+the topic of this group is to remove it. Yet this question comes up often in
+comp.compression.
+
+The file ftp://ftp.rocksoft.com/clients/rocksoft/papers/crc_v3.txt is a pretty
+comprehensive description of the whole CRC concept, including a C program.
+
+See also:
+- Schwaderer W.D., "CRC Calculation", April 85 PC Tech Journal, pp.118-133.
+- "Calculating CRCs by Bits and Bytes", BYTE Magazine, September 1986
+- Ramabadran T.V., Gaitonde S.S., "A tutorial on CRC computations", IEEE
+  Micro, Aug 1988.
+- the source of all archivers, such as the file makecrc.c in the Info-ZIP
+  sources (see extension .zip in item 2)
+
+For the related topic of Reed-Solomon encoding, see the Error Correcting Codes
+Home Page http://hideki.iis.u-tokyo.ac.jp/~robert/codes.html
+
+
+The following C code (by Rob Warnock <rpw3@sgi.com>) does CRC-32 in
+BigEndian/BigEndian byte/bit order.  That is, the data is sent most
+significant byte first, and each of the bits within a byte is sent most
+significant bit first, as in FDDI. You will need to twiddle with it to do
+Ethernet CRC, i.e., BigEndian/LittleEndian byte/bit order. [Left as an
+exercise for the reader.]
+
+The CRCs this code generates agree with the vendor-supplied Verilog models
+of several of the popular FDDI "MAC" chips.
+
+u_long crc32_table[256];
+/* Initialized first time "crc32()" is called. If you prefer, you can
+ * statically initialize it at compile time. [Another exercise.]
+ */
+
+u_long crc32(u_char *buf, int len)
+{
+        u_char *p;
+        u_long  crc;
+
+        if (!crc32_table[1])    /* if not already done, */
+                init_crc32();   /* build table */
+        crc = 0xffffffff;       /* preload shift register, per CRC-32 spec */
+        for (p = buf; len > 0; ++p, --len)
+                crc = (crc << 8) ^ crc32_table[(crc >> 24) ^ *p];
+        return ~crc;            /* transmit complement, per CRC-32 spec */
+}
+
+/*
+ * Build auxiliary table for parallel byte-at-a-time CRC-32.
+ */
+#define CRC32_POLY 0x04c11db7     /* AUTODIN II, Ethernet, & FDDI */
+
+init_crc32()
+{
+        int i, j;
+        u_long c;
+
+        for (i = 0; i < 256; ++i) {
+                for (c = i << 24, j = 8; j > 0; --j)
+                        c = c & 0x80000000 ? (c << 1) ^ CRC32_POLY : (c << 1);
+                crc32_table[i] = c;
+        }
+}
+
+------------------------------------------------------------------------------
+
+Subject: [52] What about those people who continue to ask frequently asked
+              questions in spite of the frequently asked questions document?
+
+
+Just send them a polite mail message, referring them to this document.
+There is no need to flame them on comp.compression.  That would just
+add more noise to this group.  Posted answers that are in the FAQ are
+just as annoying as posted questions that are in the FAQ.
+
+------------------------------------------------------------------------------
+
+Subject: [53] Where are FAQ lists archived?
+
+
+Many are crossposted to news.answers.  That newsgroup should have a
+long expiry time at your site; if not, talk to your sysadmin.
+
+FAQ lists are in http://www.faqs.org/faqs/ and ftp://rtfm.mit.edu
+The comp.compression FAQ that you are reading is in
+  http://www.faqs.org/faqs/compression-faq/part1/preamble.html
+  http://www.cis.ohio-state.edu/hypertext/faq/usenet/compression-faq/top.html
+  ftp://rtfm.mit.edu/pub/usenet/news.answers/compression-faq/
+
+If you don't have FTP access, you can access the archives by mail
+server.  Send an email message to mail-server@rtfm.mit.edu
+containing the commands
+    send usenet/news.answers/compression-faq/part1
+    send usenet/news.answers/compression-faq/part2
+    send usenet/news.answers/compression-faq/part3
+For instructions, send an email message to the same address with the
+words "help" and "index" (no quotes) on separate lines. If you don't
+get a reply, check your return address, or add a line such as
+    path myname@foo.edu
+
+------------------------------------------------------------------------------
+
+Subject: [54] I need specs for graphics formats
+
+Get the book by Murray & vanRyper "Encyclopedia of graphics file formats",
+O'Reilly & associates, ISBN 1-56592-058-9.
+
+See also the comp.graphics FAQ and the Graphics Formats FAQ. The latter is in
+ftp://rtfm.mit.edu/pub/usenet/news.answers/graphics/fileformats-faq/
+http://www.cis.ohio-state.edu/hypertext/faq/usenet/graphics/fileformats-faq/top.html
+
+Check also "The File Format Collection" in http://www.wotsit.org
+and the File Formats Encyclopedia 2.0
+ftp://ftp.simtel.net/pub/simtelnet/msdos/pgmutl/ffe200.zip 
+ftp://garbo.uwasa.fi/pc/programming/ffe200.zip 
+
+------------------------------------------------------------------------------
+
+Subject: [55] Where can I find Lenna and other images?
+
+The Waterloo BragZone (http://links.uwaterloo.ca/bragzone.base.html
+or ftp://links.uwaterloo.ca:/pub/BragZone/ ) compares the results of
+various image compression schemes against a 32 element test suite.
+Sample images are available.
+
+The Computer Vision Home Page has many links to test images in
+http://www.cs.cmu.edu:80/afs/cs/project/cil/ftp/html/v-images.html
+
+A bunch of standard images (lenna, baboon, cameraman, crowd, moon
+etc..) used to be in ftp://eedsp.gatech.edu/database/images . The
+images are in 256-level grayshades (256x256 pixels, 256 "colors").
+
+[Note: the site ipl.rpi.edu mentioned below keeps changing. Images
+stay there for a while then disappear. They are again available at
+the time of writing (27 Dec 93).]
+
+The site ipl.rpi.edu (128.113.14.50) has standard images in two
+directories:
+   ftp://ipl.rpi.edu/pub/image/still/usc 
+   ftp://ipl.rpi.edu/pub/image/still/canon
+
+(The directory /pub/image/sequence was taken offline because of
+possible copyright problems, but has come back again. In particular,
+Miss America is in subdirectories of /pub/image/sequence/missa.)
+
+In each of those directories are (usually) the following directories:
+   bgr     - 24 bit blue, green, red
+   color   - 24 bit red, green, blue
+   gray    - 8 bit grayscale uniform weighted
+   gray601 - 8 bit grayscale CCIR-601 weighted
+
+And in these directories are the actual images.  
+
+For example, the popular lena image is in
+   ftp://ipl.rpi.edu/pub/image/still/usc/bgr/lena        # 24 bit BGR
+   ftp://ipl.rpi.edu/pub/image/still/usc/gray/lena-y.ras # 8 bit gray
+
+All of the images are in Sun rasterfile format.  You can use the pbm
+utilities to convert them to whatever format is most convenient.
+[pbm is available in ftp://ftp.ee.lbl.gov/pbmplus*.tar.Z ].
+Questions about the ipl archive should be sent to help@ipl.rpi.edu.
+
+
+There are few gray-scale still images and some raw data of test results
+available in directory ftp://nic.funet.fi/pub/graphics/misc/test-images/
+There are lots of .gif images in ftp://nic.funet.fi/pub/pics/
+
+Medical images can be found in:
+  ftp://decaf.stanford.edu/pub/images/medical/mri
+  ftp://eedsp.gatech.edu/database/images/wchung/medical
+  ftp://omicron.cs.unc.edu/pub/projects/softlab/CHVRTD
+
+The WWW address for the National Library of Medicine is http://www.nlm.nih.gov
+A list of health and medical related Internet resources is available ftp://in
+ftp.sura.net/pub/nic/HealthResources/medical.resources.3-94
+
+Rodney Peck <rodney@balltown.cma.com> is interested in some method
+of establishing a canonical ftp database of images but does not have
+the resources to provide an ftp site for that database. Send suggestions to
+rodney@balltown.cma.com.
+
+
+Beware: the same image often comes in many different forms, at
+different resolutions, etc... The original lenna image is 512 wide,
+512 high, 8 bits per pel, red, green and blue fields.  Gray-scale
+versions of Lenna have been obtained in two different ways from the
+original:
+ (1) Using the green field as a gray-scale image, and
+ (2) Doing an RGB->YUV transformation and saving the Y component.
+Method (1) makes it easier to compare different people's results since
+everyone's version should be the same using that method.  Method (2)
+produces a more correct image.
+
+For the curious: 'lena' or 'lenna' is a digitized Playboy centerfold, from
+November 1972. (Lenna is the spelling in Playboy, Lena is the Swedish spelling
+of the name.) Lena Soderberg (ne Sjooblom) was last reported living in her
+native Sweden, happily married with three kids and a job with the state liquor
+monopoly.  In 1988, she was interviewed by some Swedish computer related
+publication, and she was pleasantly amused by what had happened to her
+picture.  That was the first she knew of the use of that picture in the
+computer business.  A scan of the original Lenna from Playboy is available at
+http://www.cs.cmu.edu/~chuck/lennapg/lenna.shtml
+
+The editorial in the January 1992 issue of Optical Engineering (v. 31 no. 1)
+details how Playboy has finally caught on to the fact that their copyright on
+Lena Sjooblom's photo is being widely infringed. However Wired says in
+http://www.wired.com/news/culture/story/4000.html "Although Playboy is
+notorious for cracking down on illegal uses of its images, it has decided to
+overlook the widespread distribution of this particular centerfold".
+
+The CCITT (ITU-T) test images are in ftp://ftp.cs.waikato.ac.nz/pub/ccitt/
+and http://www.cs.waikato.ac.nz/~singlis/ccitt.html
+[The images in ftp://nic.funet.fi/pub/graphics/misc/test-images/ccitt*.tif are
+corrupted.] This set is commonly used to compare binary image compression
+techniques. The images are 1728x2376 pixels.
+
+------------------------------------------------------------------------------
+
+Subject: [56] I am looking for a message digest algorithm
+
+
+Look in ftp://ftp.rsa.com/pub . MD4 and MD5 are there.
+See also http://wsspinfo.cern.ch/sec/cert/tools/md5/
+This question would be more appropriate on sci.crypt.
+
+------------------------------------------------------------------------------
+
+Subject: [57] I have lost my password on a .zip file
+
+This question would be more appropriate on sci.crypt.
+
+See http://www.hedgie.com/passwords/index.html
+Here are a few programs to break pkzip encryption:
+ftp://idea.sec.dsi.unimi.it/pub/security/crypt/code/zipcrack.c.gz
+ftp://idea.sec.dsi.unimi.it/pub/security/crypt/rpub.cl.msu.edu/crypt/msdos/zipcrack*
+ftp://idea.sec.dsi.unimi.it/pub/security/crypt/rpub.cl.msu.edu/crypt/other/zipcrack.c
+ftp://ftp.ox.ac.uk/pub/crypto/cryptanalysis/fzc104.zip
+ftp://ftp.ox.ac.uk/pub/crypto/cryptanalysis/pkcrack.zip
+ftp://ftp.ox.ac.uk/pub/crypto/cryptanalysis/zipcrk20.zip
+
+These are brute force crackers. A known plaintext attack is also possible,
+see http://www.unix-ag.uni-kl.de/~conrad/krypto/pkcrack.html
+or ftp://ftp.sunet.se/pub/security/docs/crypt/ripem.msu.edu/kocher-pkzip-attack.ps.gz
+
+          End of part 1 of the comp.compression faq.

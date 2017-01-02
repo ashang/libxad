@@ -1,0 +1,949 @@
+From: <Saved by Microsoft Internet Explorer 5>
+Subject: Dreamcast Programming - DreamSNES
+Date: Wed, 20 Feb 2002 19:42:06 -0000
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	boundary="----=_NextPart_000_0000_01C1BA46.ADA60420";
+	type="text/html"
+X-MimeOLE: Produced By Microsoft MimeOLE V5.50.4133.2400
+
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_0000_01C1BA46.ADA60420
+Content-Type: text/html;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Location: http://mc.pp.se/dc/dreamsnes/
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML><HEAD><TITLE>Dreamcast Programming - DreamSNES</TITLE>
+<META content=3D"text/html; charset=3Diso-8859-1" =
+http-equiv=3DContent-Type>
+<META content=3D"MSHTML 5.00.3103.1000" name=3DGENERATOR></HEAD>
+<BODY aLink=3D#ff0000 bgColor=3D#000000 link=3D#6699cc text=3D#ffffff =
+vLink=3D#6677cc><IMG=20
+align=3Dright alt=3D"" src=3D"http://mc.pp.se/dc/dc_mark.gif">=20
+<P><IMG alt=3DDreamSNES border=3D0 height=3D36=20
+src=3D"http://mc.pp.se/_internal/graphic_text!0/93$fa" width=3D175=20
+valign=3D"top"></P>DreamSNES is a Super Nintendo emulator based on Gary=20
+Henderson's Snes9X. It runs directly on the Dreamcast hardware without =
+using any=20
+SEGA or Microsoft libraries. It has been completely developed using free =
+tools.=20
+DreamSNES was created by <A href=3D"mailto:marcus@idonex.se">Marcus =
+Comstedt</A>,=20
+<A href=3D"mailto:peter@bortas.org">Peter Bortas</A>, and <A=20
+href=3D"mailto:per@hedbor.org">Per Hedbor</A>. <BR clear=3Dright>
+<P>
+<P><IMG alt=3DNews border=3D0 height=3D30=20
+src=3D"http://mc.pp.se/_internal/graphic_text!0/5f$ed" width=3D67=20
+valign=3D"top"></P>DreamSNES 0.9.5 (Valentine special) released<BR>Well, =
+I said we=20
+would find some appropriate "holiday" to use for the next release, and =
+what=20
+could be more appropriate than to deliver this to our beloved fans on =
+Valentine?=20
+So go and get this cuddly and flower scented release further down this =
+page. It=20
+comes with a free hug.=20
+<P></P>
+<P>Please note that a graphical installer is now available for =
+DreamSNES. Not=20
+only does it relieve you from messing around with the commandline (which =
+I hear=20
+some people find troublesome :), it will also index your ROM collection =
+and=20
+create a database on the CD for fast menu operation. Read more about it =
+in the=20
+<A href=3D"http://mc.pp.se/dc/dreamsnes/#inst">Installation</A> section =
+below.=20
+</P>
+<P>
+<P><IMG alt=3DFeatures border=3D0 height=3D30=20
+src=3D"http://mc.pp.se/_internal/graphic_text!0/5f$8f" width=3D107 =
+valign=3D"top"></P>
+<UL>
+  <LI>SRAM saves to VMS (when the VM starts beeping, there is a save in=20
+  progress)=20
+  <LI>Interactive game selection menu=20
+  <LI>Optional TV-mode for giving the right feel when playing on a VGA =
+monitor=20
+  <LI>Up to four controllers supported, and also mice and lightguns =
+(support for=20
+  rumble pack planned)=20
+  <LI>Really nice graphics by Kathy Choi (thanks!) (More excellent =
+images by=20
+  Kathy can be found on her <A=20
+  href=3D"http://elfwood.lysator.liu.se/loth/h/a/hana/hana.html">Elfwood =
+
+  page</A>.)=20
+  <LI>Groovy music by <A =
+href=3D"http://jan.warnstam.org/soilofsound/">Jan=20
+  Warnstam</A> (the X-mas edition instead has a Yuletide hit song by <A=20
+  href=3D"http://mc.pp.se/dc/dreamsnes/wressle@roxen.com">Daniel =
+Wressle</A>)=20
+</LI></UL>
+<P></P>
+<P>
+<P><IMG alt=3DScreenshots border=3D0 height=3D30=20
+src=3D"http://mc.pp.se/_internal/graphic_text!0/5f$7b" width=3D151=20
+valign=3D"top"></P>Here are some screenshots taken by Peter with a =
+digital camera.=20
+:-) <BR clear=3Dright><A =
+href=3D"http://mc.pp.se/dc/dreamsnes/credits.jpg"><IMG=20
+border=3D0 src=3D"http://mc.pp.se/dc/dreamsnes/credits_small.jpg"></A> =
+<A=20
+href=3D"http://mc.pp.se/dc/dreamsnes/main_menu.jpg"><IMG border=3D0=20
+src=3D"http://mc.pp.se/dc/dreamsnes/main_menu_small.jpg"></A> <A=20
+href=3D"http://mc.pp.se/dc/dreamsnes/rayearth.jpg"><IMG border=3D0=20
+src=3D"http://mc.pp.se/dc/dreamsnes/rayearth_small.jpg"></A> <BR =
+clear=3Dright>He=20
+has more screenshots on <A=20
+href=3D"http://peter.bortas.org/dreamsnes/shots.html">this page</A>.=20
+<P></P>
+<P>
+<P><IMG alt=3D"Release notes" border=3D0 height=3D30=20
+src=3D"http://mc.pp.se/_internal/graphic_text!0/5f$fc" width=3D170 =
+valign=3D"top"></P>
+<DL>
+  <DT>v0.9.5 - 20020214=20
+  <DD>This time, we actually <I>do</I> have some speed improvements, on =
+account=20
+  of porting the entire CPU emulation core into SH4 assembler. No mean =
+feat I=20
+  can tell you... It also happens to be another themed release, this =
+time=20
+  inspired by the holiday of love: Valentine. <BR>Changes since 0.9.4:=20
+  <UL>
+    <LI>Rewrote 65c816 CPU core to SH4 assembler=20
+    <LI>Added light gun (SuperScope) support=20
+    <LI>Fixed a bug that made it impossible to save unless the VMU was =
+in port=20
+    A, slot 1.=20
+    <LI>VMU saving have been improved to work on all VMUs available for =
+testing.=20
+
+    <LI>Whenever a save is in progress a VMU icon will appear in the top =
+left=20
+    corner. If the save fails for some reason a message will be =
+displayed with=20
+    the reason for the failure.=20
+    <LI>VMU saves are compressed. This reduces practically any save to =
+two=20
+    blocks.=20
+    <LI>Yoshi's Island (and other SuperFX games) no longer crashes =
+DreamSNES=20
+    <LI>Controllers are now automatically configured based on what is =
+connected=20
+    to the Dreamcast. Check the heads up display in the top right corner =
+when=20
+    starting a game for the current configuration. The configuration can =
+be=20
+    dynamically changed while playing by removing or adding peripherals =
+to the=20
+    Dreamcast ports.=20
+    <LI>A file (ROMS.LST) can optionally be added to the cd to speed up =
+the rom=20
+    scan. The game names will then be takes from the file instead of =
+scanning=20
+    the rom header.=20
+    <LI>Added Finnish, French, German, Italian, Japanese, Polish and =
+Spanish=20
+    translations. Thanks to all locale contributors! </LI></UL><BR><BR>
+  <DT>v0.9.4 - 20010312=20
+  <DD>Again, not much improvement speedwise. We just though people would =
+start=20
+  to get really tired of the Christmas song by now. :-) <BR>Changes =
+since 0.9.3:=20
+
+  <UL>
+    <LI>Support for C and Z button (as select and exit to menu)=20
+    <LI>Better keyrepeat handling in the menus=20
+    <LI>Fullscreen mode added (default, but configurable)=20
+    <LI>Translation to Swedish. And French (sort of).=20
+    <LI>Screen "blanker" in menu=20
+    <LI>New music by Jan Warnstam=20
+    <LI>Keyboard support: Press ESC for menu, Pause for "blanker"=20
+    <LI>Better support for third party memory cards=20
+    <LI>ROMs can now be placed in a directory "ROMS/" instead of in the =
+root=20
+    </LI></UL><BR><BR>
+  <DT>v0.9.3 (X-mas edition) - 20001222=20
+  <DD>This is a special Christmas release to keep you occupied over the=20
+  holidays. <I>Merry X-mas and a Happy New Year!</I> <BR>Improvements =
+over=20
+  0.9.2:=20
+  <UL>
+    <LI>Converted the menus to a cosy Christmas theme.=20
+    <LI>Added mouse support=20
+    <LI>Added possibility to to interpolate mode7.=20
+    <LI>Speeded things up a bit. Note that it is still slow.=20
+    <LI>Fixed menu interlace problem.=20
+    <LI>Removed one of the soundtracks to reduce download size. =
+</LI></UL>This is=20
+  still not 1.0. Do not expect great speed. <BR><BR><B>Known bugs:</B> =
+Does not=20
+  save to Joytech or Nexus 4M bankswitched VMUs. <BR><BR>
+  <DT>v0.9.2 - 20001104=20
+  <DD>This is the second public beta. It is not significantly faster =
+than 0.9,=20
+  but have been tweaked to be more playable, and has some awesome music=20
+  included. The specific improvements are (details in the CHANGES file): =
+
+  <UL>
+    <LI>PAL support=20
+    <LI>Verical offset of non-VGA screens fixed. (i e bottom of screen =
+should=20
+    now be visible.)=20
+    <LI>50/60Hz video option=20
+    <LI>Double buffering=20
+    <LI>Less frame skipping=20
+    <LI>Stereo sound support=20
+    <LI>Up to 1024 ROMs per CD supported.=20
+    <LI>Game can be selected before the ROM list is completely loaded=20
+    <LI>Music added on the menu screens </LI></UL>It does <I>not</I> run =
+at full=20
+  speed. If you thought the previous release was unusable due to the low =
+speed=20
+  (as you should have), then you'll be better off waiting for=20
+  v1.0.<BR><BR><B>Known bugs:</B> Sometimes the interlace gets screwed =
+up. If=20
+  this happens, switch between the game and the menu until it goes away =
+(usually=20
+  at the first try).<BR><BR>
+  <DT>v0.9 - 20001007=20
+  <DD>This is the first public release. Most stuff works, but it's still =
+pretty=20
+  slow. Expect around 50% speed in most cases. The background music for =
+the menu=20
+  has been disabled as it didn't work properly, sorry. Don't download =
+this=20
+  version if you want a really playable system, it's more for the =
+curious who=20
+  don't mind wasting a CD-R on playing around with a beta. </DD></DL>
+<P></P>
+<P><A name=3Dinst>
+<P><IMG alt=3DInstallation border=3D0 height=3D30=20
+src=3D"http://mc.pp.se/_internal/graphic_text!0/5f$66" width=3D140=20
+valign=3D"top"></P></A>To get DreamSNES running on your Dreamcast, you =
+need to=20
+burn it on a CD-R together with any SNES roms you want to run. There are =
+no game=20
+roms in the DreamSNES distribution, you have to get them elsewhere. =
+Remember=20
+that you may only use dumps of SNES roms that you actually own in order =
+to be=20
+100% legal.
+<P></P>
+<P>There is a graphical tool to create the DreamSNES CD-R for you. It =
+allows you=20
+to select a DreamSNES version, and any number of ROMS, and it will =
+download=20
+DreamSNES and create the CD automatically. Please note that you do not =
+even have=20
+to download the DreamSNES distribution, just download and install the =
+installer=20
+program (and the components it depends on), and you'll be able to burn =
+the=20
+latest DreamSNES at any time. </P>
+<P>It is still possible to use the old manual method for creating the =
+DreamSNES=20
+disc, the description of that procedure remains further down, under the =
+heading=20
+<A href=3D"http://mc.pp.se/dc/dreamsnes/#classic">"Classical =
+method"</A>.</P>
+<P>To use the graphical installer, you need:=20
+<DL>
+  <DT>GTK+=20
+  <DD>This is the GUI library used to create the graphical interface. If =
+you=20
+  don't already have it, you can get it from the <A=20
+  href=3D"http://www.gtk.org/">GTK+ homepage</A>. For a W*ndows version, =
+go <A=20
+  href=3D"http://www.gimp.org/win32/">here</A> (just download and =
+install GIMP,=20
+  it's easiest and you get a great image manipulation program for free). =
+
+  <DT>Pike=20
+  <DD>This is the script language in which the installer script is =
+written. If=20
+  you don't have it, you can get it from the <A=20
+  href=3D"http://pike.roxen.com/">Pike homepage</A>. If you are using =
+W*ndows=20
+  though, you'll be better off using <A=20
+  =
+href=3D"http://mc.pp.se/Pike-v7.3.14-Win32-Windows-NT-4.0.1381-i86pc.exe"=
+>this=20
+  distribution</A>. If you already have Pike installed, please make sure =
+that it=20
+  is compiled with the GTK bindings.=20
+  <DT>cdrtools=20
+  <DD>To actually write the CD, the script calls the tools cdrecord and =
+mkisofs=20
+  from the <A=20
+  =
+href=3D"http://www.fokus.gmd.de/research/cc/glone/employees/joerg.schilli=
+ng/private/cdrecord.html">cdrtools</A>=20
+  package. Place them in your path, or in the same directory as the =
+installer=20
+  script.=20
+  <DT>dreamsnesinstall.pike=20
+  <DD>Well, <A =
+href=3D"http://mc.pp.se/dc/dreamsnes/dreamsnesinstall.pike">the=20
+  script itself</A>. :-) (If your browser is stupid, shift-click.) =
+</DD></DL>
+<P></P>
+<P>To start the installer, just launch the script using the Pike =
+interpreter (on=20
+UNIX, it should just be a matter of setting the executable-bit on the =
+script; on=20
+W*ndows you probably have to associate the extension ".pike" with the =
+pike=20
+interpreter or something). If the startup goes well, you should be =
+presented=20
+with a window containing a selector for the device ID of your burner. =
+You may=20
+also select to create an "image file" for Nero Burning ROM. Only use =
+that as a=20
+last resort though, it's <B>slow</B>. The selection "direct burn" means =
+to write=20
+the data to the disc on the fly as it is constructed, rather than to =
+write it to=20
+hard disc first and then burn it. Normally it should be safe to do this, =
+but if=20
+you are worried just leave it unchecked and make sure you have enough =
+space on=20
+your hard drive instead. </P>
+<P>After you have selected your burner, pick the DreamSNES version you =
+want to=20
+burn from the box below, and proceed to the ROM selection page. Here you =
+can=20
+pick the ROM files you want to include on the cd. No ROM files are =
+distributed=20
+with DreamSNES, you have to provide them yourself. Note that you do not =
+have to=20
+add ROM files one at a time. Just add a directory with ROM files, and =
+all its=20
+contents will be added. </P>
+<P>When you have enough ROMs (don't add more than will fit on a CD,=20
+unfortunately there is currently no check to automatically prevent you =
+from=20
+doing that), go to the Action page and hit the Start button, and the =
+disc=20
+creation will start. (First, it will download the DreamSNES distribution =
+for=20
+you.) If anything goes wrong, please consult the messages in the popups =
+and in=20
+the "Messages" box on the Action page. </P>
+<P><A name=3Dclassic>
+<P><IMG alt=3D"Classical method" border=3D0 height=3D20=20
+src=3D"http://mc.pp.se/_internal/graphic_text!0/3d$4e" width=3D142=20
+valign=3D"top"></P></A>This is the old recipe for creating a DreamSNES =
+disc. If=20
+you haven't already done so, you should definitely try out the graphical =
+
+installer before resorting to the method outlined here. If you don't =
+like the=20
+installer, you can still use this method, but it is your own =
+responsibility to=20
+know what you are doing. :-)
+<P></P>
+<P>Extract the contents of the DreamSNES distribution =
+(dreamsnes-0.9.5/cd/) into=20
+an empty directory, and place any roms in the same directory (up to 1024 =
+ROM=20
+files). Optionally, you can create a directory "<TT>roms</TT>" and place =
+the ROM=20
+files in that. You must <I>not</I> use <TT>zip</TT>ped roms, you have to =
+unzip=20
+them before burning. You can also burn the roms on a separate CD and =
+swap CDs=20
+when the emulator has booted. Such a separate rom CD can be a normal =
+mode 1 data=20
+CD, it does not have to be CD/XA. If you make a separate rom CD, you may =
+want to=20
+put the "sound" directory from the DreamSNES distribution on the CD as =
+well, so=20
+that you still get music in the menu. </P>
+<P>When you have the necessary files in a directory, just make that into =
+a self=20
+booting disc as described on the <A =
+href=3D"http://mc.pp.se/dc/cdr.html">CD-R=20
+page</A>. Just give <TT>mkisofs</TT> the name of the directory and it =
+will add=20
+everything in the directory to the iso. Then insert the supplied =
+<TT>IP.BIN</TT>=20
+into the resulting ISO. </P>
+<P>
+<P><IMG alt=3DDownload border=3D0 height=3D30=20
+src=3D"http://mc.pp.se/_internal/graphic_text!0/5f$a3" width=3D126=20
+valign=3D"top"></P>Before you download, please make sure that you have =
+read and=20
+understood the Installation chapter above. You should also be aware that =
+the=20
+current release is a beta version which may not perform optimally =
+speedwise with=20
+all games. If this is not a problem, you may go ahead and download one =
+of the=20
+archives below.=20
+<UL>
+  <LI><A=20
+  =
+href=3D"http://www.lysator.liu.se/~marcus/dreamsnes/dreamsnes-0.9.5.tar.g=
+z">DreamSNES=20
+  0.9.5 tar.gz archive</A>=20
+  <LI><A=20
+  =
+href=3D"http://www.lysator.liu.se/~marcus/dreamsnes/dreamsnes-0.9.5.zip">=
+DreamSNES=20
+  0.9.5 zip archive</A> </LI></UL>Please note that you <B>do not</B> =
+have to=20
+download this distribution if you are going to use the installation =
+script, it=20
+will handle the download for you.=20
+<P></P>
+<P>
+<P><IMG alt=3DForum border=3D0 height=3D30=20
+src=3D"http://mc.pp.se/_internal/graphic_text!0/5f$78" width=3D81 =
+valign=3D"top"></P>A=20
+forum is <A =
+href=3D"http://www.dcemulation.com/phpBB/viewforum.php?f=3D30">here</A>. =
+
+
+<P></P>
+<HR>
+<A href=3D"http://www.roxen.com/"><IMG align=3Dright alt=3D"Powered by =
+Roxen" border=3D0=20
+height=3D40 src=3D"http://mc.pp.se/internal-roxen-power-small-white" =
+width=3D40></A><A=20
+href=3D"http://mc.pp.se/dc/">Dreamcast Programming</A> by <I><A=20
+href=3D"mailto:marcus@mc.pp.se">Marcus Comstedt</A></I><BR><!-- Created: =
+Sat Oct  7 22:29:41 MEST 2000 --><!-- hhmts start -->Last=20
+modified: Thu Feb 14 23:51:15 MET 2002 <!-- hhmts end --></BODY></HTML>
+
+------=_NextPart_000_0000_01C1BA46.ADA60420
+Content-Type: image/gif
+Content-Transfer-Encoding: base64
+Content-Location: http://mc.pp.se/dc/dc_mark.gif
+
+R0lGODlhWwBGAOMAAP/////v4P/QwP9gAP9fAPC/n/BvIO+fcO+AT7BAAIAwABAAAP//////////
+/////yH5BAEAAA8ALAAAAABbAEYAAAT+cMhJq7046827/2AojmRpnmiqrmzrvnCMGkdh38dhyDxW
+B4CgcBgUFA493kFAbDoDBUSydQASAwJj1uoECKTTE4I5FOgwtAKZKNiFRwW2u0NbBwPIN8j+JSG4
+AAB5eht/gYGDJXGHgoQaBowBYBYIOZZzPowAmI4UXAIYBYCMRpMVB6SdFmugFouasAB4F68ABaoT
+CIcBlKOBvrucA3bCelycqJFRcwiisIkDkIetncm2FbWSGoaM0NYApsaHp4y3HbXgFayduoHmE4zh
+G98AFdKB8klr6ofeOPnf3klYIzDMIYHtvFDgpoxTLXLj9FhLtGYOvWcVuCS6t0nPK0z+B3NFygJL
+oDVqA/vpIcNrwr1JBClUieeSEcRrb6y0lJBs54CQrqZRqEjhHsokVlAmo5Yw34BjE15BSypOFoVF
+TA8VGzBRpDuIBXtQndCz5tcL994ZRUtIp8yIKREhMMBprAQuuIbCjXZoUkJNc+wO05pXwitTVkzG
+GiSYaOGEAhf5HDDmk6dAKA8XliCULFALnCBfJbx532V8HdaY+riZq0rPfbdZPj057y5+B8PRABQA
+U8KjeaXi3pWFpCbga6Dl5Rg0lqZZN2sXfgXcADpSyvl+bn13+8IaNg447Y6Zu71UJWaSNu/1V/YN
+BuykY1+BoZczHJo9H28+PqxSwlT+Ip9C9GlwXSQBJOgcdAU+4oxzC4bVoAY/QDjNexNyYEAzanQY
+XoYghsgdAQQMUGKJIp6QwAIstriAAiimGMKKLypgY4sJyFhBjBjQuCOLCug4gAIL8HiBjz8WKQGK
+JE5AopFP7mgij01aEKWTVWJZJZFGWoBkBUQGSSSNRRJAJJAourhAjma+2CKMLua4pJolqiknmUWe
+CWQGX1Lg45srEsBiAgSsGKSZhCbA5QA4kqlAAjSWSCOhZpL4KIksYgpjoYWOCSmfLF4g6AKMvjjB
+mKcqWYGpg86pqqBwkrrBi4aCqSqoslbw56tq4ohlmKXGGOqcN8pppaUvjgpjql2u6jqss6Rm6iqk
+1BI6pJpBSivBs7AuaoGee46a7LXN+vksBXtqC+sFYVLK6q3c1nhrqpeu66qY8x55rgSRButql/Fm
+C2+u3ZpKwajoLsust1Ma2Weh2mp7bZBYPlurugH766TBAxjKI5cMKwojxdfWeGOr28775o1tPqqn
+xqVuHCSNLstbM620Ahvmsp1aDC7KzEKLsp424sukjTIvSXSJenpMtNKtFqqosUJWvVkEADs=
+
+------=_NextPart_000_0000_01C1BA46.ADA60420
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: base64
+Content-Location: http://mc.pp.se/_internal/graphic_text!0/93$fa
+
+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
+
+------=_NextPart_000_0000_01C1BA46.ADA60420
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: base64
+Content-Location: http://mc.pp.se/_internal/graphic_text!0/5f$ed
+
+R0lGODlhQwAeANUgAAAAAAEBAQICAgMDAwcHBwYGBgkJCQ4ODhERERUVFRsbGx8fHyIiIiQkJCkp
+KS0tLTMzM0FBQVBQUGFhYXd3d4iIiJqamqurq7u7u8rKytLS0uTk5PDw8Pn5+f39/f7+/gAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAACAALAAAAABDAB4ABQb/QBBI
+OBwWjUZkMrlkMp3PZ1QqpVarVyxWu912vV5wODwmk83nc7oqsVQg1YWFwlCr7czK54NJSCEfGhF3
+d4RDeh8cFAZPgIKFhYWIgYNMjpWRkWR6HR8dFn5Jl5qamx8ZFx4dEwWilEwKExcZGBUOrSARFBII
+SQQTuwRJCMALQwmyGah0eXwQGoEPro9GERgeGxobHhoSQxOBcEYQG6cOSRHafg0XHRwa2hveSXoY
+BhQcHxeMQ6P9GR4uTIgg4RqGcw7cTUiC74M8hh0ugCBQgcMGChEiABNnpB6IBak4LOz3CkQCCx00
+1BnygINIEAgyfKhwYIiBkB0oGElw4cNC/wU9LeAaMvQQnyESymU4B8Lfs5lJDGCYecBAPWNNM3Cw
+oC9UOg7GGky14MXjEAodPvXyN8HDBwkKFMSVo89YBHfiJnC4cFcDnAJtL9Q8gLKDrZpSzMKcuoHV
+KAIU9tDCgIFyOQwNQDyApvNABQ8TFmjg4I3nqmoAuVWIgJje0Wr5Do665wkePNsaLtQ5qY+AAwwb
+HiDgWsGAg2wcc13I57CCgmYYfH02HOEVYE8SIEDQvh2CA35oOSCIsDfB9T6BQxlR0KYcB5quoyd5
+IFNRSQmd5mFJ+jYyhVYRbMCBA+3oJMV4MlFjlHxJ8JcPNfTpU9QTC0x1AXCViPUBWgpKcaLXSx29
+loRnnZR0DwcdSCAMFhW4s9dKnmHTlREGmNdgBw+FyOB8MpUEAoEpYdTAAhBIMIF6enlSwVBJKpKE
+AxVg5AAD1niAwUoLVjFBJx1C0NM7lWmzlBGbOaRfLtBsgElWKdGiAY5ngiBLBVVQdIEtTCCDQT4c
+ZGCBBK0VUMGdWJo0KHxGHNDGmzha8MCEpZQSqaSSUlpppZdiiqmmm26KaRAAOw==
+
+------=_NextPart_000_0000_01C1BA46.ADA60420
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: base64
+Content-Location: http://mc.pp.se/_internal/graphic_text!0/5f$8f
+
+R0lGODlhawAeANUgAAAAAAEBAQICAgUFBQcHBwkJCQsLCxAQEBMTExgYGB4eHh8fHyEhISUlJSkp
+KSoqKjQ0NDw8PEpKSltbW25ubnl5eZKSkqOjo5qamsfHx9XV1eLi4urq6vb29vz8/P7+/gAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAACAALAAAAABrAB4ABQb/QBBI
+OBwWjUZkMrlkMp3PZ1QqpVarVyxWu912vV5wODwmk83nc1qtZrfbbzhcPp/XnxKLRb/f7x12doGC
+cBUfHx0diYqKEYSEj5BYhh4WFBSXmBQKklIFEROAnZ1hlBCkZAwZGxQDqKhVprBeDhofFQSzs0my
+XgkTFxkZFhC5RgQNExbCGRWnRsocH80VFA1DCxUVnEkO1QtGENoGCMAZEkYDDxXBFxQMT7/BGRcV
+8LwfHs9YERkeHBo2eNgwwdUQCBr+adAgbYOjIRk6eECkaAM6EBEOPYT2waIRChIhWJDYgcKQARM2
+dNjA0EOGfSAaXFAYkMMEJr2qPPCXYYIE/2Au9/Wz4FMCBVsZCgyJ9sEdhQnXMGpkMqHjRRAgP2Dg
+UI/CMwkqMUyIcNQDhgRDCIxkJeGnV5z5Jjx4MPfBAmMHKqzcx0BlBSMIHhg4tvaBkVq3jBnJ+GHj
+UqsfO3SsAM6IKg8X0C7twOHZggwfLBg8Cbfjhg2nN1yI+sCWBcUgLjRFgAWkw8O2cDFh7BhEVY9D
+smIYnGQChw43jez8YBKEA9AYvBjquHChhtVDJEzcpEBBdwvTDD8xkHflRsS6k/CmCjm4xMrpwHd4
+4N07BNCvQRjA4KGDBQfEPUGJBAggUCACB3x0iAbMCIPUPsgYVcEy5uGW2G5TFdceVhJpBv+YbC41
+mIE0FygFggSgeaCBBRIEaEROT1CQj3XWLXTBMwlQMCKDFyR02xDowSZVY+wBx6EHHg6RgGwd1Fij
+BSZidIE0k3HzYj4wseeBVxBA0KWXgulXAQccVBCBA9lUCGRuQq6noZEgIcnEARh8wEEEXnqZZ1RG
+KCDBVohYkOCV+vAjWXM6HVfBoFhx8KNzbGJI5JtXxZnkEHp1wGcYB/TzgQaOwciEKtPQVoWMoCZB
+gaPnRapehkMoYAucHeIh0F9taGcTPoVWQUCcE0TJhIy7xrrWRg1A5yJGh570wAWS0SrnnDOBOhpp
++iVw7QQDXQWCqKNCu4GZDSwAwQQTwBO+gWQ9gXKBQGWaikCdBDXAwKDPfYpuBSPKJu2lQ0SQUAZe
+McAAKAWB8IAFFUjgAAMounQPplh68Wx/DAqzQQaO0DkRQADpOBAGokgwKz3PFLCqnSqx8lultUqB
+op0ZM3TBYPc16aCK3vp2wQUTY1HOiIhoIJapClTgIwbFRKBSBuIVgKIiLxlxgMhcRfDJBRiId+LP
+jD7RAL+ScTDMQwdMgIEGEm3Q9bW77BK33HLTXXfdd+ONt957792333IHAQA7
+
+------=_NextPart_000_0000_01C1BA46.ADA60420
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: base64
+Content-Location: http://mc.pp.se/_internal/graphic_text!0/5f$7b
+
+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
+kY6EZCQjOUlKUtKSl7xkJucQBAA7
+
+------=_NextPart_000_0000_01C1BA46.ADA60420
+Content-Type: image/jpeg
+Content-Transfer-Encoding: base64
+Content-Location: http://mc.pp.se/dc/dreamsnes/credits_small.jpg
+
+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
+
+------=_NextPart_000_0000_01C1BA46.ADA60420
+Content-Type: image/jpeg
+Content-Transfer-Encoding: base64
+Content-Location: http://mc.pp.se/dc/dreamsnes/main_menu_small.jpg
+
+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
+
+------=_NextPart_000_0000_01C1BA46.ADA60420
+Content-Type: image/jpeg
+Content-Transfer-Encoding: base64
+Content-Location: http://mc.pp.se/dc/dreamsnes/rayearth_small.jpg
+
+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
+P//Z
+
+------=_NextPart_000_0000_01C1BA46.ADA60420
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: base64
+Content-Location: http://mc.pp.se/_internal/graphic_text!0/5f$fc
+
+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
+utCFNtShjAgCADs=
+
+------=_NextPart_000_0000_01C1BA46.ADA60420
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: base64
+Content-Location: http://mc.pp.se/_internal/graphic_text!0/5f$66
+
+R0lGODlhjAAeANUgAAAAAAEBAQICAgcHBwcHBwoKCg4ODhAQEBQUFBkZGRkZGSAgICMjIyUlJSkp
+KS0tLTs7O09PT1lZWXFxcXl5eY6OjqGhobCwsMTExNTU1N/f3+np6e3t7fn5+fz8/P7+/gAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAACAALAAAAACMAB4ABQb/QBBI
+OBwWjUZkMrlkMp3PZ1QqpVarVyxWu912vV5wODwmk83nc1qtZrfbbzhcLi0gDkwEYjCf9/1+gG0U
+GRdJCxgaEYGBjFIRFRWNjW0VHRlJDRsfEpRPEJGeZxQfH6KiW5aYRpqcqEYTHaavW6SztEwOERAF
+gaqZm51wCRASCE8RFxi4WLbMTBUaFwu+l8CucBGJD08IDg7PUs7hQxYfGNR+v6zBcxKbEOSjpUwT
+FBADCBIWGBcSBkwKgMKAAYOFCHxAQJiQ4YOGChQoLBqCAAIFZQaNQbPGDtuQAw8m8Os3IYGRAxMu
+yIJI4d+QhRSeFHhwsWCFCCaToKTAjUFK/4MReiUZZ0TDhwoQLnzoIMtDBaEgCkzY0EFDBg0cLBwD
+MdXDBw9MO1gwYqnqVbAVcg5ZN6SVsCETOJjVwPRCgyEM6JYKiw6urDwUNHjYcLUuuI4TIGBY6pXD
+hIRDiA4xWnCDhYgYPGiIN+QB3YMQIkyQIDTkYg0UJkyYCMKChdWhLXjgwBoEWxBuk1S4IDF0hdmP
+QaC0wOGoapdc/w6V68+30WkdLVx9TegcNyOSQRitOmFrBKoxh0j4kIHzEMjlzqVL8kAtCM8fKEC9
+nZsVgyQFGmo18u6DeVjKdcaBBxccJhwFHHAQHm6bcKAIHlx9sMFbIGRnlGOQLUCXJJGR9//fE+b0
+5UUCi1UA0FoctdXOFkpBJx48T8Ryi20OUShcQxjcxaCEtTHwgWND0ZOEURZASNGGRkAgCwYR7CFF
+iOtJMYABDpRoJH0rPjFAAQa0uF5/HyZ3ywA4RrmWQxO1Il8SCSw1QZAzancUVCAggCRFFRTXgT/3
+MQGlFBVJMEEFFhhVwZUp7mijAaENGs0HLoIAZowBaggpneL9+OaOwRnRZgebdhinoXTa2QGHQyxA
+iCwcXIBQEn8yAYF0G/RzwSaHkpVofZ1VkAFhF9wK6Zcw1hOgA8894qaKH3Q6xKehVihkUXMmYSqq
+Qwg0QWYelAererJi0AEGEjzAgGJHIbr/CrNvPaASuRAwsICX/BWbhIxG5AUpepkCySl60MLJBKnW
+3snEAAxYctS3Ip5nwSV9gkBiurquq+h5FDBlIAj0vugfpbfkd457HU7IrLMSL4vdtJNVa8S1WMx7
+DsNRVrmwp1ZWfI0wCZhjSBIdS2ovgDOao0hAi2FwXSsoB7zyqC4feaqnRoLAQIu6eZiEzRecCEIE
++qm787NKZWCkAw1dELEERtkoZhJKiqXWAO+cmhDTAKss6sBR12nwoBLESxNVFEbwYwXmmmSAbApG
+EAEhxSktFJbYFGCJU45vW1wGEUD4QNLxMpAQvrAOhtQCIWXggdKI5Q2qwEP2DfNag2VQnpBcFrhn
+wGIcFLRpBNtp8BmC425K+VvoVoUVuVRlwOEAxNtewVak5/vwJZVp3TqbeksarJ/+oGfAbqE+UAEG
+G8xGLsm4RTOYMAMoxhQG3SWQp4JwXYBtzxeYN8ADxLkEBRggFaqMZQgGYMhs9vM1C/zMWhIQ1rgo
+oCNPObA2wrnAQeQhDw52sIMfBCEIRTjCEZbQhCZEYQpTuEIWziEIADs=
+
+------=_NextPart_000_0000_01C1BA46.ADA60420
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: base64
+Content-Location: http://mc.pp.se/_internal/graphic_text!0/3d$4e
+
+R0lGODlhjgAUANUgAAAAAAEBAQMDAwcHBwkJCQoKCg0NDRAQEBMTExgYGBsbGx8fHyAgICUlJSYm
+JiwsLAICAjg4OEdHR1tbW3R0dIeHh5WVlaGhoa2trbu7u8rKytjY2OXl5fDw8Pb29v7+/gAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAACAALAAAAACOABQABQb/QBBI
+OBwWjUZkMrlkMp3PZ1QqpVarVyxWu912vV5wODwmk83MAZMgcZzP7+1DAodvJQ87VhJhFiIWGBkY
+FRMHIAsdFXpkE3SMQxYfkJAgBh0XApVJHBpJChgfHBeBHB90iYubVRwYm5KrepeZsSCdRgcZHhWa
+RhELiIq1TxF5lbDDUhQaCkazvau3QxMeGGpSqUkNEb9MBtwPh0YI4AZGCglMC+DiIAzcDEnIaQoI
+IAnFvdsNaw8R/EMSXPAQgYG9Zwe4FWBCLoKbNP7cSAORocMjbMJAIMCwYUPHCUYeZPC4gYIRCRpI
+ghyiwYKRBBZIlrR0QabJSJOeONBQSAMH/w4VDlTYwGHDShAiSd680OGDR5OzJGTg0AFDumkpPV6I
+N2QBhqIbKkhDUBRYlWz3LOBBycHcgK9r+4AokHKtMVuuQAjA4OFCMT4gDqj1p6GDuHlJHnRI6UiX
+oAkTippToEEDHgsEQUTg6yjPJY8VJEi6KcFDBjwUqtqj2IHCnAwfPIFwsNjc2YxMKnjIk0BDhicN
+RklpNUTChwztlH2Qizhkhw7GJsRefeGDPQoeHi3g4BIEZrOWOnhYqaDvXJ8AQVT4ADLCB1VzpdHW
+YBsj/CEGGmDOI6C63yQD6GLBXUMQp94HN0mR33rM5cSEYt2BIN1RkiAQYHYSSDDBBhmo8f+dM1Vd
+c4B5C3xgjS+YHChXgbKRtQF4T6A1wAQZ+LbBbkMwMFBVd4nkQQcWgEdcf6c8IQCNNi6HkxQQGjGh
+ERUeoIFTMmVAgHcegPfMECNeoNkHEc7GQQZEcsWiEYVdFGNGqVXgQAK63VWABExpcFVgEvCFgTgG
+SnKUk4o8AKeS3jmYGJBOsgeldRc+0EADjzaDpZaY9NIlUh946RwGRD505hAUmHilfYGNZEScaVhg
+URpfGWOgdGFaMtI1oTbIJKLTKIqTPbqpCaUHZm4ZmHlkadAONYusd9QBE/WW6UIn5ZENAj4dooAu
+feR3agd9HCApCF89ZCCzqw6BQC4dpJPgQCi2PtFkrhRah1Qnd/bSK4i0DKspZisZ4FMe7mWQDiix
+aQNbVaVkF4wqoY45imkFbaDBBXx190AnFuiSoIGa3agBR142PNVAlhV6a4RP7lrcTxhkrMFCF48C
+krCXlmraBVTF28GNYsmGywQXZDBIBRGoYQAFchUAtAURGAC0BANIUAEpE9g259RqjQoCBX8yQMEF
+F7gGwoykSKD0BXRIkGASCFBwkQMUeKq21g18HfaKgKA9tttGDMA3lxMEUgGBZ18wwYx/JlGAAdck
+k4zjjz8eueSSU1555ZdjjvkmQQAAOw==
+
+------=_NextPart_000_0000_01C1BA46.ADA60420
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: base64
+Content-Location: http://mc.pp.se/_internal/graphic_text!0/5f$a3
+
+R0lGODlhfgAeANUgAAAAAAEBAQICAgUFBQcHBwkJCQkJCQsLCxAQEA4ODhcXFxsbGyIiIiYmJigo
+KC4uLjMzM0hISFlZWWxsbHV1dY6OjqOjo6+vr7a2ts/Pz93d3ejo6Orq6vj4+Pz8/P7+/gAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAACAALAAAAAB+AB4ABQb/QBBI
+OBwWjUZkMrlkMp3PZ1QqpVarVyxWu912vV5wODwmk83nc1qtZrfbb7gXoRjI5VJ6Ao/nyx0ZGhB9
+fUYXGhVMERUVjI0VFBIQCwSFhW0QHB8Rl4UZHxdMFR8fHR2mHqQdGBMMnZ1emZuweJ+hSaMeFRMT
+ExQVFxulFoO0tEyynMdttqKlxUMFDBIZHh0WrsvLydpqzbjPUg4apROV3bDc6GHfRqMd0IqpGQ1M
+0xYZGRYSDHYgC77igWhAgYIDJgQlIADhK8IABRLwXVCYRJ2RAQ4m4NMnYcGTBYsu5KsQYQ+TA4sw
+6IuAoN2QdwKNtCylDMSACJ86aNDAwUMG/wmVGGD4YCHJAAqkKJx7qesACHIVIFgo1aFUhQJGLNqk
+9oHDzlMYag7B0MFrhg0eOChNgoBCzw2BOFQgd8tdOCkERn2QYASnTwoRIlD4pIFTgQoeNCQ58OkD
+BpMgCJzl+9QxBg4WClYrnFWTWAkbVk0IPPhDhoNGMFgYHUECBg8bsg2ZcGpf67mp6r68+2TAhKR2
+FFiAHeHczU8YhoDu8MAIg1OnPA6B0OH0EHI6JyhQzqEDhc6zhgj1CcFfAQnkimbdbgT0XiML6NYb
+gsC9bhAwsUggVcFOBKhMHGbNIBBU891sHqj03hAUXGMEORxMgNUQ8XWQyHSetdfdgUYcMP+cIFjg
+9MEERtC2AWUXuYQfb0/s9wEFdlCQiljKAUjABQmmduJU6rXEAYrpLWSEAhpYCF5NiHHQHBMTcBCh
+FAUk8N+Ihvg0XxIq5ieFb6SQmIBe7FX0iXoNanAQA3Ax4JYGWP2ngXSVVeDUkEVeCII6ClzwwQaQ
+9RWanf+09ssFmpAIwkwYTIglKM7AU0VeNB2ql6JGPIDcdBv8yBBmIPzHwSANqnfdB3ImQaSRGIa3
+gJ4bSAFBne1ZoAFcF5BFJQgMXPpEliyy9Yl1X5ISZlbfMGbhABZ0wFdLHWinJ4pxzjnEqXbiySql
+Q0TwZ7ZFWhDBA9OQY2iujknBq6NSRFD/VQULHUVKTFPaOUpYGXDAXrLeZtDBsFBJCwK1Rw5BwFQc
+XKmhdyAw5sEFcBZ4qwK/DjvEuTHh+mtN7gFqU4Me1BTBBxpYsEFdElSHmAVLRWsqrKnW1GSzTAxM
+3J2ZGjrdJzbjyFkSDNDVqEAKRPCaWkuNp8GS0w2VgaIIdNeTzQuEhha0KtOJ6p0ZDmFpggaLiEEl
+EPw5YQITCGMzbdewVwAEF1R1Xy6RSCCBL7LCRoGQ7RWJgQQOTNO2phcNVYrBgh/NRL8rX60V2t42
+4IBrM/9LGGASVKAvKApUAnFX+1SewWWMgtOVk05WxcEFJT1xAGiJfa6B3X2CgJRjeMtOhooFEiNu
+dbVZD5GAWzrlI4wG0Jbc1U5yJdsB6tyWskFoGYh4nwQXXFC99RfsAoHESRAAwVxVIQKBv0M4YL0E
+/mh9/hPAmJPElxM5Z8EFSA+BUt0+RZUyAdSAxVIDbSPeEAYgFbRsQH/A4NA61rFABjLQgQ98YAQl
+KEEKVrCCF8QgBjVYiCAAADs=
+
+------=_NextPart_000_0000_01C1BA46.ADA60420
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: base64
+Content-Location: http://mc.pp.se/_internal/graphic_text!0/5f$78
+
+R0lGODlhUQAeANUgAAAAAAEBAQMCAwUFBQYGBgMDAwoJCgwKDBAOEBYUFhwcHB4cHiEhISYlJigl
+KCsqKy41LjtGO0hVSGZrZnZ6doWKhZqemqCooDExMbi6uMjMyN3g3eXq5fb39vz9/P7+/gAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAACAALAAAAABRAB4ABQb/QBBI
+OBwWjUZkMrlkMp3PZ1QqpVarVyxWu912vV5wODwmk83nc1qtZrfbEotFPp/PGe93/l35fDodgIGB
+GHp6hmd9HhUTE42OEwmHh5NefR2FlJSaapeZm5ugln+fWAlxGhoXEw0GTBIUEwcKExkXmRQUpSAJ
+uZ+0FA8EGBQZGhUYBLyoGZFMnl4YGX8bGxweGrJJF9gRGR4dGhEgA34UTBgdHBNGERsfjhrqHh/i
+ChaD4BYISdBY0h42UJAQodaHDRIGGOG2IcMGC7HwlPtwLkm6de3eWdigIVaFDh4uXOCwqlZACf3+
+SHjwgOUDBspAIPjoQYKrIRE01JM0hBs2/2dGJlY0cpEdzncdMmBQiGCaOqARAg0F0ecDh2rVNlzA
+AwKDzgwxhwyY4KHmQg/rwoo1h+5pxoMKgiqicCBohw8VUh7MWs0CVwn0jCZx98HC2Qw8kwhti/Eo
+PMV9NDxgcjevkUsREiTQnIAfCAIT/Ixj8mCahsOeFbO16NaxYHKRJyepnBJTFQMU/OwC0cA06ieL
+WTcGQfj1gNiU8dbePQS07iel6/1mEpxoa+LvjCOfrfwyKSwS/KBEp/PCdNUUGQsuDrmebCO0vduu
+guGdeSYT7grmliF10NVDJMDNcOzJ5V5ylg3hjxQJWABOKb0dxBUI/PknFgeF8cRABRgSmI5de5Ih
+uNwWOdUzwQMNRHCBOhSEVaEU0wgkQS0kXVegWNvB152C32FhgAQaoJXKBmhVkBiFHvQnhQQYdmAN
+BxVE5eFjBobIXYIg1LKVFwQ0UIE8B1kQgYUUXFBBXU/8mEEgGUiAAAMijQfCAxZkMJoREmRQQVzb
+NBNKKH8CCqiggw5aqKGGIppooosyqkYQADs=
+
+------=_NextPart_000_0000_01C1BA46.ADA60420
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: base64
+Content-Location: http://mc.pp.se/internal-roxen-power-small-white
+
+R0lGODlhKAAoALP/AP//////9/+MAO/v79bW3sbGxq2trYyMjISEhHt7e2NjY1JSUkI5QiEhIQgI
+CAAAACwAAAAAKAAoAAAE//DJSZ+rGF89i/9gKI6kJxVAqgLB6ravCruFhbp4ru/1UyyMxWDRUBSM
+DAKQwSg0GAkn48BMpJ7RBWDR+zEPjUEDnGgkqp6GoeEsDJpNALuxbXBPwINTfjabGQp6T4IJBHAo
+fwRiA11AKUBCZQRsTE0Nk2tTVVcMl3IAXTuiozihpKeipjMpGa0VOqouDwK0tba3tQ+wJzqzuL+2
+ujmmKy2+wMDCpbwsq8cCrs/KNMwBzsG92MPMONIp1ive2z7ZuawY2svkOd4Bz7jTK8Sy2O7I0Lvr
+3drvt/Eq88Lxk/Zq3I195liIGxVQxcKFq6itswbOnjlrECMCrEYRozaLtNKETch3UAaAh9oc4DNo
+0mHBkwUlOCi2UR+qm/JOaMSpA0YLUwO+rRpKVEfQFKESUEgQYJIENj8eHCDgIEmDDVMWOJg6BalO
+pQeoPHjzIEGCqqAsnDUwyQGIBQ80HWCR9MECBQ6MXPXgIAyAAxa4tG1w6YeDvl3TklMqE5HbAn0D
+RH1gAEDbsAR+KFBg4cBPXmAROEAAgEHZs1wMODjrYEDbtwiczgV1AQXYSZfa9iVgyAGBAw64XJWw
+AMECK8Bnq9K4cyjNoV1KSJ8+Ilq0DdYzRAAAOw==
+
+------=_NextPart_000_0000_01C1BA46.ADA60420--

@@ -1,0 +1,876 @@
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<META NAME="Generator" CONTENT="Microsoft Word 97">
+<TITLE>LZH format</TITLE>
+</HEAD>
+<BODY LINK="#0000ff" VLINK="#800080">
+
+<P ALIGN="CENTER">This document was last updated on Sunday, December 13, 1998</P>
+<B><FONT FACE="Arial" SIZE=4><P><A NAME="_Toc438218098">Introduction</A></P>
+</B></FONT><FONT FACE="Arial"><P>Every effort has been made to document LZH header formats as well as changes made for features <I>not yet implemented</I>.  Corrections, additions and suggestions are always welcomed.  Header fields in <I>Italics</I> are currently under development for Huffman Compression Engine only, and should be ignored (skipped) if not supported, as should any extended header.  If you are a developer of compression utilities in .lzh file formats, please feel free to jump in and help.  </P>
+<P>&nbsp;</P>
+<P>Table of Contents</P>
+</FONT><P>Introduction&#9;<A HREF="#_Toc438218098">*</A>
+<P>LZH format&#9;<A HREF="#_Toc438218099">*</A></P><DIR>
+
+<P>level-0&#9;<A HREF="#_Toc438218100">*</A></P>
+<P>level-1, level-2&#9;<A HREF="#_Toc438218101">*</A></P>
+<P>Level 0 header structure&#9;<A HREF="#_Toc438218102">*</A></P>
+<P>Level 1 header structure&#9;<A HREF="#_Toc438218103">*</A></P>
+<P>Level 2 header structure&#9;<A HREF="#_Toc438218104">*</A></P>
+<P>Extended headers&#9;<A HREF="#_Toc438218105">*</A></P>
+<P>Handling of extended headers.&#9;<A HREF="#_Toc438218106">*</A></P>
+<P>Method ID&#9;<A HREF="#_Toc438218107">*</A></P>
+<P>Variances&#9;<A HREF="#_Toc438218108">*</A></P>
+<P>Huffman Compression Engine II&#9;<A HREF="#_Toc438218109">*</A></P>
+<P>Generic time stamp&#9;<A HREF="#_Toc438218110">*</A></P>
+<P>OS ID&#9;<A HREF="#_Toc438218111">*</A></P></DIR>
+
+<P>Links to other LHA utilities and compression references:&#9;<A HREF="#_Toc438218112">*</A></P>
+<P>0x39 Multi-disk field&#9;<A HREF="#_Toc438218113">*</A></P><DIR>
+
+<P>SPAN_COMPLETE.&#9;<A HREF="#_Toc438218114">*</A></P>
+<P>SPAN_MORE.&#9;<A HREF="#_Toc438218115">*</A></P>
+<P>SPAN_LAST&#9;<A HREF="#_Toc438218116">*</A></P>
+<P>size_of_run&#9;<A HREF="#_Toc438218117">*</A></P>
+<P>span_mode:&#9;<A HREF="#_Toc438218118">*</A></P>
+<P>Termination&#9;<A HREF="#_Toc438218119">*</A></P>
+</DIR>
+</P>
+<FONT FACE="Arial"><P>&nbsp;</P>
+<P>&nbsp;</P>
+</FONT><B><FONT FACE="Arial" SIZE=4><P><A NAME="_Toc438218099">LZH format</A></P>
+</B></FONT><FONT FACE="Arial"><P>Byte Order: Little-endian </P>
+<P>There are 3 types of LZH headers, <B>level-0</B>, <B>level-1</B>, and <B>level-2</B>. </P>
+<P>All .lzh and .lha files are null terminated.  The last byte of the file should be a 0, but if it's not, it will be interpreted as null terminated.  The reason for this termination is that it implies that the next header-size is zero.  Huffman Compression Engine adds the null but doesn't need it.</P>
+
+<B><I><P><A NAME="_Toc438218100">level-0</A></P>
+</B></I><P>LZH header</P>
+<P>Compressed file</P>
+<P>LZH header</P>
+<P>Compressed file </P>
+<P>LZH header of size 0 (1 byte null)</P>
+
+<B><I><P><A NAME="_Toc438218101">level-1, level-2</A></P>
+</B></I><P>LZH header </P>
+<P>Extension header(s)</P>
+<P>Compressed file</P>
+
+<P>In all cases, read the first 21 bytes of the header.  After determining the header type, you will then have to handle the header as needed or suggested.</P>
+
+<P>&nbsp;</P>
+<B><I><P><A NAME="_Toc438218102">Level 0 header structure</A></P>
+</B></I></FONT>
+<TABLE BORDER CELLSPACING=1 BORDERCOLOR="#000080" CELLPADDING=7 WIDTH=594>
+<TR><TD WIDTH="14%" VALIGN="TOP" BGCOLOR="#000080">
+<B><FONT FACE="Arial" COLOR="#ffffff"><P>Offset</B></FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP" BGCOLOR="#000080">
+<B><FONT FACE="Arial" COLOR="#ffffff"><P>Size in bytes</B></FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP" BGCOLOR="#000080">
+<B><FONT FACE="Arial" COLOR="#ffffff"><P>Description</B></FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP" HEIGHT=32>
+<FONT FACE="Arial"><P>0</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP" HEIGHT=32>
+<FONT FACE="Arial"><P>1</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP" HEIGHT=32>
+<FONT FACE="Arial"><P>Size of archived file header (h)</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>1</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>1</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>1 byte&#9;Header checksum</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>2</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>5</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<P>Method ID</TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>7</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>4</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Compressed file size Refered to as C in subsequent fields.  As there are no extended headers in level 0 format archive headers, this value represents the size of the file data only.</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>11</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>4</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Uncompressed file size</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>15</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>4</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Original file date/time (</FONT><B>Generic time stamp</B><FONT FACE="Arial">)</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>19</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>1</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>File or directory attribute</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>20</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>1</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Level identifier (0x00)  Programmers should only read the first 21 bytes of the header before taking further action</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>21</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>1</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Length of filename in bytes (Refered to as N in subsequent fields</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>22</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>N</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Path and Filename</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>22+N</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>2</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>16 bit CRC of the uncompressed file</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>24+N</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>C</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Compressed file data</FONT></TD>
+</TR>
+</TABLE>
+
+<FONT FACE="Arial">
+<P>&nbsp;</P>
+<P>&nbsp;</P>
+<P>&nbsp;</P>
+<B><I><P><A NAME="_Toc438218103">Level 1 header structure</A></P>
+</B></I></FONT>
+<TABLE BORDER CELLSPACING=1 BORDERCOLOR="#000080" CELLPADDING=7 WIDTH=624>
+<TR><TD WIDTH="14%" VALIGN="TOP" BGCOLOR="#000080">
+<B><FONT FACE="Arial" COLOR="#ffffff"><P>Offset</B></FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP" BGCOLOR="#000080">
+<B><FONT FACE="Arial" COLOR="#ffffff"><P>Size in bytes</B></FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP" BGCOLOR="#000080">
+<B><FONT FACE="Arial" COLOR="#ffffff"><P>Description</B></FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP" HEIGHT=32>
+<FONT FACE="Arial"><P>0</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP" HEIGHT=32>
+<FONT FACE="Arial"><P>1</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP" HEIGHT=32>
+<FONT FACE="Arial"><P>Size of archived file header (h)</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>1</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>1</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>1 byte&#9;Header checksum</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>2</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>5</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<P>Method ID</TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>7</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>4</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Compressed file size Refered to as C in subsequent fields<BR>
+Note: Compressed size includes the size of all </FONT>Extended headers<FONT FACE="Arial"> for the file.</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>11</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>4</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Uncompressed file size </FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>15</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>4</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Original file date/time (</FONT><B>Generic time stamp</B><FONT FACE="Arial">)</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>19</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>1</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>File or directory attribute</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>20</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>1</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Level identifier (0x00)  Programmers should only read the first 21 bytes of the header before taking further action</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>21</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>1</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Length of filename in bytes (Refered to as N in subsequent fields</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>22</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>N</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Path and Filename</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>22+N</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>2</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>16 bit CRC of the uncompressed file</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>24+N</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>1</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Operating System identifier. See </FONT>OS ID<FONT FACE="Arial"> chart</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>25+N</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>2</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Next Header size </FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>27+N</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>3 or more bytes</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Extended headers (</P>
+<P>Note: Extended headers are optional, and have no preset maximum.  The first byte of an extended header identifies the type of header, and the last 2 bytes of the header identify whether or not more headers are defined.  Huffman Compression Engine will use the extended header filename if both exist in level 1 archives.</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>C</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Compressed file data</FONT></TD>
+</TR>
+</TABLE>
+
+<FONT FACE="Arial">
+<P>&nbsp;</P>
+<P>&nbsp;</P>
+<B><I><P><A NAME="_Toc438218104">Level 2 header structure</A></P></B></I></FONT>
+<TABLE BORDER CELLSPACING=1 BORDERCOLOR="#000080" CELLPADDING=7 WIDTH=624>
+<TR><TD WIDTH="14%" VALIGN="TOP" BGCOLOR="#000080">
+<B><FONT FACE="Arial" COLOR="#ffffff"><P>Offset</B></FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP" BGCOLOR="#000080">
+<B><FONT FACE="Arial" COLOR="#ffffff"><P>Size in bytes</B></FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP" BGCOLOR="#000080">
+<B><FONT FACE="Arial" COLOR="#ffffff"><P>Description</B></FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>1</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>2</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Total size of headers, including Extended headers for this entry.<BR>
+This field is unimportant as long as the extended headers are looped appropriately.  For compatibility with other archivers however, a variable should be assigned to add up the size of each extended header.</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>2</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>5</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<P>Method ID</TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>7</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>4</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Compressed file size Referred to as C in subsequent fields</P>
+<P>This value excludes the size of all </FONT>Extended headers<FONT FACE="Arial"> and only refers to the actual compressed data.  This is an improvement, and can be problematic if not handled properly.</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>11</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>4</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Uncompressed file size </FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>15</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>4</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Original file date/time (</FONT><B>Generic time stamp</B><FONT FACE="Arial">)</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>19</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>1</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>File or directory attribute. Not supported in all compression utilities.</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>20</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>1</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Level identifier (0x00)  Programmers should only read the first 21 bytes of the header before taking further action</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>21</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>2</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>16 bit CRC of the uncompressed file</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>23</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>1</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Operating System identifier. See </FONT>OS ID<FONT FACE="Arial"> chart</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>24</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>2</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Next Header size </FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">
+<FONT FACE="Arial"><P>26</FONT></TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>3 or more bytes</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Extended headers (</P>
+<P>Note: Extended headers are not optional, and have no preset maximum.  Minimum compatibility should include a type1 extended header.</P>
+<P>The first byte of an extended header identifies the type of header, and the last 2 bytes of the header identify whether or not more headers are defined.  Huffman Compression Engine will use the extended header filename if both exist in level 1 archives.  Your loop for reading of these headers should include offset 24 for the first assignment and loop until extended header size = 0.</FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="11%" VALIGN="TOP">
+<FONT FACE="Arial"><P>C</FONT></TD>
+<TD WIDTH="75%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Compressed file data</FONT></TD>
+</TR>
+</TABLE>
+
+<FONT FACE="Arial">
+<P>&nbsp;</P>
+<B><I><P><A NAME="_Ref437432291"><A NAME="_Ref437432331"><A NAME="_Toc438218105">Extended headers</A></A></A></P>
+</B></I><P>Unspecified size fields are intentionally left blank.</P></FONT>
+<TABLE BORDER CELLSPACING=1 BORDERCOLOR="#000080" CELLPADDING=7 WIDTH=624>
+<TR><TD WIDTH="13%" VALIGN="TOP" BGCOLOR="#000080">
+<B><FONT FACE="Arial" COLOR="#ffffff"><P>ID</B></FONT></TD>
+<TD WIDTH="8%" VALIGN="TOP" BGCOLOR="#000080">
+<B><FONT FACE="Arial" COLOR="#ffffff"><P>Size</B></FONT></TD>
+<TD WIDTH="79%" VALIGN="TOP" BGCOLOR="#000080">
+<B><FONT FACE="Arial" COLOR="#ffffff"><P>Description</B></FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="TOP">
+<FONT FACE="Arial"><P>0x00</FONT></TD>
+<TD WIDTH="8%" VALIGN="TOP">
+<FONT FACE="Arial"><P>2</FONT></TD>
+<TD WIDTH="79%" VALIGN="TOP">
+<FONT FACE="Arial"><P>CRC-16 of header and an optional information byte.</FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="TOP">
+<FONT FACE="Arial"><P>0x01</FONT></TD>
+<TD WIDTH="8%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="79%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Filename</FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="TOP">
+<FONT FACE="Arial"><P>0x02</FONT></TD>
+<TD WIDTH="8%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="79%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Directory name</FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="TOP">
+<FONT FACE="Arial"><P>0x39</FONT></TD>
+<TD WIDTH="8%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="79%" VALIGN="TOP">
+<P>0x39 Multi-disk field</TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="TOP">
+<FONT FACE="Arial"><P>0x3f</FONT></TD>
+<TD WIDTH="8%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="79%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Uncompressed file comment.</FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="TOP">
+<I><FONT FACE="Arial"><P>0x48</P>
+<P>0x4f</I></FONT></TD>
+<TD WIDTH="8%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="79%" VALIGN="TOP">
+<I><FONT FACE="Arial"><P>Reserved for Authenticity verification</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="8%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="79%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="8%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="79%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="8%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="79%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="8%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="79%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="TOP">
+<FONT FACE="Arial"><P>0x5?</FONT></TD>
+<TD WIDTH="8%" VALIGN="TOP">
+<FONT FACE="Arial"><P>2<BR>
+1</FONT></TD>
+<TD WIDTH="79%" VALIGN="TOP">
+<FONT FACE="Arial"><P>UNIX related information.</P>
+<P>Optional information byte</FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="TOP">
+<FONT FACE="Arial"><P>0x50</FONT></TD>
+<TD WIDTH="8%" VALIGN="TOP">
+<FONT FACE="Arial"><P>2</FONT></TD>
+<TD WIDTH="79%" VALIGN="TOP">
+<FONT FACE="Arial"><P>UNIX file permission</FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="TOP">
+<FONT FACE="Arial"><P>0x51</FONT></TD>
+<TD WIDTH="8%" VALIGN="TOP">
+<FONT FACE="Arial"><P>2<BR>
+2</FONT></TD>
+<TD WIDTH="79%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Group ID<BR>
+UserID</FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="TOP">
+<FONT FACE="Arial"><P>0x52</FONT></TD>
+<TD WIDTH="8%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="79%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Group Name</FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="TOP">
+<FONT FACE="Arial"><P>0x53</FONT></TD>
+<TD WIDTH="8%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="79%" VALIGN="TOP">
+<FONT FACE="Arial"><P>User Name</FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="TOP">
+<FONT FACE="Arial"><P>0x54</FONT></TD>
+<TD WIDTH="8%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="79%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Last modified time in UNIX time</FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="8%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="79%" VALIGN="TOP">
+<FONT FACE="Arial">
+<P>&nbsp;</FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="TOP">
+<I><FONT FACE="Arial"><P>0xcn</I></FONT></TD>
+<TD WIDTH="8%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="79%" VALIGN="TOP">
+<I><FONT FACE="Arial"><P>Under development:</P>
+<P>Compressed file comment.  Method -lhn- is assumed</P>
+<P>Compressed comment cannot exceed 64K in size.</P>
+<P>Applicable range for Huffman Compression Engine (4..8)</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="TOP">
+<FONT FACE="Arial"><P>0xdx<BR>
+0xff</FONT></TD>
+<TD WIDTH="8%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="79%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Under development:  Operating system specific header info.  These fields may have different meanings for different platforms.  If the file was not created on the same platform as your own these signatures should be ignored.</FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="TOP">
+<FONT FACE="Arial"><P>0xd1</FONT></TD>
+<TD WIDTH="8%" VALIGN="TOP">&nbsp;</TD>
+<TD WIDTH="79%" VALIGN="TOP">
+<FONT FACE="Arial"><P>Under development</P>
+<P>Autodelete after autorun</FONT></TD>
+</TR>
+</TABLE>
+
+<FONT FACE="Arial">
+<P>&nbsp;</P>
+<B><I><P><A NAME="_Toc438218106">Handling of extended headers.</A></P>
+</B></I>
+<P>Proper procedure for handling of extended headers can be summed up in virtual code:</P>
+
+<P>&nbsp;</P>
+<OL>
+
+<LI>Read the first 21 bytes of the real header to determine the size of the first extended header.  If the </LI>
+<LI>Use the first extended header in the loop that reads subsequent headers</LI>
+<LI>Assign this value to a variable which is used inside the extended header loop</LI>
+<LI>Repeat</LI>
+<LI>Allocate enough memory for the header</LI>
+<LI>Read the header into the array</LI>
+<LI>Assign headersize to a word variable at the last 2 bytes of the array</LI>
+<LI>Goto 3</LI>
+<LI>Handle compressed data if it exists.</LI></OL>
+
+
+<P>Code has not been supplied intentionally.  It is expected that the programmer reading this document has enough knowledge of programming to perform the task of writing real code.</P>
+
+<P>&nbsp;</P>
+<B><I><P><A NAME="_Ref437430773"><A NAME="_Toc438218107">Method ID</A></A> </P></B></I></FONT>
+<TABLE BORDER CELLSPACING=1 BORDERCOLOR="#000080" WIDTH=624>
+<TR><TD WIDTH="13%" VALIGN="MIDDLE" BGCOLOR="#000080">
+<FONT FACE="Arial"><P>Signature</FONT></TD>
+<TD WIDTH="88%" VALIGN="MIDDLE" BGCOLOR="#000080">
+<FONT FACE="Arial"><P>Description</FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>-lh0-</FONT></CODE></TD>
+<TD WIDTH="88%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>No compression</FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>-lzs-</FONT></CODE></TD>
+<TD WIDTH="88%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>2k sliding dictionary(max 17 bytes) </FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>-lz4-</FONT></CODE></TD>
+<TD WIDTH="88%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>No compression </FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>-lh1-</FONT></CODE></TD>
+<TD WIDTH="88%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>4k sliding dictionary(max 60 bytes) + dynamic Huffman + fixed encoding of position</FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>-lh2-</FONT></CODE></TD>
+<TD WIDTH="88%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>8k sliding dictionary(max 256 bytes) + dynamic Huffman (Obsoleted) </FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>-lh3-</FONT></CODE></TD>
+<TD WIDTH="88%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>8k sliding dictionary(max 256 bytes) + static Huffman (Obsoleted) This method is not supported by Huffman Compression Engine</FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>-lh4-</FONT></CODE></TD>
+<TD WIDTH="88%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>4k sliding dictionary(max 256 bytes) + static Huffman + improved encoding of position and trees </FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>-lh5-</FONT></CODE></TD>
+<TD WIDTH="88%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>8k sliding dictionary + static Huffman</FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>-lh6-</FONT></CODE></TD>
+<TD WIDTH="88%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>32k sliding dictionary + static Huffman </FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>-lh7-</P>
+<P>-lh8-</FONT></CODE></TD>
+<TD WIDTH="88%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>64k sliding dictionary + static Huffman </P>
+<P>Lh8 has yet to be discovered except in my own utility.  It existed from 0.21d to 0.21M and was actually -lh7- per Harihiko's review of Yoshi's notes.</FONT></TD>
+</TR>
+<TR><TD WIDTH="13%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>"-lhd-"</FONT></CODE></TD>
+<TD WIDTH="88%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>Directory (no compressed data).  This signature may not contain any information at all.  In some cases it only is used to signify that there are extended headers with important information.  In level 0 archives it most likely contains the directory for the next header's file, but in level 1 and 2 headers, it most likely contains nothing except for possibly the size of the first extended header.</FONT></TD>
+</TR>
+</TABLE>
+
+<FONT FACE="Arial">
+<P>Huffman Compression Engine II dynamically sets the method for compression based on the file size.  Reasoning: It makes little sense to use a 64KB buffer if the file is 1K.  The next section covers variances, which basically define what to do in known cases where the file signature does not match the dictionary size.</P>
+
+<P>&nbsp;</P>
+<B><I><P><A NAME="_Toc438218108">Variances</A></P>
+</B></I><P><A NAME="_Toc438218109">Huffman Compression Engine II</A></P>
+<P>Versions after 0.21M now dynamically size the dictionary buffer according to the size of the file to be compressed.  It is not uncommon to have signatures of -lh4- thru -lh7-.  <I>A future implementation will include -lh9- through -lhc- and -lhe-, which represent dictionary sizes of 128KB through 2MB</I>. -lhd- is skipped due to the fact that it is a reserved signature.  During 0.21, a misunderstanding about the method identifier lead me to think that a 64KB buffer was -lh8-.  Although logic dictated that it should be, 16KB dictionaries were bypassed entirely, which lead to this confusion.  In order to simplify the problem, decode should use 64KB for -lh6- through -lh8-.</P>
+<P>&nbsp;</P>
+<B><I><P><A NAME="_Ref437431257"><A NAME="_Toc438218110">Generic time stamp</A></A></P>
+</B></I><P> 31 30 29 28 27 26 25 24 23 22 21 20 19 18 17 16</P>
+<P>|&lt;-------- year -------&gt;|&lt;- month -&gt;|&lt;-- day --&gt;|</P>
+
+<P> 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0</P>
+<P>|&lt;--- hour ---&gt;|&lt;---- minute ---&gt;|&lt;- second/2 -&gt;|</P>
+
+<P>Offset   Length   Contents</P>
+<P> 0       8 bits   year     years since 1980</P>
+<P> 8       4 bits   month    [1..12]</P>
+<P>12       4 bits   day      [1..31]</P>
+<P>16       5 bits   hour     [0..23]</P>
+<P>21       6 bits   minite   [0..59]</P>
+<P>27       5 bits   second/2 [0..29]</P>
+
+<P>&nbsp;</P>
+<B><I><P><A NAME="_Ref437431451"><A NAME="_Toc438218111">OS ID</A></A> </P></B></I></FONT>
+<TABLE BORDER CELLSPACING=1 BORDERCOLOR="#000080" WIDTH=216>
+<TR><TD WIDTH="17%" VALIGN="MIDDLE" BGCOLOR="#000080">
+<P><B><FONT FACE="Arial" COLOR="#ffffff"><CODE>'ID</B></FONT></CODE></TD>
+<TD WIDTH="83%" VALIGN="MIDDLE" BGCOLOR="#000080">
+<B><FONT FACE="Arial" COLOR="#ffffff"><P>Platform</B></FONT></TD>
+</TR>
+<TR><TD WIDTH="17%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>M</FONT></CODE></TD>
+<TD WIDTH="83%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P> MS-Dos</FONT></TD>
+</TR>
+<TR><TD WIDTH="17%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>'2'</FONT></CODE></TD>
+<TD WIDTH="83%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>OS/2 </FONT></TD>
+</TR>
+<TR><TD WIDTH="17%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>'9'</FONT></CODE></TD>
+<TD WIDTH="83%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>OS9 </FONT></TD>
+</TR>
+<TR><TD WIDTH="17%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>'K'</FONT></CODE></TD>
+<TD WIDTH="83%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>OS/68K </FONT></TD>
+</TR>
+<TR><TD WIDTH="17%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>'3'</FONT></CODE></TD>
+<TD WIDTH="83%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>OS/386 </FONT></TD>
+</TR>
+<TR><TD WIDTH="17%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>'H'</FONT></CODE></TD>
+<TD WIDTH="83%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>HUMAN </FONT></TD>
+</TR>
+<TR><TD WIDTH="17%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>'U'</FONT></CODE></TD>
+<TD WIDTH="83%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>UNIX </FONT></TD>
+</TR>
+<TR><TD WIDTH="17%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>'C'</FONT></CODE></TD>
+<TD WIDTH="83%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>CP/M </FONT></TD>
+</TR>
+<TR><TD WIDTH="17%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>'F'</FONT></CODE></TD>
+<TD WIDTH="83%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>FLEX </FONT></TD>
+</TR>
+<TR><TD WIDTH="17%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>'m'</FONT></CODE></TD>
+<TD WIDTH="83%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>Mac </FONT></TD>
+</TR>
+<TR><TD WIDTH="17%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>'w'</FONT></CODE></TD>
+<TD WIDTH="83%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>Windows 95, 98</FONT></TD>
+</TR>
+<TR><TD WIDTH="17%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>'W'</FONT></CODE></TD>
+<TD WIDTH="83%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>Windows NT</FONT></TD>
+</TR>
+<TR><TD WIDTH="17%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><CODE><P>'R'</FONT></CODE></TD>
+<TD WIDTH="83%" VALIGN="MIDDLE">
+<FONT FACE="Arial"><P>Runser </FONT></TD>
+</TR>
+</TABLE>
+
+<FONT FACE="Arial">
+<P>&nbsp;</P>
+<P>&nbsp;</P>
+</FONT><B><FONT FACE="Arial" SIZE=4><P><A NAME="_Toc438218112">Links to other LHA utilities and compression references:</A></P>
+</B></FONT><FONT FACE="Arial"><P>The following hyperlinks are visible in word97.  If you cannot see these links, you may also jump on the internet to </FONT><A HREF="http://www.webworldinc.com/joejared/lzhformat.htm">http://www.webworldinc.com/joejared/lzhformat.htm</A><FONT FACE="Arial"> to see them in your favorite browser.</P>
+</FONT><P><A HREF="http://www.clione.ne.jp/lha/">LHA World by Dr. Haruyasu Yoshizaki</A></P>
+<P><A HREF="http://www.bekkoame.or.jp/~h_ozawa/lha.html">LHA Page</A></P>
+<P><A HREF="http://www2m.meshnet.or.jp/~dolphin/index.htm">Dolphin's Home Page</A><FONT FACE="Arial"> The author, Tsugio Okamoto, maintains "Lha for Unix."</P>
+<P>If you are interested in how LHA works, its </FONT><A HREF="http://www2m.meshnet.or.jp/~dolphin/lha/prog/">source code</A><FONT FACE="Arial"> is a very good place to start.</P>
+<P>This site includes useful info like LHA header specs, in Japanese.</P>
+</FONT><P><A HREF="http://infonet.aist-nara.ac.jp/~tsuneo-y/soft/lha/lha-114d.ty.html">Lha for UNIX patch</A><FONT FACE="Arial"> by Yoshioka Tsuneo.</P>
+</FONT><P><A HREF="http://www.vector.co.jp/authors/VA008909/">MacLHA</A><FONT FACE="Arial"> for Macintosh systems.</P>
+</FONT><P><A HREF="http://www.netmaj.com/">Network Mahjong International</A><FONT FACE="Arial">  (LHA in Java)</P>
+</FONT><P><A HREF="http://www2.nsknet.or.jp/~micco/micindex.html">Micco's HomePage</A><FONT FACE="Arial"> (UNLHA32.DLL UNARJ32.DLL LHMelt)</P>
+</FONT><P><A HREF="http://www.matsusaka-u.ac.jp/~okumura/compression.html">Haruhiko Okumura's Compression Pointers</A><FONT FACE="Arial">. Haruhiko Okumura is the original designer of the lha compression algorithm.</P>
+<P>Compatibility with the above links can only be guessed at this point, as few lha style compressors support anything above -lh5-.  However, if your interest is in maintaining compatibility with these other platforms, -K5 added to the command line during compression will force compatibility with these compression utilities.  </P>
+
+<P>&nbsp;</P>
+<P>&nbsp;</P>
+</FONT><B><FONT FACE="Arial" SIZE=4><P>&nbsp;</P>
+<P><A NAME="_Ref437709015"><A NAME="_Toc438218113">0x39 Multi-disk field</A></A></P>
+</B></FONT><P>&nbsp;</P>
+<FONT FACE="Arial" SIZE=3><P>The following is a planned implementation.  The original can be found at:</P>
+</FONT><P><A HREF="http://www.creative.net/~aeco/jp/lzhspc01.html"><FONT FACE="Arial" SIZE=3>http://www.creative.net/~aeco/jp/lzhspc01.html</FONT></A></P>
+<FONT FACE="Arial" SIZE=3><P>&nbsp;</P>
+<P>struct MDF {</P>
+<P>&#9;byte span_mode;</P>
+<P>&#9;long beginning_offset;</P>
+<P>&#9;long size_of_run;</P>
+<P>&#9;}</P>
+<P>&nbsp;</P>
+<P>      span_mode: This identifies the mode of this segment of file. The values are:</P>
+<P>      #define SPAN_COMPLETE 0</P>
+<P>      #define SPAN_MORE 1</P>
+<P>      #define SPAN_LAST 2</P>
+<P>&nbsp;</P>
+</FONT><B><I><FONT FACE="Arial"><P><A NAME="_Toc438218114">SPAN_COMPLETE.</A> </P>
+</B></I></FONT><FONT FACE="Arial" SIZE=3><P>This specifies that the information following this header contains a complete (optionally compressed) file. This is often unused because MDF is not needed in these cases. In an unsplit file, the header information and format should follow the standard LZH format.</P>
+<P>&nbsp;</P>
+</FONT><B><I><FONT FACE="Arial"><P><A NAME="_Toc438218115">SPAN_MORE.</A> </P>
+</B></I></FONT><FONT FACE="Arial" SIZE=3><P>This specifies that the information following this header is incomplete. The uncompressor needs to concatenate this segment with</P>
+<P>      information from the following volume. It should continue to do that until it sees a volume with a header information that contains span_mode</P>
+</FONT><B><I><FONT FACE="Arial"><P><A NAME="_Toc438218116">SPAN_LAST</A></P>
+</B></I></FONT><FONT FACE="Arial" SIZE=3><P>This specifies that the information following this header is the last segment of the (optionally compressed) file.</P>
+</FONT><B><I><FONT FACE="Arial"><P>beginning_offset</B></I></FONT><FONT FACE="Arial" SIZE=3>:</P>
+<P>This value specifies the location in bytes of where this segment (run) of information will fit into.</P>
+<P>&nbsp;</P>
+</FONT><B><I><FONT FACE="Arial"><P><A NAME="_Toc438218117">size_of_run</A></P>
+</B></I></FONT><FONT FACE="Arial" SIZE=3><P>This is the size of this segment of information.</P>
+<P>&nbsp;</P>
+</FONT><B><I><FONT FACE="Arial"><P><A NAME="_Toc438218118">span_mode:</A> </P>
+</B></I></FONT><FONT FACE="Arial" SIZE=3><P>This identifies the mode of this segment of file. The values are:</P>
+<P>      #define SPAN_COMPLETE 0</P>
+<P>      #define SPAN_MORE 1</P>
+<P>      #define SPAN_LAST 2</P>
+<P>&nbsp;</P>
+<P>SPAN_COMPLETE. This specifies that the information following this header contains a complete (optionally compressed) file. This is often unused</P>
+<P>      because MDF is not needed in these cases. In an unsplit file, the header information and format should follow the standard LZH format.</P>
+<P>&nbsp;</P>
+<P>      SPAN_MORE. This specifies that the information following this header is incomplete. The uncompressor needs to concatenate this segment with</P>
+<P>      information from the following volume. It should continue to do that until it sees a volume with a header information that contains span_mode</P>
+<P>      SPAN_LAST.</P>
+<P>&nbsp;</P>
+<P>      SPAN_LAST. This specifies that the information following this header is the last segment of the (optionally compressed) file.</P>
+<P>&nbsp;</P>
+<P>&nbsp;</P>
+<P>      beginning_offset: This value specifies the location in bytes of where this segment (run) of information will fit into.</P>
+<P>&nbsp;</P>
+<P>      size_of_run: This is the size of this segment of information.</P>
+<P>&nbsp;</P>
+<P>&nbsp;</P>
+<P>&nbsp;</P>
+<P>      The illustration below contain two volumes with two compressed files, one of them split between the two volumes. "File 1" is compressed and fits</P>
+<P>      within the first volume. "File 2" is a file 100 bytes long compressed to 90 bytes. The first 50 bytes of which resides on the first volume and the</P>
+<P>      last 40 bytes on the next.</P>
+
+</FONT><PRE>      Volume 1
+      +--------------+
+      | +----------+ |
+      | |LZH header| | &lt;- MDF not needed
+      | +----------+ | &lt;- header unchanged from non-spanned versions of LZH
+      | | File 1   | |
+      | |          | |
+      | |          | |
+      | +----------+ |
+      |              |
+      | +----------+ | &lt;- span_mode = SPAN_MORE
+      | |LZH header| | &lt;- beginning_offset = 0
+      | +----------+ | &lt;- size_of_run = 50
+      | | File 2   | |
+      | | split    | |
+      | |          | |
+      +--------------+
+
+      Volume 2
+      +--------------+
+      | +----------+ | &lt;- span_mode = SPAN_LAST
+      | |LZH header| | &lt;- beginning_offset = 50
+      | +----------+ | &lt;- size_of_run = 40
+      | | File 2   | |
+      | |          | |
+      | |          | |
+      | |          | |
+      | +----------+ |
+      | +----------+ |
+      | | [0]      | | &lt;- end of volumes, a byte with value zero (0)
+      | +----------+ |
+      +--------------+
+
+</PRE>
+<B><I><FONT FACE="Arial"><P><A NAME="_Toc438218119">Termination</A></P>
+</B></I></FONT><FONT FACE="Arial" SIZE=3><P>      -----------</P>
+<P>In addition to the above changes, the compressor must before closing the file after writing the last volume, write a null byte at the end of the file. This byte serves to inform the decompressor that this is the last volume and no other comes after it.</P>
+<P>&nbsp;</P>
+<P>This end of volume byte is needed to tell the decompressor when to stop prompting for the next volume.  This termination byte is optional, as the decompressor may also stop when it has completed a file, i.e., see SPAN_LAST or just a regular file with</P>
+<P>      MDF. However if the end of this completed file coincides with an end of volume, there would be not way for the compressor detect that the following</P>
+<P>      volumes and prompt for them.</P>
+<P>      This termination byte is a way around this potential bug.</P>
+<P>&nbsp;</P>
+<P>      Note that this null byte coincides with header_size in the LZH header.</P>
+<P>&nbsp;</P>
+<P>      Pseudo code for a sample implementation</P>
+<P>      ---------------------------------------</P>
+<P>&nbsp;</P>
+<P>      boolean spanned = false;</P>
+<P>      while(file_available()) {</P>
+<P>      compress file();</P>
+<P>      if(size_of_compressed_file &gt; available_space()) {</P>
+<P>&nbsp;</P>
+<P>        while(size_of_compressed_file) {</P>
+<P>          size_to_write = available_space();</P>
+<P>&nbsp;</P>
+<P>          construct_header_with_MDF(size_to_write);</P>
+<P>          write_header();</P>
+<P>          write_data(size_to_write);</P>
+<P>&nbsp;</P>
+<P>          size_of_compressed_file -= size_to_write;</P>
+<P>&nbsp;</P>
+<P>          prompt_for_next_volume();</P>
+<P>&nbsp;</P>
+<P>          spanned = true;</P>
+<P>          }</P>
+<P>        }</P>
+<P>      else {</P>
+<P>        construct_header_without_MDF(size_of_compressed_file);</P>
+<P>        write_header();</P>
+<P>        write_data(size_of_compressed_file);</P>
+<P>        }</P>
+<P>      }</P>
+<P>      if(spanned)</P>
+<P>      write_null_byte();</P>
+<P>&nbsp;</P>
+<P>       </P>
+<P>&nbsp;</P>
+<P>      Author’s address:</P>
+<P>      Aeco Systems</P>
+<P>      826 28th Avenue</P>
+<P>      San Francisco, CA 94121</P>
+<P>&nbsp;</P>
+<P>      Phone: (415) 221-7806</P>
+<P>      EMail: aeco@creative.net</P>
+<P>&nbsp;</P>
+<P>&nbsp;</P>
+<P> </P>
+<P>&nbsp;</P>
+<P> </P>
+</FONT></BODY>
+</HTML>

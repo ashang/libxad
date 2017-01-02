@@ -1,0 +1,7 @@
+section 6 of 6 of file allbytes FILE HEADER
+
+?X>+CY.7FY^CIZNOL[>[O\/'R\_3U]O?X^?K[_/W^_P``0
+``
+end
+sum -r/size 59992/54 section (from first encoded line to "end")
+sum -r/size 512/256 entire input file

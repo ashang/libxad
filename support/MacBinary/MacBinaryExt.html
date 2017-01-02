@@ -1,0 +1,296 @@
+<html>
+<head>
+<title>Mac Binary format</title>
+</head>
+<body bgcolor="#ffffff">
+
+<center>
+<h1>MacBinary format</h1>
+Originally by Peter Olson<p>
+Compiled by <a href="../">Paul Bourke</a><p>
+November 1990</center>
+<p><hr><p>
+
+<b>Introduction</b><p>
+<p align="justify">
+MacBinary is a binary (non-text) format that encodes Macintosh files so that they can be safely stored or transfered through non-Macintosh systems.  MacBinary combines the two forks of a Mac file, together with the file information (Name, Creator Application, File Type, etc) into a single binary data stream, suitable for storage on non-Mac systems.  This serves a simmilar purpose to BinHex, except that BinHex takes things even further and stores the file using only text characters, so that the file will be preserved on almost any system, and can be sent through Email or USENET News without loss or corruption.
+</p>
+
+<p align="justify">
+MacBinary II is the current standard for the MacBinary format.  I have further extended the format to allow the encoding of folder hierarchies into a single MacBinary II+ file.  But be warned, currently no one else implements this extension, and it may well be that no one else ever will, so the only program you can use to decode folders stored in MacBinary II+ format is this one.  Note that this does not affect files stored in MacBinary II format, since files use the MacBinary II format without the new extensions, so any MacBinary decoder should work happily.
+</p>
+
+<b>Specification</b><p>
+<p align="justify">
+This is a priliminary specification of an extension to the MacBinary II 
+Standard to allow MacBinary to incorporate a directory tree in a similar 
+way to a unix tar file.  This is done by a fairly simple extension to 
+the standard (which is documented seperately, and which you should be 
+familiar with before reading this), basically, I defined a 128 byte 
+block that marks the start of a folder, and another one that marks the 
+end of the folder, and then set it up like this:
+</p>
+<pre>
+start block for folder "Folder1"
+  file1 - standard macbinary format
+  file2
+  start block for "Folder2"
+    file3
+  end block
+end block
+</pre>
+
+<p align="justify">
+While the end block doesn't actually need to contain any information, its 
+format is similar to the header block for consistency.
+</p>
+
+<b>Start Block:</b><p>
+<pre>
+  Offset 000-version 1 - this is incomptible with previous decoders.
+  Offset 001-Byte, Length of foldername (must be in the range 1-63)
+  Offset 002-1 to 63 chars, foldername (only "length" bytes are significant, 
+             the rest should be zero).
+  Offset 065-Long Word, file type - 'fold'
+  Offset 069-Long Word, file creator - $FFFFFFFF
+  Offset 073-Byte, original Finder flags of folder (high byte)
+  Offset 074-Byte, zero fill, must be zero for compatibility
+  Offset 075-Word, folder's vertical position within its window.
+  Offset 077-Word, folder's horizontal position within its window.
+  Offset 079-Word, folder's window or folder ID.
+  Offset 081-Byte, "Protected" flag (in low order bit).
+  Offset 082-Byte, zero fill, must be zero for compatibility
+  Offset 083-Long Word, Data Fork length 0
+  Offset 087-Long Word, Resource Fork length 0
+  Offset 091-Long Word, Folder's creation date
+  Offset 095-Long Word, Folder's "last modified" date.
+  Offset 099-Word, length of Get Info comment to be sent after the resource
+             fork (if implemented, see below).
+ *Offset 101-Byte, Finder Flags, bits 0-7. (Bits 8-15 are already in byte 73)
+ *Offset 116-Long Word, Length of total files when packed files are unpacked.
+             This may be zero to avoid having to preparse the folder when
+             creating the MacBinary file.
+ *Offset 120-Word, Length of a secondary header.  If this is non-zero,
+             Skip this many bytes (rounded up to the next multiple of 128)
+             This is for future expansion only, when sending files with
+             MacBinary, this word should be zero.
+ *Offset 122-Byte, Version number of Macbinary II - 130
+ *Offset 123-Byte, Minimum MacBinary II version needed to read this file - 130
+ *Offset 124-Word, CRC of previous 124 bytes
+</pre>
+
+<b>Notes</b><p>
+<ul>
+<li><p align="justify">
+The secondary header length MAY be non-zero, and if so, the secondary 
+header immediately follows the Start Block, padded to a multiple of 128 bytes 
+as usual.
+</p>
+<li><p align="justify">
+The comment length MAY be non-zero, and if so, the comment immediately 
+follows the Start Block or secondary header, padded to a multiple of 128 
+bytes as usual.
+</p>
+</ul>
+
+<b>End Block:</b><p>
+<pre>
+  Offset 000-version 1 - this is incomptible with previous decoders.
+  Offset 065-Long Word, file type - 'fold'
+  Offset 069-Long Word, file creator - $FFFFFFFE
+ *Offset 116-Long Word, Length of total files when packed files are unpacked.
+             This may be zero.
+ *Offset 120-Word, Length of a secondary header.  If this is non-zero,
+             Skip this many bytes (rounded up to the next multiple of 128)
+             This is for future expansion only, when sending files with
+             MacBinary, this word should be zero.
+ *Offset 122-Byte, Version number of Macbinary II - 130
+ *Offset 123-Byte, Minimum MacBinary II version needed to read this file - 130
+ *Offset 124-Word, CRC of previous 124 bytes
+</pre>
+
+<p align="justify"> 
+<b>Note</b><br>
+This block is static except for the total length field, which may be 
+zero as well, in which case its totally static.
+</p>
+
+<p align="justify">
+You should recognize the Start and End blocks by the version, file type and 
+creator fields.  Decoders MUST NOT rely on ANY other fields in the End Block 
+being valid.  Encoders MAY fill them out to look like a start block, or may 
+zero-fill them.  Encoders SHOULD zero-fill any bytes not explicitly set - 
+this applies to all header blocks and all padding.
+</p>
+
+All internal files should have version 0, MacBinary II version 129,129.
+<p>
+
+An extended MacBinary file MUST start with a Start Block.  Thus a 
+MacBinary II+ file is either:
+<br>
+1) A MacBinary II file encoding a single file, OR
+<br>
+2) A MacBinary II+ file encoding a single folder.
+<p>
+
+<p><hr><p>
+
+<h3>Revised standard</h3>
+
+<p align="justify">
+These are the new changes to the MacBinary Standard, as generally agreed
+upon in the MacBinary II Conference 6/21/87, and as changed in the followup
+conference 6/28/87.  Revised 7/24/87 to reflect suggestions and clarifications
+that came later, and to include all necessary information needed from the
+original MacBinary standard document to implement MacBinary II.
+</p>
+
+<p align="justify"> 
+The new standard will be very similar to the original MacBinary standard as
+described in [MacBinary Standard].  (Reading the original standard is
+recommended for a full understanding of implementation and philosophy
+behind the MacBinary I and II formats.)  The binary format consists of a
+128-byte header containing all the information necessary to reproduce the
+document's directory entry on the receiving Macintosh; followed by the
+document's Data Fork (if it has one), padded with nulls to a multiple of
+128 bytes (if necessary); followed by the document's Resource Fork (again, 
+padded if necessary). The lengths of these forks (either or both of which
+may be zero) are contained in the header.
+</p>
+
+<b>Header format</b><p>
+<pre>
+  Offset 000-Byte, old version number, must be kept at zero for compatibility
+  Offset 001-Byte, Length of filename (must be in the range 1-63)
+  Offset 002-1 to 63 chars, filename (only "length" bytes are significant).
+  Offset 065-Long Word, file type (normally expressed as four characters)
+  Offset 069-Long Word, file creator (normally expressed as four characters)
+  Offset 073-Byte, original Finder flags
+                                 Bit 7 - Locked.
+                                 Bit 6 - Invisible.
+                                 Bit 5 - Bundle.
+                                 Bit 4 - System.
+                                 Bit 3 - Bozo.
+                                 Bit 2 - Busy.
+                                 Bit 1 - Changed.
+                                 Bit 0 - Inited.
+  Offset 074-Byte, zero fill, must be zero for compatibility
+  Offset 075-Word, file's vertical position within its window.
+  Offset 077-Word, file's horizontal position within its window.
+  Offset 079-Word, file's window or folder ID.
+  Offset 081-Byte, "Protected" flag (in low order bit).
+  Offset 082-Byte, zero fill, must be zero for compatibility
+  Offset 083-Long Word, Data Fork length (bytes, zero if no Data Fork).
+  Offset 087-Long Word, Resource Fork length (bytes, zero if no R.F.).
+  Offset 091-Long Word, File's creation date
+  Offset 095-Long Word, File's "last modified" date.
+  Offset 099-Word, length of Get Info comment to be sent after the resource
+             fork (if implemented, see below).
+ *Offset 101-Byte, Finder Flags, bits 0-7. (Bits 8-15 are already in byte 73)
+ *Offset 116-Long Word, Length of total files when packed files are unpacked.
+             This is only used by programs that pack and unpack on the fly,
+             mimicing a standalone utility such as PackIt.  A program that is
+             uploading a single file must zero this location when sending a
+             file.  Programs that do not unpack/uncompress files when
+             downloading may ignore this value.
+ *Offset 120-Word, Length of a secondary header.  If this is non-zero,
+             Skip this many bytes (rounded up to the next multiple of 128)
+             This is for future expansion only, when sending files with
+             MacBinary, this word should be zero.
+ *Offset 122-Byte, Version number of Macbinary II that the uploading program
+             is written for (the version begins at 129)
+ *Offset 123-Byte, Minimum MacBinary II version needed to read this file
+             (start this value at 129 129)
+ *Offset 124-Word, CRC of previous 124 bytes
+</pre>
+
+* This is newly defined for MacBinary II.
+<p>
+
+<p align="justify">
+All values are stored in normal 68000 order, with Most Significant Byte
+appearing first then the file.  Any bytes in the header not defined above
+should be set to zero.
+</p>
+
+<p align="justify">
+The original MacBinary format was ammended to include the sending of the FCMT
+(Get Info comment) after the resource fork was sent, if the length for such
+comment, given in offset 99, is not zero.  To the best of our knowledge, no
+program has implemented this feature, due to Apple's stated position that no
+program should read or write these comments.  The definition remains in
+MacBinary II, so that should Apple ever provide a documented way of reading and
+writing these comments, terminal programs will be able to take advantage of
+this feature. 
+</p>
+
+<p align="justify"> 
+All Finder flags and information would be uploaded, however, a downloading
+program should clear the Finder flag bits of<br>
+  0 - Set if file/folder is on the desktop (Finder 5.0 and later)<br>
+  1 - bFOwnAppl (used internally)<bR>
+  8 - Inited (seen by Finder)<br>
+  9 - Changed (used internally by Finder)<br>
+ 10 - Busy (copied from File System busy bit)<br>
+</p>
+
+Also, fdLocation and fdFldr should be zeroed
+<p>
+
+<p align="justify"> 
+To determine if a header is a valid  MacBinary header, check bytes 0 and 74 to
+be both zero.  If they are both zero, either (a) the CRC should match, which
+means it is a MB II file, or (b) byte 82 is zero, which means it may be a MB I
+file.  (Note that, at the current version level, byte 82 is kept zero to
+maintain compatibility with MacBinary I. If at some point the MacBinary
+versions change sufficiently that it is necessary to keep MacBinary I programs
+from downloading these files, we can change byte 82 to non-zero.)
+</p>
+
+<p align="justify">
+If the header is a MB II header, the program will check the minimum version
+byte, to see if it knows enough to decode the file.  If the minimum version in
+the header is greater than the version that the terminal program was written
+for, it will download the file as pure XModem (creating a "TEXT" file) and
+notify the user that conversion is needed because the MacBinary version was too
+high.
+</p>
+
+<p align="justify"> 
+If the header does NOT represent a valid MB II header, the program must at
+minimum check byte 82 to be zero--if it is not zero, the file is not a MB I
+file.  It is possible to write a much more robust routine, by checking the
+following:
+</p>
+<ul>
+<li><p align="justify">
+Offsets 101-125, Byte, should all be 0.
+</p>
+<li><p align="justify">
+Offset 2, Byte, (the length of the file name) should be in the range of 1-63.
+</p>
+<li><p align="justify">
+Offsets 83 and 87, Long Word, (the length of the forks) should be in the
+    range of 0-$007F FFFF.
+</p>
+</ul>
+
+<p align="justify">
+If any of these tests fail, the file is not a valid MacBinary file.  It may
+still be desirable to distinguish between text files and foreign binary files
+(for stripping line feeds or similar helpful acts).  Some tests that would
+prove useful include:
+<ul>
+<li><p align="justify">
+   A quantity of bytes in the first block with the high bit set would point to
+     a binary file (though this could be fooled by files with many extended
+     ascii characters, such as generated by the option key on a Mac).
+</p>
+<li><p align="justify">
+   A large quantity of zero bytes (nulls) would also point to a binary file.
+</p>
+</ul>
+</body>
+</html>
+

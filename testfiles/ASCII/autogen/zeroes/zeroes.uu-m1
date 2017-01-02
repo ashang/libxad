@@ -1,0 +1,7 @@
+section 1 of 6 of file zeroes FILE HEADER
+
+filetime 728019948
+begin 644 zeroes
+M`````````````````````````````````````````````````````````````
+
+sum -r/size 63596/80 section (from "begin" to last encoded line)

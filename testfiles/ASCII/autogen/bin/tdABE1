@@ -1,0 +1,146 @@
+
+/* Tiny ABE 'Ascii-Binary Encoding' Decoder for ABE1 (3 sets, 94 printables)
+   'sort' ALL THE INPUT FILES TOGETHER IF THEY'RE NOT IN ORDER.
+   Try to get the full version of this program from various archives.
+   This program is mainly meant as a temporary version for Unix users.
+   DEFINE THE SYMBOL "msdos" on DOS MACHINES.
+   By Brad Templeton.  This code is released to the public domain.  No
+   warranties are provided or implied. */
+
+
+#include <stdio.h>
+#include <fcntl.h>		/* to get the MSDOS O_BINARY symbol only */
+
+#define OUR_VERSION 1000
+#define MAX_LLEN 80		/* max output line len */
+#define NSETS 3			/* number of character sets */
+#define NPRINTS 86		/* number of printable characters */
+#define FPRINT '%'		/* first printable character used */
+#define LPRINT 'z'		/* last printable */
+#define SETXX '!'
+#define NEWSET1 '{'
+#define SET10X '}'
+#define SFBYTE 31
+#define NUM_SAFE 64
+#define CSUM_MOD 65536
+
+/* header characters */
+#define CODE_HEAD '"'
+#define MAIN_HEAD '#'
+
+long line_num;
+long expected_sum = 0;
+extern long atol();
+int whatbyte[NSETS][NPRINTS];	/* array maps printables to bytes */
+char linbuf[MAX_LLEN];		/* input line */
+
+main()
+{
+	int i, c, len;
+	int sum;
+	int setby, by;
+	char ltype;
+
+	line_num = 1;
+#ifdef msdos
+	setmode( 1, O_BINARY );		/* make stdout binary on DOS */
+#endif
+
+	while( fgets( linbuf, MAX_LLEN, stdin ) ){
+		if( linbuf[0] >= 'T' && linbuf[0] <= 'Z' ) {
+			ltype = linbuf[4] == linbuf[5] ? linbuf[4] : 0;
+			len = strlen(linbuf);
+			if( linbuf[len-1] == '\n' )
+				linbuf[--len] = 0;
+			 else
+				continue;	/* line too long */
+			sum = 0;
+			for( i = 4; i < len; i++ )
+				sum += linbuf[i];
+			/* bad checksum, not a line for us */
+			if( (sum % NUM_SAFE) != lnconv(linbuf[3]) )
+				continue;
+			if( ( (long)(lnconv(linbuf[0])-SFBYTE)*NUM_SAFE+
+					lnconv(linbuf[1]))*NUM_SAFE +
+					lnconv(linbuf[2]) != line_num++ )
+				bomb_out("Sequence");
+			if( ltype == MAIN_HEAD ) {
+				if( linbuf[6] == 'S' ) {
+					int ver;
+					ver = atoi(linbuf+7);
+					if( ver > OUR_VERSION || ver < 1000 )
+						bomb_out( "Version number" );
+					if(strcmp(linbuf+len-5,",ABE1") != 0 )
+						bomb_out("Bad Encoding Style");
+					}
+				 else
+					if( expected_sum != atol(linbuf+7) )
+						bomb_out( "Checksum" );
+				}
+			else if( ltype == CODE_HEAD ) { /* encoding map */
+				reduce( linbuf+6 );
+				for( i = 0; i < 8; i++ ) {
+					setby = linbuf[7+4+i*5];
+					for( by = 3; by >= 0; by-- ) {
+						whatbyte[setby%3][linbuf[7+i*5	
+							+by]] = linbuf[6]*32+i*4
+							+by;
+						setby /= NSETS;
+						}
+					}
+				}
+			else if( !ltype || (ltype>=FPRINT && ltype<=LPRINT)) {
+				/* decode a line */
+				reduce( linbuf+4 );
+				expected_sum = (expected_sum + sum) % CSUM_MOD;
+				for( i = 4; i < len; i++ )
+				  switch(c = linbuf[i] + FPRINT){
+				    case NEWSET1:
+				    case NEWSET1+1:
+					putchar(whatbyte[1+c-NEWSET1]
+							[linbuf[++i]]);
+					break;
+				    case SETXX:
+				    case SETXX+1:
+				    case SETXX+2:
+				    case SETXX+3:
+					putchar(whatbyte[1+(c-SETXX)/2]
+							[linbuf[++i]]);
+					putchar(whatbyte[1+(c-SETXX)%2]
+							[linbuf[++i]]);
+					break;
+				    case SET10X:
+				    case SET10X+1:
+					putchar(whatbyte[1][linbuf[++i]]);
+					putchar(whatbyte[0][linbuf[++i]]);
+					putchar(whatbyte[1+c-SET10X]
+							[linbuf[++i]]);
+					break;
+				    default:
+					putchar(whatbyte[0][c-FPRINT]);
+					break;
+					}
+				}
+			}
+		}
+
+}
+/* reduce elements of string to numbers from 0 to NPRINTS-1 */
+reduce(str)
+char *str;
+{
+	while( *str )
+		*str++ -= FPRINT;
+}
+bomb_out(err)
+char *err;
+{
+	fprintf( stderr, "Decode aborted - %s error, Line: %3.3s\n",err,linbuf);
+	fprintf(stderr, "Try to sort file or get the advanced DABE decoder.\n");
+	exit(1);
+}
+lnconv( n )		/* convert line number and checksum chars to ints */
+int n;
+{
+	return n - (n > '9' ? (n > 'Z' ? 'a'-38 : 'A'-12) : '.');
+}

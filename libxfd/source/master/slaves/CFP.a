@@ -1,0 +1,210 @@
+*****************************************************************************
+*   $Id: CFP.a,v 1.2 2005/06/23 14:39:16 stoecker Exp $
+*   CFP decrunching slave
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+
+S_CFP135
+		IFND	XFD_LASTSLAVE
+		dc.l	S_CFP_END
+		ELSE
+		dc.l	0
+		ENDIF
+		dc.w	2
+		dc.w	39
+		dc.l	N_CFP135
+		dc.w	XFDPFF_RELOC	;!XFDPFF_RELMODE
+		dc.w	0
+		dc.l	RB_CFP135
+		dc.l	DB_CFP135
+		dc.l	0	;RS_CFP135
+		dc.l	0	;DS_CFP135
+		dc.w	XFDID_CFP135
+		dc.w	0
+		dc.l	$20+$b8+$7c+4
+
+N_CFP135	dc.b	'CFP 1.35/1.36',0
+		even
+
+;-------------------------------------------------
+
+RB_CFP135	JSR	xfdCodeBeginRecog
+		TST.L	D0
+		BEQ.B	.Exit
+
+		lea	CFP_Tab(pc),a1
+		moveq	#16-1,d0
+.Cmp		cmpm.l	(a0)+,(a1)+
+		bne.s	.Exit
+		dbf	d0,.Cmp
+
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+CFP_Tab		dc.l	$48e7fffe,$2c780004,$41fafff6,$2e08d1fc
+		dc.l	$000000b8,$2c08203c,$00000200,$72004eae
+		dc.l	$ff3a2a00,$660c33f9,$00dff006,$00dff180
+		dc.l	$60f42245,$2047203c,$000000b8,$4eaefd8a
+
+
+;-------------------------------------------------
+
+DB_CFP135	movem.l	d2-d7/a2-a6,-(a7)
+		sub.w	#$b8,a7
+		move.l	a7,a4
+		move.l	a0,a5
+
+		move.l	xfdbi_SourceBuffer(a5),a0
+		JSR	xfdCodeBegin
+		move.l	a0,d7
+		sub.l	xfdbi_SourceBuffer(a5),d7	;header len
+
+		move.l	a4,a1
+		moveq	#$b8/4-1,d0
+.CopyStack	move.l	(a0)+,(a1)+
+		dbf	d0,.CopyStack
+
+		move.l	xfdbi_SourceBuffer(a5),a1
+		sub.l	#$b8/4,20(a1)
+		add.l	d7,a1
+		sub.l	#$b8/4,-4(a1)
+		move.l	d7,d0
+.CopyHeader	move.b	-(a1),-(a0)
+		subq.l	#1,d0
+		bne.s	.CopyHeader
+
+		move.l	xfdbi_SourceBuffer(a5),-(a7)
+		move.l	xfdbi_SourceBufLen(a5),-(a7)
+		move.l	xfdbi_Slave(a5),-(a7)
+		move.l	xfdbi_PackerName(a5),-(a7)
+		move.w	xfdbi_PackerFlags(a5),-(a7)
+
+		move.l	a0,xfdbi_SourceBuffer(a5)
+		sub.l	#$b8,xfdbi_SourceBufLen(a5)
+		move.l	a5,a0
+		jsr	_LVOxfdRecogBuffer(a6)
+		tst.l	d0
+		beq.s	.Unknown
+
+		move.l	a5,a0
+		jsr	_LVOxfdDecrunchBuffer(a6)
+
+.Unknown	move.l	xfdbi_SourceBuffer(a5),a0
+
+		move.w	(a7)+,xfdbi_PackerFlags(a5)
+		move.l	(a7)+,xfdbi_PackerName(a5)
+		move.l	(a7)+,xfdbi_Slave(a5)
+		move.l	(a7)+,xfdbi_SourceBufLen(a5)
+		move.l	(a7)+,xfdbi_SourceBuffer(a5)
+
+		move.l	xfdbi_SourceBuffer(a5),a1
+.CopyHeader2	move.b	(a0)+,(a1)+
+		subq.l	#1,d7
+		bne.s	.CopyHeader2
+
+		add.l	#$b8/4,-4(a1)
+		move.l	xfdbi_SourceBuffer(a5),a0
+		add.l	#$b8/4,20(a0)
+
+		moveq	#$b8/4-1,d1
+.CopyStack2	move.l	(a4)+,(a1)+
+		dbf	d1,.CopyStack2
+
+		add.w	#$b8,a7
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;-------------------------------------------------
+
+		IFEQ	1
+
+* Geht nicht, weil DecrunchSegment() die SegList freigeben will!
+
+RS_CFP135	add.l	a0,a0
+		add.l	a0,a0
+		cmp.l	#($b8)+8,-4(a0)
+		blt.s	.Exit
+
+		addq.w	#4,a0
+		lea	CFP_Tab(pc),a1
+		moveq	#16-1,d0
+.Cmp		cmpm.l	(a0)+,(a1)+
+		bne.s	.Exit
+		dbf	d0,.Cmp
+
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+		* this function needs to use a buffer copy
+		* instead of pseudo hunk creation
+DS_CFP135	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+
+		move.l	xfdsi_SegList(a5),a2
+		add.l	a2,a2
+		add.l	a2,a2
+		lea	$b8(a2),a3
+
+		move.l	(a3),-(a7)
+		move.l	-4(a3),-(a7)
+		move.l	(a2),(a3)
+		move.l	-4(a2),d0
+		sub.l	#$b8,d0
+		move.l	d0,-4(a3)
+
+		move.l	xfdsi_SegList(a5),-(a7)
+		move.l	xfdsi_Slave(a5),-(a7)
+		move.l	xfdsi_PackerName(a5),-(a7)
+		move.w	xfdsi_PackerFlags(a5),-(a7)
+
+		move.l	a3,d0
+		lsr.l	#2,d0
+		move.l	d0,xfdsi_SegList(a5)
+
+		move.l	a5,a0
+		jsr	_LVOxfdRecogSegment(a6)
+		tst.l	d0
+		beq.s	.Unknown
+
+		move.l	a5,a0
+		jsr	_LVOxfdDecrunchSegment(a6)
+
+.Unknown	move.w	(a7)+,xfdsi_PackerFlags(a5)
+		move.l	(a7)+,xfdsi_PackerName(a5)
+		move.l	(a7)+,xfdsi_Slave(a5)
+		move.l	(a7)+,xfdsi_SegList(a5)
+
+		move.l	(a7)+,-4(a3)
+		move.l	(a7)+,(a3)
+
+		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+		ENDC
+
+S_CFP_END

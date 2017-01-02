@@ -1,0 +1,517 @@
+*****************************************************************************
+*   $Id: ISC.a,v 1.2 2005/06/23 14:39:16 stoecker Exp $
+*   ISC decrunching slave
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+
+S_ISC_P1	DC.L	S_ISC_P2
+		DC.W	2
+		DC.W	39
+		DC.L	N_ISCPass1
+		DC.W	XFDPFF_ADDR
+		DC.W	0
+		DC.L	RB_ISC_P1
+		DC.L	DB_ISC_P1
+		DC.L	0
+		DC.L	0
+		DC.W	XFDID_ISC_Pass1
+		DC.W	0
+		DC.L	$104
+
+S_ISC_P2	DC.L	S_ISC_P3
+		DC.W	2
+		DC.W	39
+		DC.L	N_ISCPass2
+		DC.W	XFDPFF_ADDR
+		DC.W	0
+		DC.L	RB_ISC_P2
+		DC.L	DB_ISC_P2
+		DC.L	0
+		DC.L	0
+		DC.W	XFDID_ISC_Pass2
+		DC.W	0
+		DC.L	$198
+
+S_ISC_P3
+		IFND	XFD_LASTSLAVE
+		dc.l	S_ISC_END
+		ELSE
+		dc.l	0
+		ENDIF
+		DC.W	2
+		DC.W	39
+		DC.L	N_ISCPass3
+		DC.W	XFDPFF_ADDR
+		DC.W	0
+		DC.L	RB_ISC_P3
+		DC.L	DB_ISC_P3
+		DC.L	0
+		DC.L	0
+		DC.W	XFDID_ISC_Pass3
+		DC.W	0
+		DC.L	$104
+
+N_ISCPass1	DC.B	'ISC1.5 Normal    (Pass1)',0
+N_ISCPass2	DC.B	'ISC1.5 Comparer  (Pass2)',0
+N_ISCPass3	DC.B	'ISC1.5 Bitstream (Pass3)',0
+		EVEN
+
+*************************************************************************
+*	Recog buffer function: receives buffer + length in A0/D0	*
+*************************************************************************
+
+RB_ISC_P1	MOVEQ	#0,D0			; False
+
+		CMP.W	#$4FF9,$C+8(A0)
+		BNE.B	.Skip
+		LEA	-$20+8(A0),A0
+
+.Skip		CMP.L	#$4FF90000,$2C(A0)
+		BNE.B	.No
+		CMP.L	#$B7C866FA,$78(A0)
+		BNE.B	.No
+		CMP.L	#$13C000DF,$8C(A0)
+		BNE.B	.No
+		CMP.L	#$0008D7C1,$A0(A0)
+		BNE.B	.No
+		CMP.L	#$D60251C8,$F0(A0)
+		BNE.B	.No
+		MOVEQ	#1,D0			; True
+.No		RTS
+
+RB_ISC_P2	MOVEQ	#0,D0			; False
+
+		CMP.W	#$4FF9,$C+8(A0)
+		BNE.B	.Skip
+		LEA	-$20+8(A0),A0
+
+.Skip		CMP.L	#$4EF90000,$64(A0)
+		BNE.B	.No
+		CMP.L	#$2323B7C8,$78(A0)
+		BNE.B	.No
+		CMP.L	#$00C80880,$8C(A0)
+		BNE.B	.No
+		CMP.L	#$60027202,$DC(A0)
+		BNE.B	.No
+		CMP.L	#$72036002,$F0(A0)
+		BNE.B	.No
+		MOVEQ	#1,D0			; True
+.No		RTS
+
+RB_ISC_P3	MOVEQ	#0,D0			; False
+
+		CMP.W	#$4FF9,$12+8(A0)
+		BNE.B	.Skip
+		LEA	-$20+8(A0),A0
+
+.Skip		CMP.L	#$4FF90000,$32(A0)
+		BNE.B	.No
+		CMP.L	#$287C0000,$68(A0)
+		BNE.B	.No
+		CMP.L	#$51C9FFFC,$78(A0)
+		BNE.B	.No
+		CMP.L	#$010E4CDF,$90(A0)
+		BNE.B	.No
+		CMP.L	#$48E77000,$98(A0)
+		BNE.B	.No
+		MOVEQ	#1,D0			; True
+.No		RTS
+
+*************************************************************************
+*	decrunch routine - copied from file (a bit modified)		*
+*************************************************************************
+
+DB_ISC_P1	MOVEM.L	D2-D7/A2-A6,-(A7)
+		MOVE.L	A0,A5
+		MOVEA.L	xfdbi_SourceBuffer(A5),A0
+
+		CMP.W	#$4FF9,$C+8(A0)
+		BNE.B	.Skip
+		LEA	-$20+8(A0),A0
+.Skip
+		MOVE.L	$22(A0),xfdbi_DecrAddress(A5)
+		MOVE.L	$88(A0),xfdbi_JmpAddress(A5)
+		LEA	$104(A0),A1
+
+		MOVEQ	#1,D7
+		MOVE.L	A1,-(A7)
+		SUBA.L	A2,A2
+		BSR.B	D_ISC_P1	* get size
+
+		MOVE.L	A2,D0
+		MOVE.L	D0,xfdbi_TargetBufLen(A5)
+		MOVE.L	D0,xfdbi_TargetBufSaveLen(A5)
+		MOVE.L	xfdbi_TargetBufMemType(A5),D1
+		MOVE.L	xfdm_ExecBase(A6),A6
+		JSR	_LVOAllocMem(A6)
+		MOVE.W	#XFDERR_NOMEMORY,xfdbi_Error(A5)
+		MOVE.L	D0,xfdbi_TargetBuffer(A5)
+		BEQ.B	.NoMem
+		MOVEA.L	D0,A2				* destination
+
+		MOVE.L	(A7)+,A1
+		MOVEQ	#0,D7
+		BSR.B	D_ISC_P1
+
+		CLR.W	xfdbi_Error(A5)
+		MOVEQ	#1,D0
+.NoMem		MOVEM.L	(A7)+,D2-D7/A2-A6
+		RTS
+
+* A2 - destination
+* A1 - source
+* uses D0,D1,D2,D3,D4,A1,A2,A3
+
+D_ISC_P1	CLR.L	D0
+		CLR.L	D1
+		MOVE.B	(A1)+,D0
+		BNE.B	.Pass1_01
+.ok		RTS
+
+.Pass1_01	MOVE.B	D0,D1
+		ANDI.B	#$001F,D0
+		ANDI.B	#-$0020,D1
+		LSR.B	#4,D1
+		LEA	.Pass1_02(PC),A3
+		ADDA.L	D1,A3
+		JSR	(A3)
+		BRA.B	D_ISC_P1
+.Pass1_02	BRA.B	.Pass1_06
+		BRA.B	.Pass1_14
+		BRA.B	.Pass1_10
+		BRA.B	.Pass1_11
+		BRA.B	.Pass1_04
+		BRA.B	.Pass1_03
+		BRA.B	.Pass1_15
+		CLR.B	D1
+		BRA.B	.Pass1_05
+.Pass1_03	LSL.W	#8,D0
+		MOVE.B	(A1)+,D0
+.Pass1_04	MOVE.B	(A1)+,D1
+.Pass1_05	
+		TST.L	D7
+		BNE.B	.Skip1
+		MOVE.B	D1,(A2)
+.Skip1		ADDQ.L	#1,A2
+
+		DBRA	D0,.Pass1_05
+		RTS	
+.Pass1_06	MOVE.B	(A1)+,D1
+.Pass1_07	CLR.L	D4
+.Pass1_08	
+		TST.L	D7
+		BNE.B	.Skip2
+		MOVE.B	(A1,D4.W),(A2)
+.Skip2		ADDQ.L	#1,A2
+
+		ADDQ.B	#1,D4
+		CMP.B	D4,D0
+		BNE.B	.Pass1_08
+		DBRA	D1,.Pass1_07
+.Pass1_09	MOVE.B	(A1)+,D0
+		SUBQ.B	#1,D4
+		BNE.B	.Pass1_09
+		RTS	
+.Pass1_10	MOVE.B	#1,D2
+		BRA.B	.Pass1_12
+.Pass1_11	MOVE.B	(A1)+,D2
+.Pass1_12	MOVE.B	(A1)+,D3
+.Pass1_13
+		TST.L	D7
+		BNE.B	.Skip3
+		MOVE.B	D3,(A2)
+.Skip3		ADDQ.L	#1,A2
+
+		ADD.B	D2,D3
+		DBRA	D0,.Pass1_13
+		RTS	
+.Pass1_14	LSL.W	#8,D0
+		MOVE.B	(A1)+,D0
+.Pass1_15	
+		TST.L	D7
+		BNE.B	.Skip4
+		MOVE.B	(A1),(A2)
+.Skip4		ADDQ.L	#1,A2
+		ADDQ.L	#1,A1
+
+		DBRA	D0,.Pass1_15
+		RTS
+
+*************************************************************************
+*	decrunch routine - copied from file (a bit modified)		*
+*************************************************************************
+
+DB_ISC_P2	MOVEM.L	D2-D7/A2-A6,-(A7)
+		MOVE.L	A0,A5
+		MOVEA.L	xfdbi_SourceBuffer(A5),A0
+
+		CMP.W	#$4FF9,$C+8(A0)
+		BNE.B	.Skip
+		LEA	-$20+8(A0),A0
+
+.Skip		MOVE.L	$22(A0),xfdbi_DecrAddress(A5)
+		MOVE.L	$11A(A0),xfdbi_JmpAddress(A5)
+		LEA	$198(A0),A1
+
+		MOVEQ	#1,D7
+		MOVE.L	A1,-(A7)
+		SUBA.L	A2,A2
+		BSR.B	D_ISC_P2	* get size
+
+		MOVE.L	A2,D0
+		MOVE.L	D0,xfdbi_TargetBufLen(A5)
+		MOVE.L	D0,xfdbi_TargetBufSaveLen(A5)
+		MOVE.L	xfdbi_TargetBufMemType(A5),D1
+		MOVE.L	xfdm_ExecBase(A6),A6
+		JSR	_LVOAllocMem(A6)
+		MOVE.W	#XFDERR_NOMEMORY,xfdbi_Error(A5)
+		MOVE.L	D0,xfdbi_TargetBuffer(A5)
+		BEQ.B	.NoMem
+		MOVEA.L	D0,A2				* destination
+
+		MOVE.L	(A7)+,A1
+		MOVEQ	#0,D7
+		BSR.B	D_ISC_P2
+
+		CLR.W	xfdbi_Error(A5)
+		MOVEQ	#1,D0
+.NoMem		MOVEM.L	(A7)+,D2-D7/A2-A6
+		RTS
+
+* A2 - destination
+* A1 - source
+* uses D0,D1,D2,D3,D4,D5,A0,A1,A2,A3
+
+D_ISC_P2	LEA	.Pass2_07(PC),A3
+		CLR.L	D4
+		CLR.L	D3
+.Pass2_01	CLR.L	D0
+		CLR.L	D1
+		BSR.W	.Pass2_26
+		BCLR	#3,D0
+		BNE.B	.Pass2_06
+		BCLR	#2,D0
+		BNE.B	.Pass2_02
+		BSR.B	.Pass2_16
+		CLR.L	D1
+		TST.W	D0
+		BNE.W	.Pass2_33
+		RTS
+
+.Pass2_02	MOVE.W	D0,D1
+.Pass2_03	BSR.W	.Pass2_24
+
+		TST.L	D7
+		BNE.B	.Skip1
+		MOVE.B	D0,(A2)
+.Skip1		ADDQ.L	#1,A2
+
+		DBRA	D1,.Pass2_03
+		BRA.B	.Pass2_01
+.Pass2_04	LSL.W	#8,D0
+		BSR.B	.Pass2_24
+.Pass2_05	ADDQ.W	#4,D0
+		BRA.B	.Pass2_02
+.Pass2_06	MOVE.B	D0,D1
+		BSR.W	.Pass2_26
+		LSL.B	#1,D1
+		JMP	(A3,D1.W)
+.Pass2_07	BRA.B	.Pass2_05
+		BRA.B	.Pass2_04
+		BRA.B	.Pass2_23
+		BRA.B	.Pass2_10
+		BRA.B	.Pass2_20
+		BRA.B	.Pass2_21
+		BRA.B	.Pass2_22
+		BCLR	#3,D0
+		BEQ.B	.Pass2_08
+		MOVEQ	#1,D1
+		BRA.B	.Pass2_09
+.Pass2_08	MOVEQ	#2,D1
+.Pass2_09	BSR.B	.Pass2_16
+		BRA.B	.Pass2_19
+.Pass2_10	BCLR	#3,D0
+		BEQ.B	.Pass2_13
+		BCLR	#2,D0
+		BEQ.B	.Pass2_11
+		MOVEQ	#3,D1
+		BRA.B	.Pass2_12
+.Pass2_11	MOVEQ	#2,D1
+.Pass2_12	BSR.B	.Pass2_14
+		BRA.B	.Pass2_19
+.Pass2_13	BCLR	#2,D0
+		BNE.B	.Pass2_18
+		BSR.B	.Pass2_16
+		BRA.B	.Pass2_29
+.Pass2_14	LSL.W	#8,D0
+.Pass2_15	BSR.B	.Pass2_24
+.Pass2_16	LSL.L	#8,D0
+		BSR.B	.Pass2_24
+		RTS	
+.Pass2_18	BSR.B	.Pass2_16
+		ADDI.W	#$0800,D0
+		MOVEQ	#1,D1
+.Pass2_19	BRA.B	.Pass2_33
+.Pass2_20	MOVE.B	D0,D1
+		BSR.B	.Pass2_15
+		BRA.B	.Pass2_32
+.Pass2_21	BSR.B	.Pass2_16
+		BRA.B	.Pass2_30
+.Pass2_22	MOVE.B	D0,D1
+		BSR.B	.Pass2_24
+		BRA.B	.Pass2_32
+.Pass2_23	BRA.B	.Pass2_28
+.Pass2_24	TST.B	D3
+		BNE.B	.Pass2_25
+		MOVE.B	(A1)+,D0
+		RTS	
+.Pass2_25	MOVE.B	D4,D0
+		LSL.B	#4,D0
+		MOVE.B	(A1)+,D4
+		MOVE.B	D4,D5
+		LSR.B	#4,D5
+		OR.B	D5,D0
+		ANDI.B	#$000F,D4
+		RTS	
+.Pass2_26	TST.B	D3
+		BNE.B	.Pass2_27
+		MOVEQ	#1,D3
+		MOVE.B	(A1)+,D4
+		MOVE.B	D4,D0
+		ANDI.B	#$000F,D4
+		LSR.B	#4,D0
+		RTS	
+.Pass2_27	CLR.L	D3
+		MOVE.B	D4,D0
+		RTS	
+.Pass2_28	BSR.B	.Pass2_14
+		BCLR	#$0013,D0
+		BEQ.B	.Pass2_30
+.Pass2_29	MOVE.L	D0,D2
+		BSR.B	.Pass2_15
+		BRA.B	.Pass2_31
+.Pass2_30	MOVE.L	D0,D2
+		CLR.L	D0
+		BSR.B	.Pass2_24
+.Pass2_31	MOVE.W	D0,D1
+		MOVE.L	D2,D0
+.Pass2_32	ADDQ.L	#1,D1
+.Pass2_33	MOVEA.L	A2,A0
+		SUBA.L	D0,A0
+		ADDQ.W	#1,D1
+.Pass2_34
+		TST.L	D7
+		BNE.B	.Skip2
+		MOVE.B	(A0),(A2)
+.Skip2		ADDQ.L	#1,A2
+		ADDQ.L	#1,A0
+
+		DBRA	D1,.Pass2_34
+		BRA.W	.Pass2_01
+
+*************************************************************************
+*	decrunch routine - copied from file (a bit modified)		*
+*************************************************************************
+
+DB_ISC_P3	MOVEM.L	D2-D7/A2-A6,-(A7)
+		MOVE.L	A0,A5
+		MOVEA.L	xfdbi_SourceBuffer(A5),A0
+
+		MOVE.L	$14(A0),D2
+		LSL.L	#2,D2		* size
+		CMP.W	#$4FF9,$12+8(A0)
+		BNE.B	.Skip
+		MOVE.L	(A0),D2		* size
+		SUBQ.L	#8,D2
+		LEA	-$20+8(A0),A0
+
+.Skip		MOVE.L	$28(A0),xfdbi_DecrAddress(A5)
+		MOVE.W	$84(A0),D0
+		SUB.W	#$80,D0
+		MOVE.L	(A0,D0.W),xfdbi_JmpAddress(A5)
+		LEA	4(A0,D0.W),A1
+
+		MOVEQ	#0,D5
+		MOVE.B	$8B(A0),D5
+		ADD.L	A0,D2
+		ADD.L	#$20,D2
+
+		MOVEQ	#1,D7
+		MOVE.L	A1,-(A7)
+		SUBA.L	A2,A2
+		BSR.B	D_ISC_P3	* get size
+
+		MOVE.L	A2,D0
+		MOVE.L	D0,xfdbi_TargetBufLen(A5)
+		MOVE.L	D0,xfdbi_TargetBufSaveLen(A5)
+		MOVE.L	xfdbi_TargetBufMemType(A5),D1
+		MOVE.L	xfdm_ExecBase(A6),A6
+		JSR	_LVOAllocMem(A6)
+		MOVE.W	#XFDERR_NOMEMORY,xfdbi_Error(A5)
+		MOVE.L	D0,xfdbi_TargetBuffer(A5)
+		BEQ.B	.NoMem
+		MOVEA.L	D0,A2				* destination
+
+		MOVE.L	(A7)+,A1
+		MOVEQ	#0,D7
+		BSR.B	D_ISC_P3
+
+		CLR.W	xfdbi_Error(A5)
+		MOVEQ	#1,D0
+.NoMem		MOVEM.L	(A7)+,D2-D7/A2-A6
+		RTS
+
+* A2 - destination
+* A1 - source
+* D2 - source end
+* D5 - data byte
+* uses D0,D1.W,D3.B,A0,A1,A2,A3,A4
+
+D_ISC_P3	MOVE.B	#$80,D3
+		LEA	$100(A1),A4
+		MOVEA.L	A4,A0
+		ADDA.L	D5,A0
+		MOVEA.L	A0,A3
+		ADDA.L	D5,A3
+.Pass3_01	MOVEQ	#0,D0
+		MOVE.W	#$FF,D1
+.Pass3_02	ADDQ.B	#1,D1
+		LSL.B	#1,D3
+		BNE.B	.Pass3_04
+		MOVE.B	(A3)+,D3
+		BNE.B	.Pass3_03
+		CMPA.L	D2,A3		* reached end
+		BCC.B	.ok
+.Pass3_03	ROXL.B	#1,D3
+.Pass3_04	ROXL.B	#1,D0
+		CMP.B	(A4,D1.W),D0
+		BCS.B	.Pass3_02
+		ADD.B	(A0,D1.W),D0
+
+		TST.L	D7
+		BNE.B	.Skip
+		MOVE.B	(A1,D0.W),(A2)
+.Skip		ADDQ.L	#1,A2
+
+		BRA.B	.Pass3_01
+.ok		RTS
+
+S_ISC_END
+

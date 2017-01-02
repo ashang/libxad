@@ -1,0 +1,381 @@
+<!doctype html public "-//ietf//dtd html 2.0//en">
+<html>
+
+	<head>
+		<title>MacBinary</title>
+		<meta http-equiv="GENERATOR" content="Globetrotter 2.0.0b1">
+		<meta http-equiv="UPDATED" content="Tuesday, December 17, 1996 2:08 PM">
+		<meta http-equiv="X-GLOBETROTTERDATA" content="FC4F59BF">
+	</head>
+
+	<body>
+		<a name="_top"></a>
+		<p><font face="Garamond" size="4"><b>Macintosh Binary Transfer Format (&quot;MacBinary&quot;) Standard Proposal
+		<br>
+		Dennis F. Brothers - 13 March 1985 <br>
+		</b></font><font face="Garamond"><i>(Revision 1 - 10 April 1985 - Miscellaneous clarifications) <br>
+		(Revision 2 - 12 April 1985 - Corrected reversal of icon position
+		v,h) <br>
+		(Revision 3 - 6 May 1985 - Added processor ID, general cleanup)</i></font></p>
+		<p><font face="Garamond">&nbsp; <br>
+		&nbsp;&nbsp; The following notes are a proposal for a standard format for
+		binary transfer of arbitrary Macintosh documents via a telecommunication
+		link. It is intended for use both between Macintoshes running
+		(possibly different) terminal programs which adhere to the standard,
+		and for use in uploading arbitrary Macintosh documents to remote
+		systems (where it is presumed that they will be stored as an exact
+		image of the data transmitted). A proposal is also made for standard
+		processing to be performed on text files transferred via a protocol,
+		to maximize the likelihood that text files transmitted to a remote
+		system will be usable by that system, and that text files received
+		from a remote system will be usable by the Macintosh.</font></p>
+		<p><font face="Garamond">&nbsp;&nbsp; It is recommended that the format and procedures described
+		here be referred to as &quot;MacBinary&quot;, and that any terminal program
+		implementing this format and procedures be called &quot;MacBinary-Compatible&quot;.</font></p>
+		<p><font face="Garamond">&nbsp;&nbsp; The binary format described is independent of the communication
+		protocol used to accomplish the transfer, and assumes only that
+		an 8-bit transparent transfer can be accomplished. Such protocols
+		as Christensen (usually referred to as XMODEM or MODEM7), Kermit,
+		and CompuServe A or B meet this requirement. Because of the proposed
+		standard's MacTerminal/XMODEM heritage, there is a requirement
+		that the transmitted data be padded (with nulls) to a 128-byte
+		boundary at certain points, but this in no way implies that a
+		block-oriented protocol must be used. The basic format proposed
+		is identical to that used by MacTerminal, by Mike Boich and Martin
+		Haeberli, and can be used with a version of MacTerminal that has
+		had a patch applied to &quot;normalize&quot; its implementation of the XMODEM
+		protocol. </font></p>
+		<p><font face="Garamond">&nbsp;&nbsp; In brief, the binary format consists of a 128-byte header containing
+		all the information necessary to reproduce the document's directory
+		entry on the receiving Macintosh; followed by the document's Data
+		Fork (if it has one), padded with nulls to a multiple of 128 bytes
+		(if necessary); followed by the document's Resource Fork (again,
+		padded if necessary). The lengths of these forks (either or both
+		of which may be zero) are contained in the header. </font></p>
+		<br>
+		<p><font face="Garamond">The format of the 128-byte header is as follows (offsets and lengths
+		are given in decimal): </font><table width='100"%"' cellpadding="1">
+			<col width='12"%"'>
+				<col width='12"%"'>
+					<col width='77"%"'>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond"><b>Offset</b></font><br>
+							</td>
+							<td width='12"%"' valign="TOP"><font face="Garamond"><b>Length</b></font><br>
+							</td>
+							<td width='77"%"' valign="TOP"><font face="Garamond"><b>Contents</b></font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">000</font><br>
+							</td>
+							<td width='12"%"' valign="TOP"><font face="Garamond">1</font><br>
+							</td>
+							<td width='77"%"' valign="TOP"><font face="Garamond">Zero. This is a &quot;version&quot; byte.</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">001</font><br>
+							</td>
+							<td width='12"%"' valign="TOP"><font face="Garamond">1</font><br>
+							</td>
+							<td width='77"%"' valign="TOP"><font face="Garamond">Length of filename.</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">002</font><br>
+							</td>
+							<td width='12"%"' valign="TOP"><font face="Garamond">63</font><br>
+							</td>
+							<td width='77"%"' valign="TOP"><font face="Garamond">Filename (only &quot;length&quot; bytes are significant) <br>
+								(the following 16 bytes are a standard Finder Info record)</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">065</font><br>
+							</td>
+							<td width='12"%"' valign="TOP"><font face="Garamond">4</font><br>
+							</td>
+							<td width='77"%"' valign="TOP"><font face="Garamond">File type.</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">069</font><br>
+							</td>
+							<td width='12"%"' valign="TOP"><font face="Garamond">4</font><br>
+							</td>
+							<td width='77"%"' valign="TOP"><font face="Garamond">File creator.</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">073</font><br>
+							</td>
+							<td width='12"%"' valign="TOP"><font face="Garamond">1</font><br>
+							</td>
+							<td width='77"%"' valign="TOP"><font face="Garamond">Finder flags: <br>
+								Bit 7 - Locked. <br>
+								Bit 6 - Invisible. <br>
+								Bit 5 - Bundle. <br>
+								Bit 4 - System. <br>
+								Bit 3 - Bozo. <br>
+								Bit 2 - Busy. <br>
+								Bit 1 - Changed. <br>
+								Bit 0 - Inited.</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">074</font><br>
+							</td>
+							<td width='12"%"' valign="TOP"><font face="Garamond">1</font><br>
+							</td>
+							<td width='77"%"' valign="TOP"><font face="Garamond">Zero.</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">075</font><br>
+							</td>
+							<td width='12"%"' valign="TOP"><font face="Garamond">2</font><br>
+							</td>
+							<td width='77"%"' valign="TOP"><font face="Garamond">File's vertical position within its window.</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">077</font><br>
+							</td>
+							<td width='12"%"' valign="TOP"><font face="Garamond">2</font><br>
+							</td>
+							<td width='77"%"' valign="TOP"><font face="Garamond">File's horizontal position within its window.</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">079</font><br>
+							</td>
+							<td width='12"%"' valign="TOP"><font face="Garamond">2</font><br>
+							</td>
+							<td width='77"%"' valign="TOP"><font face="Garamond">File's window or folder ID. <br>
+								(End of Finder Info)</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">081</font><br>
+							</td>
+							<td width='12"%"' valign="TOP"><font face="Garamond">1</font><br>
+							</td>
+							<td width='77"%"' valign="TOP"><font face="Garamond">&quot;Protected&quot; flag (in low order bit).</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">082</font><br>
+							</td>
+							<td width='12"%"' valign="TOP"><font face="Garamond">1</font><br>
+							</td>
+							<td width='77"%"' valign="TOP"><font face="Garamond">Zero.</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">083</font><br>
+							</td>
+							<td width='12"%"' valign="TOP"><font face="Garamond">4</font><br>
+							</td>
+							<td width='77"%"' valign="TOP"><font face="Garamond">Data Fork length (bytes, zero if no Data Fork).</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">087</font><br>
+							</td>
+							<td width='12"%"' valign="TOP"><font face="Garamond">4</font><br>
+							</td>
+							<td width='77"%"' valign="TOP"><font face="Garamond">Resource Fork lenth (bytes, zero if no R.F.).</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">091</font><br>
+							</td>
+							<td width='12"%"' valign="TOP"><font face="Garamond">4</font><br>
+							</td>
+							<td width='77"%"' valign="TOP"><font face="Garamond">File's creation date.</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">095</font><br>
+							</td>
+							<td width='12"%"' valign="TOP"><font face="Garamond">4</font><br>
+							</td>
+							<td width='77"%"' valign="TOP"><font face="Garamond">File's &quot;last modified&quot; date.</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">099</font><br>
+							</td>
+							<td width='12"%"' valign="TOP"><font face="Garamond">27</font><br>
+							</td>
+							<td width='77"%"' valign="TOP"><font face="Garamond">Zero fill (reserved for expansion of standard).</font></td>
+						</tr>
+						<tr>
+							<td width='12"%"' valign="TOP">
+								<p><font face="Garamond">126</font><br>
+							</td>
+							<td width='12"%"' valign="TOP"><font face="Garamond">2</font><br>
+							</td>
+							<td width='77"%"' valign="TOP"><font face="Garamond">Reserved for computer type and OS ID <br>
+								(this field will be zero for the current Macintosh).</font></td>
+						</tr>
+					</table></p>
+					<p><font face="Garamond">&nbsp;&nbsp; Note that it is the responsibility of the receiving terminal
+					program to resolve file name conflicts, generally by somehow modifying
+					the name of received file if there already exists a file with
+					the original name on the target volume.</font></p>
+					<p><font face="Garamond">&nbsp;&nbsp; Note also that, while the original window or folder ID and
+					position may be transmitted, the receiving terminal program would
+					not normally set these items for the received file, but would
+					instead accept the values that the File Manager assigns when it
+					creates the new file.</font></p>
+					<p><font face="Garamond">&nbsp;&nbsp; It is suggested that Macintosh terminal programs implement
+					two modes of protocol transfer: text and document. Text mode is
+					used for unformatted files of type TEXT (with only a data fork),
+					and document mode (using the binary format proposed here) is used
+					for all other files. Document mode may also be used on text files,
+					of course, if it is desired to preserve such things as the file's
+					creator ID or creation date.</font></p>
+					<p><font face="Garamond">&nbsp;&nbsp; The intent of text mode is to provide compatibility with text
+					files on other systems. Toward that end, it is recommended that
+					a linefeed be inserted after each return character as the text
+					file is transmitted, and that, in the case of block-oriented protocols,
+					the last block be explicitely padded with nulls if the text does
+					not end on a block boundary. When receiving in text mode, linefeeds
+					and trailing nulls should be stripped. If a CTRL-Z (Hex 1A) character
+					is received following all other text (and before any null padding),
+					it should also be stripped (Ctrl-Z is a common text terminator
+					on CP/M and smoe other systems). Note that the above discussion
+					applies only to text files transferred under some protocol, where
+					an exact image of the transmitted data will be stored in a file
+					on the remote system.</font></p>
+					<p><font face="Garamond">&nbsp;&nbsp; When receiving a file via a protocol, a terminal program may
+					distinguish between text and document modes by examining bytes
+					0, 74, and 82 of the first 128 bytes received. If they are each
+					zero (and at least 128 bytes have been received), then it is a
+					safe assumption that a MacBinary-formatted document is being received.
+					Terminal programs implementing possible future versions of the
+					proposed standard would, of course, accept an appropriate set
+					of version numbers in byte 0. Note also that compatible extensions
+					of Version 0 of the proposed standard are possible (one such is
+					suggested below) that involve transmission of additional information
+					following the information described here. For this reason, a terminal
+					program should be implemented so as to perform the proper receive
+					procedures for all data sent to it, but to ignore any data that
+					it does not know what to do with.</font></p>
+					<p><font face="Garamond">&nbsp;&nbsp; Since a text-mode document does not contain a file name, it
+					is suggested that when text-mode is detected, a file be opened
+					under a dummy name on the receiving Macintosh, the text written
+					to that file, and the file renamed to a name selected by the user
+					(via an SFPutFile box) after the reception is completed. This
+					will avoid problems caused by indeterminate delays for name selection
+					at the beginning of the file transfer.</font></p>
+					<p><font face="Garamond">&nbsp;&nbsp; It is desirable to allow the user to specify the destination
+					volume in advance of the actual start of transfer for either type
+					of transfer. Two methods are suggested for this: provide a &quot;Select
+					Destination Volume&quot; menu selection, presumably in the menu containing
+					the &quot;Receive File&quot; selection; or query the user immediately after
+					the &quot;Receive File&quot; menu selection is made. Either or both of these
+					methods could be implemented in a given terminal program - the
+					independent &quot;Select Receive Volume&quot; method is particularly desirable
+					if the ESC-a/ESC-b automatic receive facility (see below) is implemented.
+					The volume selection procedure should provide the same functions
+					as the volume selection portion of the SFGetFile and SFPutFile
+					dialog boxes.</font></p>
+					<br>
+					<p><font face="Garamond"><b>First proposed extension to the proposed standard: <br>
+					</b>&nbsp;&nbsp; It is proposed that the binary format described above be extended
+					to allow the transmission of descriptive text with a Macintosh
+					document (specifically, the descriptive text from the Finder's
+					&quot;Get Info&quot; box for the file being transferred). This is to be
+					accomplished in a transparent manner by assigning bytes 99 and
+					100 of the header described above to be used to hold the length
+					of the descriptive text (or zero, if there is none). The descriptive
+					text, if any, will begin on the 128-boundary immediately following
+					the Resource Fork, if present, else the Data Fork, if present,
+					else immediately following the header if neither fork is present.
+					It is hoped that methods for reading and setting a file's &quot;Get
+					Info&quot; text will be made public at some point.</font></p>
+					<br>
+					<p><font face="Garamond"><b>Notes on MacTerminal's XMODEM implementation, and a proposed extension:
+					<br>
+					</b>&nbsp;&nbsp; Familiarity with the Christensen (XMODEM) protocol is assumed
+					in the following discussion. <br>
+					&nbsp;&nbsp; When doing &quot;Mac-to-Mac&quot; transfers, using the binary format
+					described above, unmodified MacTerminal does not use a true XMODEM
+					protocol, and is therefore incompatible with most non-Mac systems.
+					The differences lie in two specifics: the transmitting Macintosh
+					initiates the transfer by sending the the two characters ESCAPE
+					(hex 1B) and &quot;a&quot; (hex 61); the receiving Macintosh is expected
+					to reply with the character ACK (hex 06). The transfer then proceeds
+					using normal XMODEM procedures, except that each of the header
+					and the two forks (if present) is treated as a separate XMODEM
+					transfer, with the transmitting Macintosh waiting for a NAK (hex
+					15), then sending the blocks of that phase (beginning with a block
+					number of one), then sending EOT (hex 04) and waiting for an ACK
+					(hex 06) from the receiving Macintosh.</font></p>
+					<p><font face="Garamond">&nbsp;&nbsp; It is proposed that a modified procedure be accepted as a standard,
+					to be implemented instead of or in addition to the above-described
+					MacTerminal &quot;Mac-to-Mac&quot; protocol in complying terminal programs.
+					The modified procedure, which is compatible with standard XMODEM
+					implementations, functions as follows: The transmitting Macintosh
+					sends the two characters ESCAPE (hex 1B) and &quot;b&quot; (hex 62). The
+					receiving Macintosh may optionally reply with ACK (hex 06) (this
+					is allowed so as to have minimum impact on existing MacTerminal-compatible
+					implementations). The transmitting Macintosh then awaits receipt
+					of a NAK (hex 15) (or optionally a &quot;C&quot; (hex 43), if the receiving
+					terminal program supports CRC checking), following which a single,
+					normal XMODEM transfer occurs. The transfer may be in text mode
+					or document mode, will begin with block number one, and block
+					numbers will increment uniformly (modulo 256) throughout the transfer.</font></p>
+					<p><font face="Garamond">&nbsp;&nbsp; It is expected that a patch to MacTerminal making it compatible
+					with the above proposed procedure will be available in the near
+					future.</font></p>
+					<br>
+					<p><font face="Garamond"><b>Responses to proposals: <br>
+					</b>Please address comments or questions on the above proposals to:
+					<br>
+					&nbsp;&nbsp; Dennis F. Brothers <br>
+					&nbsp;&nbsp; 197 Old Connecticut Path <br>
+					&nbsp;&nbsp; Wayland, MA 01778 <br>
+					&nbsp;&nbsp; 617-358-2863 <br>
+					&nbsp;&nbsp; CompuServe: 70065,172 <br>
+					&nbsp;&nbsp; Delphi: DBROTHERS <br>
+					&nbsp;&nbsp; MCI Mail: DBROTHERS</font></p>
+					<br>
+					<p></p>
+					<hr>
+					<p><font face="Garamond"><b>MacBinary Working Group: <br>
+					</b>&nbsp;&nbsp; An informal working group, consisting of Macintosh terminal
+					program developers and others with interests or expertise in the
+					field of computer communications, was formed during April, 1985
+					to discuss and refine this proposal. The group met in the MAUG
+					(Micro-networked Apple User's Group) Special Interest Group on
+					the CompuServe Information Service. The present form of the MacBinary
+					format standard represents a consensus of this group as a whole,
+					but may not reflect the opinion of a given individual member of
+					the group.</font></p>
+					<br>
+					<p><font face="Garamond">The working group included: <br>
+					&nbsp;&nbsp; Christopher Allen <br>
+					&nbsp;&nbsp; William Bond <br>
+					&nbsp;&nbsp; Steve Brecher <br>
+					&nbsp;&nbsp; Dennis Brothers <br>
+					&nbsp;&nbsp; Ward Christensen <br>
+					&nbsp;&nbsp; Dan Cochran <br>
+					&nbsp;&nbsp; Mike Cohen <br>
+					&nbsp;&nbsp; Bill Cook <br>
+					&nbsp;&nbsp; Ed Edell <br>
+					&nbsp;&nbsp; Duane Harris <br>
+					&nbsp;&nbsp; Yves Lempereur <br>
+					&nbsp;&nbsp; Neil Shapiro <br>
+					&nbsp;&nbsp; Dan Smith <br>
+					&nbsp;&nbsp; Bill Steinberg <br>
+					&nbsp;&nbsp; Scott Watson</font></p>
+					<p><font face="Garamond"></font></p>
+					<br clear="ALL">
+				</body>
+
+			</html>

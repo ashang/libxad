@@ -1,0 +1,559 @@
+*****************************************************************************
+*   $Id: TurtleSmasher.a,v 1.2 2005/06/23 14:39:16 stoecker Exp $
+*   Turtle Smasher and related types decrunching slave
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+
+**************************************************
+
+S_Turtle200Data	dc.l	S_Turtle200
+		dc.w	2
+		dc.w	39
+		dc.l	N_Turtle200Data
+		dc.w	XFDPFF_DATA
+		dc.w	0
+		dc.l	RB_Turtle200Data
+		dc.l	DB_Turtle200Data
+		dc.l	RB_Turtle200Data
+		dc.l	VD_Turtle200Data
+		dc.w	XFDID_TurtleSmasher200Data
+		dc.w	0
+		dc.l	8+4
+
+N_Turtle200Data	dc.b	'TurtleSmasher 2.00 Data',0
+		even
+
+;-------------------------------------------------
+
+RB_Turtle200Data
+		moveq	#0,d0
+		cmp.l	#'T.S ',(a0)
+		bne.s	.Exit
+		cmp.l	#'2.00',4(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+.Exit		rts
+
+;-------------------------------------------------
+
+VD_Turtle200Data
+		MOVEM.L	D2-D7/A2-A6,-(A7)
+		MOVE.L	A0,A2
+		MOVE.L	D0,D2
+
+		MOVE.L	#4500,D0
+		MOVE.L	#MEMF_CLEAR,D1
+		MOVE.L	xfdm_ExecBase(A6),A6
+		JSR	_LVOAllocMem(A6)
+		MOVE.L	D0,A3
+		TST.L	D0
+		BEQ.B	.Exit
+
+		MOVEM.L	D2/A2/A3/A6,-(A7)
+		PEA	-1.W		* count flag
+		MOVE.L	A2,-(A7)	* source
+		ADDQ.L	#8,(A7)		* skip header
+		CLR.L	-(A7)		* destination
+		BSR.W	DecrunchLHLib
+		LEA	12(A7),A7
+		MOVEM.L	(A7)+,D2/A2/A3/A6
+		MOVE.L	A0,D3		* source position
+
+		MOVE.L	#4500,D0
+		MOVE.L	A3,A1
+		JSR	_LVOFreeMem(A6)
+
+		MOVEQ	#0,D0
+		SUB.L	A2,D3
+		CMP.L	D2,D3
+		BGT.B	.Exit
+		MOVE.L	D3,D0
+
+.Exit		MOVEM.L	(A7)+,D2-D7/A2-A6
+		RTS
+
+;-------------------------------------------------
+
+DB_Turtle200Data
+		movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a4
+		addq	#8,A4		;databeg
+		bra.b	DB_Turtle2001		
+
+**************************************************
+
+S_Turtle200	dc.l	S_PMCnormal
+		dc.w	2
+		dc.w	39
+		dc.l	N_Turtle200
+		dc.w	XFDPFF_ADDR
+		dc.w	0
+		dc.l	RB_Turtle200
+		dc.l	DB_Turtle200
+		dc.l	0
+		dc.l	0
+		dc.w	XFDID_TurtleSmasher200
+		dc.w	0
+		dc.l	$42a+4+4
+
+N_Turtle200	dc.b	'TurtleSmasher 2.00',0
+		even
+
+;-------------------------------------------------
+
+RB_Turtle200	cmp.l	#$43ee027a,$a4(a0)
+		bne.s	.Exit
+		cmp.l	#$45ee0eda,$a8(a0)
+		bne.s	.Exit
+		cmp.l	#$47ee076e,$ac(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_Turtle200	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a4
+		move.l	$41a(a4),xfdbi_DecrAddress(a5)
+		move.l	$41e(a4),xfdbi_JmpAddress(a5)
+		lea	$42a(a4),a4		;databeg
+
+DB_Turtle2001	move.l	#4500,d0
+		move.l	#MEMF_CLEAR,D1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	_LVOAllocMem(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		MOVEA.L	D0,A3
+		tst.l	d0
+		beq.s	.Exit
+
+		MOVEM.L	A3-A6,-(A7)
+		PEA	-1.W		* count flag
+		MOVE.L	A4,-(A7)	* source
+		CLR.L	-(A7)		* destination
+		BSR.W	DecrunchLHLib
+		LEA	12(A7),A7
+		MOVEM.L	(A7)+,A3-A6
+
+		MOVE.L	A1,D0	* destination size
+		move.l	d0,xfdbi_TargetBufSaveLen(a5)
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		JSR	_LVOAllocMem(a6)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit1
+
+		MOVEM.L	A3-A6,-(A7)
+		CLR.L	-(A7)		* count flag
+		MOVE.L	A4,-(A7)	* source
+		MOVE.L	D0,-(A7)	* destination
+		BSR.W	DecrunchLHLib
+		LEA	12(A7),A7
+		MOVEM.L	(A7)+,A3-A6
+
+		moveq	#1,d0
+
+.Exit1		MOVE.L	D0,D2
+		MOVE.L	A3,A1
+		MOVE.L	#4500,D0
+		JSR	_LVOFreeMem(a6)
+		MOVE.L	D2,D0
+
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+**************************************************
+
+S_PMCnormal	dc.l	S_PMCsample
+		dc.w	2
+		dc.w	39
+		dc.l	N_PMCnormal
+		dc.w	XFDPFF_DATA|XFDPFF_RECOGLEN|XFDPFF_USERTARGET
+		dc.w	0
+		dc.l	RB_PMCnormal
+		dc.l	DB_PMCnormal
+		dc.l	SD_PMCnormal
+		dc.l	VD_PMCnormal
+		dc.w	XFDID_PMCNormal
+		dc.w	0
+		dc.l	12+4
+
+S_PMCsample	
+		IFND	XFD_LASTSLAVE
+		dc.l	S_Turtle_END
+		ELSE
+		dc.l	0
+		ENDIF
+		dc.w	2
+		dc.w	39
+		dc.l	N_PMCsample
+		dc.w	XFDPFF_DATA|XFDPFF_RECOGLEN|XFDPFF_USERTARGET
+		dc.w	0
+		dc.l	RB_PMCsample
+		dc.l	DB_PMCnormal	; combined
+		dc.l	SD_PMCsample
+		dc.l	VD_PMCnormal
+		dc.w	XFDID_PMCSample
+		dc.w	0
+		dc.l	12+4
+
+N_PMCnormal	dc.b	'PMC Normal',0
+N_PMCsample	dc.b	'PMC Sample',0
+		even
+
+;-------------------------------------------------
+
+RB_PMCnormal	CMP.L	#'FLS0',(A0)
+		BEQ.B	.FLS0
+		CMP.L	#'SFHD',(A0)
+		BEQ.B	RB_PMC
+		MOVEQ	#0,D0
+		RTS
+
+.FLS0		MOVE.L	8(A0),D0
+		MOVE.L	D0,xfdrr_MinTargetLen(A1)
+		MOVE.L	D0,xfdrr_FinalTargetLen(A1)
+		MOVEQ	#$13,D0
+		ADD.W	$10(A0),D0
+		BCLR	#0,D0	* word alignment!
+		ADD.L	4(A0),D0
+		MOVE.L	D0,xfdrr_MinSourceLen(A1)
+		MOVEQ	#1,D0
+		RTS
+
+RB_PMCsample	CMP.L	#'SFCD',(A0)
+		BEQ.B	RB_PMC
+		MOVEQ	#0,D0
+		RTS
+
+RB_PMC		MOVE.L	4(A0),D0
+		MOVE.L	D0,xfdrr_MinTargetLen(A1)
+		MOVE.L	D0,xfdrr_FinalTargetLen(A1)
+		MOVEQ	#$C,D0
+		ADD.L	8(A0),D0
+		MOVE.L	D0,xfdrr_MinSourceLen(A1)
+		MOVEQ	#1,D0
+		RTS
+
+SD_PMCnormal	MOVEQ	#0,D0
+		CMP.L	#'FLS0',(A0)
+		BEQ.B	.OK
+		CMP.L	#'SFHD',(A0)
+		BNE.B	.Exit
+.OK		MOVEQ	#1,D0
+.Exit		RTS
+
+SD_PMCsample	MOVEQ	#0,D0
+		CMP.L	#'SFCD',(A0)
+		BNE.B	.Exit
+		MOVEQ	#1,D0
+.Exit		RTS
+
+;-------------------------------------------------
+
+VD_PMCnormal	CMP.L	#'FLS0',(A0)
+		BEQ.B	.FLS0
+		moveq	#$c,d1
+		add.l	8(a0),d1	;crlen
+		cmp.l	d0,d1		;crlen > buflen ??
+		bgt.s	.Exit
+		move.l	4(a0),d0
+		sub.l	8(a0),d0	;cr > uncr ??
+		bmi.s	.Exit
+		move.l	d1,d0
+		rts
+
+.FLS0		MOVEQ	#$13,D1
+		ADD.W	$10(A0),D1
+		BCLR	#0,D1	* word alignment!
+		ADD.L	4(A0),D1
+		CMP.L	D0,D1		;crlen > buflen ??
+		BGT.B	.Exit
+		MOVE.L	8(A0),D0
+		SUB.L	4(A0),D0	;cr > uncr ??
+		BMI.B	.Exit
+		MOVE.L	D1,D0
+		RTS
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_PMCnormal	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+
+		move.l	xfdbi_SourceBuffer(a5),a2
+		move.l	xfdm_ExecBase(a6),a6
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+
+		MOVEQ	#0,D7
+		CMP.L	#'SFCD',(A2)
+		BNE.B	.next
+		MOVEQ	#1,D7
+
+.next		CMP.L	#'FLS0',(A2)
+		BNE.B	.nofls0
+		MOVEQ	#7,D0
+		ADD.W	$10(A2),D0
+		BCLR	#0,D0	* word alignment!
+		LEA	(A2,D0.W),A2
+
+.nofls0		MOVE.L	#4500,D0
+		MOVE.L	#MEMF_CLEAR,D1
+		JSR	_LVOAllocMem(A6)
+		MOVE.L	D0,A3
+		TST.L	D0
+		BEQ.B	.Exit
+
+		MOVEM.L	D7/A3/A5/A6,-(A7)
+		LEA	12(A2),A1
+		CLR.L	-(A7)				* nocopy flag
+		MOVE.L	A1,-(A7)			* source buffer
+		MOVE.L	xfdbi_UserTargetBuf(A5),-(A7)	* target buffer
+		BSR.B	DecrunchLHLib
+		MOVE.W	#XFDERR_CORRUPTEDDATA,xfdbi_Error(A5)
+		MOVE.L	A1,D2			* end of decrunched buffer
+		SUB.L	(A7)+,D2
+		ADDQ.L	#8,A7			* restore stack
+		MOVEM.L	(A7)+,D7/A3/A5/A6
+
+		MOVEA.L	A3,A1
+		MOVE.L	#4500,D0
+		JSR	_LVOFreeMem(A6)
+		CMP.L	xfdbi_TargetBufSaveLen(A5),D2
+		MOVEQ	#0,D0
+		BNE.B	.Exit
+
+		TST.L	D7
+		BEQ.B	.NoSample
+		MOVE.L	xfdbi_UserTargetBuf(A5),A0
+		MOVE.L	D2,D0
+		subq.l	#1,d0
+		move.b	(a0)+,d1
+.DoSample	add.b	(a0),d1
+		move.b	d1,(a0)+
+		subq.l	#1,d0
+		bne.b	.DoSample
+
+.NoSample	MOVEQ	#1,D0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+**************************************************
+
+		* this routine contains some useless stuff, which is a result
+		* of previous design in lh.library
+
+DecrunchLHLib	MOVEA.L	A3,A0
+		LEA	$C60(A3),A1
+		LEA	$76E(A3),A2
+		MOVEQ	#-2,D0
+		MOVEQ	#0,D3
+		MOVEQ	#1,D1
+		MOVEQ	#2,D2
+		MOVE.W	#$13C,D7
+.decr1:		MOVE.W	D1,(A0)+
+		MOVE.W	D0,(A1)+
+		MOVE.W	D3,-(A2)
+		SUB.W	D2,D0
+		ADD.W	D2,D3
+		DBF	D7,.decr1
+		MOVEQ	#0,D6
+		MOVE.L	#$27A,D7
+		MOVEA.L	A3,A0
+		LEA	$27A(A3),A1
+		LEA	$EDA(A3),A2
+		LEA	$76E(A3),A6
+		MOVEQ.L	#$04,D4
+		MOVEQ.L	#$02,D2
+		MOVE.W	#$013B,D1
+.decr2:		MOVE.W	(A0)+,D0
+		ADD.W	(A0)+,D0
+		MOVE.W	D0,(A1)+
+		MOVE.W	D6,(A2)+
+		MOVE.W	D7,(A6)+
+		MOVE.W	D7,(A6)+
+		ADD.W	D4,D6
+		ADD.W	D2,D7
+		DBF	D1,.decr2
+		MOVE.W	D1,(A1)
+		CLR.W	$C5E(A3)
+		MOVEA.L	8(A7),A0
+		MOVEA.L	4(A7),A1
+		LEA	$76E(A3),A5
+		LEA	$C60(A3),A6
+		MOVEQ	#1,D4
+		MOVEQ	#$F,D5
+		MOVE.W	(A0)+,D6
+		BRA.B	.decr4
+
+.decr3:		NEG.W	D7
+		LSR.W	D4,D7
+		SUB.W	D4,D7
+		TST.L	12(A7)
+		BNE.B	.nocopy1
+		MOVE.B	D7,(A1)+
+		BRA.B	.decr4
+.nocopy1	ADDQ.L	#1,A1
+.decr4:		MOVE.W	$4F0(A6),D7
+.decr5:		ADD.W	D6,D6
+		BCC.B	.decr7
+		MOVE.W	$2(A6,D7.W),D7
+		DBMI	D5,.decr5
+		BMI.B	.decr8
+.decr6:		MOVEQ	#$F,D5
+		MOVE.W	(A0)+,D6
+		BRA.B	.decr5
+
+.decr7:		MOVE.W	(A6,D7.W),D7
+		DBMI	D5,.decr5
+		BPL.B	.decr6
+.decr8:		DBF	D5,.decr9
+		MOVE.W	(A0)+,D6
+		MOVEQ	#$F,D5
+.decr9:		CMPI.W	#$8000,$4F0(A3)
+		BEQ.B	.decr15
+		MOVE.W	(A5,D7.W),D0
+.decr10:	LEA	(A3,D0.W),A2
+		MOVE.W	(A2),D1
+		ADD.W	D4,D1
+		MOVE.W	D1,(A2)+
+		CMP.W	(A2)+,D1
+		BLS.B	.decr14
+.decr11:	CMP.W	(A2)+,D1
+		BHI.B	.decr11
+		SUBQ.L	#4,A2
+		MOVE.L	A2,D2
+		SUB.L	A3,D2
+		MOVE.W	(A2),(A3,D0.W)
+		MOVE.W	D1,(A2)
+		MOVE.W	(A6,D0.W),D1
+		BMI.B	.decr12
+		MOVE.W	D2,2(A5,D1.W)
+.decr12:	MOVE.W	D2,(A5,D1.W)
+		MOVE.W	(A6,D2.W),D3
+		BMI.B	.decr13
+		MOVE.W	D0,2(A5,D3.W)
+.decr13:	MOVE.W	D1,(A6,D2.W)
+		MOVE.W	D0,(A5,D3.W)
+		MOVE.W	D3,(A6,D0.W)
+		MOVE.W	(A5,D2.W),D0
+		BNE.B	.decr10
+		BRA.B	.decr15
+
+.decr14:	MOVE.W	(A5,D0.W),D0
+		BNE.B	.decr10
+.decr15:	CMPI.W	#$FE00,D7	* end of copy field
+		BGE.W	.decr3
+		CMPI.W	#$FD86,D7	* start of copy field
+		BGT.B	.decr16
+		RTS		* A1 contains buffer end
+
+.decr16:	ROL.W	#8,D6
+		SUBQ.W	#7,D5
+		BCC.B	.decr17
+		MOVEQ	#0,D3
+		MOVE.W	(A0)+,D3
+		SWAP	D3
+		NEG.W	D5
+		ROL.L	D5,D3
+		MOVE.W	D3,D1
+		OR.B	D6,D1
+		SWAP	D3
+		MOVE.W	D3,D6
+		NEG.W	D5
+		MOVEQ	#$F,D2
+		ADD.W	D2,D5
+		BRA.B	.decr18
+
+.decr17:	MOVEQ	#0,D1
+		MOVE.B	D6,D1
+		CLR.B	D6
+		DBF	D5,.decr18
+		MOVE.W	(A0)+,D6
+		MOVEQ	#$F,D5
+.decr18:	MOVE.W	D1,D3
+		ADD.W	D3,D3
+		MOVE.W	.Data(PC,D3.W),D3
+		CLR.W	D2
+		MOVE.B	D3,D2
+		CLR.B	D3
+		LSR.W	#2,D3
+.decr19:	ADD.W	D6,D6
+		ADDX.W	D1,D1
+		DBF	D5,.decr20
+		MOVEQ	#$F,D5
+		MOVE.W	(A0)+,D6
+.decr20:	DBF	D2,.decr19
+		ANDI.W	#$3F,D1
+		OR.W	D3,D1
+		LEA	(A1),A2
+		SUBA.W	D1,A2
+
+		NEG.W	D7
+		SUB.W	#512+2,D7	* subtract 2 for DBRA
+		LSR.W	#1,D7
+		TST.L	12(A7)
+		BNE.B	.nocopy2
+
+.Loop		MOVE.B	(A2)+,(A1)+
+		DBRA.B	D7,.Loop
+		BRA.W	.decr4
+
+.nocopy2	ADDQ.L	#1,A1
+		DBRA.B	D7,.nocopy2
+		BRA.W	.decr4
+
+.Data		DC.W	$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000
+		DC.W	$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000
+		DC.W	$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000
+		DC.W	$0000,$0000,$0101,$0101,$0101,$0101,$0101,$0101,$0101,$0101
+		DC.W	$0101,$0101,$0101,$0101,$0101,$0101,$0101,$0101,$0201,$0201
+		DC.W	$0201,$0201,$0201,$0201,$0201,$0201,$0201,$0201,$0201,$0201
+		DC.W	$0201,$0201,$0201,$0201,$0301,$0301,$0301,$0301,$0301,$0301
+		DC.W	$0301,$0301,$0301,$0301,$0301,$0301,$0301,$0301,$0301,$0301
+		DC.W	$0402,$0402,$0402,$0402,$0402,$0402,$0402,$0402,$0502,$0502
+		DC.W	$0502,$0502,$0502,$0502,$0502,$0502,$0602,$0602,$0602,$0602
+		DC.W	$0602,$0602,$0602,$0602,$0702,$0702,$0702,$0702,$0702,$0702
+		DC.W	$0702,$0702,$0802,$0802,$0802,$0802,$0802,$0802,$0802,$0802
+		DC.W	$0902,$0902,$0902,$0902,$0902,$0902,$0902,$0902,$0A02,$0A02
+		DC.W	$0A02,$0A02,$0A02,$0A02,$0A02,$0A02,$0B02,$0B02,$0B02,$0B02
+		DC.W	$0B02,$0B02,$0B02,$0B02,$0C03,$0C03,$0C03,$0C03,$0D03,$0D03
+		DC.W	$0D03,$0D03,$0E03,$0E03,$0E03,$0E03,$0F03,$0F03,$0F03,$0F03
+		DC.W	$1003,$1003,$1003,$1003,$1103,$1103,$1103,$1103,$1203,$1203
+		DC.W	$1203,$1203,$1303,$1303,$1303,$1303,$1403,$1403,$1403,$1403
+		DC.W	$1503,$1503,$1503,$1503,$1603,$1603,$1603,$1603,$1703,$1703
+		DC.W	$1703,$1703,$1804,$1804,$1904,$1904,$1A04,$1A04,$1B04,$1B04
+		DC.W	$1C04,$1C04,$1D04,$1D04,$1E04,$1E04,$1F04,$1F04,$2004,$2004
+		DC.W	$2104,$2104,$2204,$2204,$2304,$2304,$2404,$2404,$2504,$2504
+		DC.W	$2604,$2604,$2704,$2704,$2804,$2804,$2904,$2904,$2A04,$2A04
+		DC.W	$2B04,$2B04,$2C04,$2C04,$2D04,$2D04,$2E04,$2E04,$2F04,$2F04
+		DC.W	$3005,$3105,$3205,$3305,$3405,$3505,$3605,$3705,$3805,$3905
+		DC.W	$3A05,$3B05,$3C05,$3D05,$3E05,$3F05
+
+S_Turtle_END
+

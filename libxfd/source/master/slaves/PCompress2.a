@@ -1,0 +1,820 @@
+*****************************************************************************
+*   $Id: PCompress2.a,v 1.2 2005/06/23 14:39:16 stoecker Exp $
+*   PCompress decrunching slave
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+
+S_PCompFALH	DC.L	S_PCompHILH
+		DC.W	2
+		DC.W	39
+		DC.L	N_PCompressFALH
+		DC.W	XFDPFF_DATA|XFDPFF_USERTARGET|XFDPFF_RECOGLEN
+		DC.W	0
+		DC.L	RB_PCompFALH
+		DC.L	DB_PComp2
+		DC.L	SD_PCompFALH
+		DC.L	VD_PCompFALH
+		DC.W	XFDID_PCompressFALH
+		DC.W	0
+		DC.L	16
+
+S_PCompHILH
+		IFND	XFD_LASTSLAVE
+		dc.l	S_PComp2_END
+		ELSE
+		dc.l	0
+		ENDIF
+		DC.W	2
+		DC.W	39
+		DC.L	N_PCompressHILH
+		DC.W	XFDPFF_DATA|XFDPFF_USERTARGET|XFDPFF_RECOGLEN
+		DC.W	0
+		DC.L	RB_PCompHILH
+		DC.L	DB_PComp2
+		DC.L	SD_PCompHILH
+		DC.L	VD_PCompHILH
+		DC.W	XFDID_PCompressHILH
+		DC.W	0
+		DC.L	16
+
+N_PCompressFALH	DC.B	'PCompress FALH Data',0
+N_PCompressHILH	DC.B	'PCompress HILH Data',0
+		EVEN
+
+*************************************************************************
+*	Recog buffer function: receives buffer + length in A0/D0	*
+*	and receives pointer to struct RecogResult in A1		*
+*************************************************************************
+
+* optional	DC.L	'PRE',byte-num
+* file format:	DC.B	'HILH' or 'FALH'
+*		DC.L	original length
+*		DC.L	compressed length (for FALH only part 1)
+*		DC.W	checksum
+
+RB_PCompHILH	MOVE.L	#"HILH",D1
+		BRA.B	RB_PComp2
+
+RB_PCompFALH	MOVE.L	#"FALH",D1
+
+RB_PComp2	MOVE.L	D2,-(A7)
+		MOVEQ	#0,D0			; False
+
+		MOVEQ	#14,D2
+		CMP.W	#"PR",(A0)
+		BNE.B	.normal
+		CMP.B	#'E',2(A0)
+		BNE.B	.No
+		ADDQ.L	#4,A0
+		ADDQ.L	#4,D2
+.normal		CMP.L	(A0),D1
+		BNE.B	.No
+		MOVE.L	4(A0),D1
+		CMP.L	8(A0),D1	* source greater than destination
+		BLE.B	.No
+		MOVE.L	D1,xfdrr_FinalTargetLen(A1)
+		MOVE.L	D1,xfdrr_MinTargetLen(A1)
+		ADD.L	8(A0),D2
+		ADD.L	D2,xfdrr_MinSourceLen(A1)
+		MOVEQ	#1,D0			; True
+.No		MOVE.L	(A7)+,D2
+		RTS
+
+SD_PCompHILH	MOVEQ	#0,D0
+		CMP.L	#"HILH",(A0)
+		BNE.B	.end
+		MOVEQ	#1,D0
+.end		RTS
+
+SD_PCompFALH	MOVEQ	#0,D0
+		CMP.L	#"FALH",(A0)
+		BNE.B	.end
+		MOVEQ	#1,D0
+.end		RTS
+
+VD_PCompHILH	MOVEQ	#14,D1
+		ADD.L	8(A0),D1	;crlen
+		CMP.L	D0,D1		;crlen > buflen ??
+		BGT.B	.Exit
+		MOVE.L	4(A0),D0
+		SUB.L	8(A0),D0	;cr > uncr ??
+		BMI.B	.Exit
+		MOVE.L	D1,D0
+		RTS
+.Exit		MOVEQ	#0,D0
+		RTS
+
+VD_PCompFALH	MOVE.L	8(A0),D1
+		CMP.L	D0,D1		;part of crunched > buflen ??
+		BHI.B	.Exit
+
+		MOVEM.L	D0/D2-D7/A0-A6,-(A7)
+		MOVE.L	A0,A4
+		SUBA.L	A2,A2			* turn testmode on
+		BSR.W	D_PComp2FALH
+		MOVE.L	A6,D1
+		MOVEM.l	(A7)+,D0/D2-D7/A0-A6
+		SUB.L	A0,D1		;crlen
+
+		CMP.L	D0,D1		;crlen > buflen ??
+		BGT.B	.Exit
+		MOVE.L	4(A0),D0
+		SUB.L	8(A0),D0	;cr > uncr ??
+		BMI.B	.Exit
+		MOVE.L	D1,D0
+		RTS
+.Exit		MOVEQ	#0,D0
+		RTS
+
+*************************************************************************
+*	      decrunch buffer function for uncrunched files		*
+*           receives xfdbiBufferInfo in A0 and bufferpos in A1		*
+*************************************************************************
+
+DB_PComp2	MOVEM.L	D4/A2/A4-A6,-(A7)
+		MOVE.L	A0,A5
+		MOVE.L	xfdbi_SourceBuffer(A5),A4
+
+		CMP.W	#"PR",(A4)		* skip PRE0 or PRE1 header
+		BNE.B	.Decrunch
+		ADDQ.L	#4,A4
+
+.Decrunch	MOVE.L	xfdbi_UserTargetBuf(A5),A2
+		MOVEM.L	D2-D7/A2-A6,-(A7)
+		CMP.W	#'HI',(A4)
+		BNE.B	.falh
+		BSR.B	D_PComp2HILH
+		BRA.B	.next
+.falh		BSR.W	D_PComp2FALH
+.next		MOVEM.L	(A7)+,D2-D7/A2-A6
+		MOVEA.L	xfdbi_TargetBufSaveLen(A5),D0
+		MOVE.L	A2,A0
+		JSR	GetCRC_A001
+		CMP.W	12(A4),D0
+		BEQ.B	.ok
+		MOVE.W	#XFDERR_CORRUPTEDDATA,xfdbi_Error(A5)
+		MOVEQ	#0,D0
+		BRA.B	.End
+.ok		MOVEQ	#1,D0
+.End		MOVEM.L	(A7)+,D4/A2/A4-A6
+		RTS
+
+*************************************************************************
+*		 decrunch routine for HILH data				*
+*									*
+* This is made of reassembled code from PCompress2 and P-Reader.	*
+* I removed a lot of obsolete stuff and made the routine mem to mem	*
+* decrunching. Thus it should be a lot shorter and faster. I hope I     *
+* catched all the stuff and did not miss any obsolete code.		*
+*									*
+* I think I also removed a bug. I tried PCompress2 with WordWorth7.01   *
+* executable (972972 bytes) and it fails after circa 300000 bytes. My   *
+* decruncher has no problems with this :-)				*
+*									*
+*	gets following parameters:					*
+*		A4	source buffer					*
+*		A2	destination buffer				*
+*************************************************************************
+
+D_PComp2HILH	LINK	A5,#-$0018
+		CLR.L	-$000C(A5)
+		MOVE.L	4(A4),-8(A5)		* source size
+		LEA	14(A4),A4		* source buffer
+		MOVE.L	(A4)+,-$0014(A5)
+
+		MOVE.L	#$844,D0
+		MOVE.L	#MEMF_CLEAR,D1
+		MOVE.L	xfdm_ExecBase(A6),A6
+		JSR	_LVOAllocMem(A6)
+		MOVEA.L	D0,A3
+		TST.L	D0
+		BEQ.B	.end
+		MOVE.L	A6,-(A7)
+		BSR.B	.HI01
+		MOVE.L	(A7)+,A6
+		MOVE.L	#$844,D0
+		MOVEA.L	A3,A1
+		JSR	_LVOFreeMem(A6)
+.end		UNLK	A5
+		RTS
+
+.HI01		SUBA.L	A6,A6			* current file size
+		MOVEQ	#0,D2
+.HI02 		CMPI.W	#$0020,D2
+		BLT.B	.HI03
+		CMPI.W	#$007E,D2
+		BGT.B	.HI03
+		MOVEQ	#3,D0
+		BRA.B	.HI04
+.HI03		MOVEQ	#1,D0
+.HI04		MOVE.W	D2,D1
+		ADDI.W	#$01F8,D1
+		EXT.L	D1
+		ASL.L	#1,D1
+		MOVE.W	D0,(A3,D1.L)
+		ADDQ.W	#1,D2
+		CMPI.W	#$0105,D2
+		BLT.B	.HI02
+		MOVE.W	#1,$0702(A3)
+		MOVE.W	#1,$05F8(A3)
+		BSR.W	.HISub5
+		MOVE.L	#$80000000,$0840(A3)
+		BRA.W	.HI23
+.HI05		MOVE.L	-$000C(A5),D0
+		CMP.L	A6,D0
+		BHI.B	.HI06
+		BSR.W	.HISub3
+		MOVE.L	D0,-$000C(A5)
+		BRA.B	.HI05
+.HI06		CLR.L	-$0010(A5)
+		CLR.L	-$0018(A5)
+		BSR.W	.HISub6
+		MOVE.W	D0,-2(A5)
+		CMPI.W	#$0100,-2(A5)
+		BGE.B	.HI07
+		MOVE.L	A6,D0
+		ADDQ.L	#1,A6
+		MOVE.B	-1(A5),(A2,D0.L)
+		BRA.W	.HI23
+.HI07		CMPI.W	#$0104,D0
+		BGE.B	.HI10
+		SUBI.W	#$0100,D0
+		MOVE.W	D0,-$000E(A5)
+		ADDQ.W	#2,D0
+		BSR.W	.HISub1
+		MOVE.W	-$000E(A5),D1
+		BSR.W	.HISub2
+		MOVE.W	D0,-$0010(A5)
+		ADDQ.W	#2,-$0010(A5)
+.HI08		MOVE.L	A6,D0
+		LEA	(A2,D0.L),A1
+		LEA	-1(A2,D0.L),A0
+.HI09		MOVE.W	-$0010(A5),D0
+		BEQ.W	.HI23
+		SUBQ.W	#1,-$0010(A5)
+		MOVE.B	(A0)+,(A1)+
+		ADDQ.L	#1,A6
+		BRA.B	.HI09
+.HI10		CMPI.W	#$0105,-2(A5)
+		BGE.B	.HI11
+		MOVE.W	#$0010,D0
+		BSR.W	.HISub1
+		MOVE.W	D0,-$0010(A5)
+		BRA.B	.HI08
+.HI11		CMPI.W	#$0135,-2(A5)
+		BGE.B	.HI13
+		SUBI.W	#$0103,D0
+		MOVE.W	D0,-$0016(A5)
+		MOVEQ	#0,D3
+.HI12		CMPI.L	#2,D3
+		BEQ.W	.HI23
+		MOVE.L	A6,D0
+		MOVE.L	D0,D1
+		MOVE.L	-$0018(A5),D2
+		SUB.L	D2,D0
+		MOVE.B	(A2,D0.L),(A2,D1.L)
+		ADDQ.L	#1,A6
+		ADDQ.L	#1,D3
+		BRA.B	.HI12
+.HI13		CMPI.W	#$0151,-2(A5)
+		BGE.B	.HI16
+		SUBI.W	#$0135,D0
+		MOVE.W	D0,-$000E(A5)
+		LSR.W	#2,D0
+		BSR.W	.HISub1
+		LSL.W	#2,D0
+		MOVE.W	D0,D7
+		MOVE.W	-$000E(A5),D0
+		ANDI.W	#3,D0
+		OR.W	D0,D7
+		MOVE.W	D7,D0
+		MOVE.W	-$000E(A5),D1
+		LSR.W	#2,D1
+		BSR.W	.HISub2
+		MOVE.W	D0,-$0016(A5)
+		ADDQ.W	#3,-$0016(A5)
+		MOVE.W	#3,-$0010(A5)
+.HI14		MOVE.L	A6,D3
+		LEA	(A2,D3.L),A1
+		MOVE.L	-$0018(A5),D2
+		SUB.L	D2,D3
+		LEA	(A2,D3.L),A0
+.HI15		MOVE.W	-$0010(A5),D0
+		BEQ.W	.HI23
+		SUBQ.W	#1,-$0010(A5)
+		MOVE.B	(A0)+,(A1)+
+		ADDQ.L	#1,A6
+		BRA.B	.HI15
+.HI16		CMPI.W	#$0189,-2(A5)
+		BGE.B	.HI17
+		SUBI.W	#$0151,D0
+		MOVE.W	D0,-$0016(A5)
+		MOVEQ	#0,D0
+		MOVE.W	-$0016(A5),D0
+		DIVU	#$000E,D0
+		MOVE.W	D0,-$000E(A5)
+		SWAP	D0
+		MOVE.W	D0,-$0016(A5)
+		MOVE.W	-$000E(A5),D0
+		ADDQ.W	#2,D0
+		BSR.W	.HISub1
+		MOVE.W	-$000E(A5),D1
+		BSR.W	.HISub2
+		MOVE.W	D0,-$0010(A5)
+		MOVE.W	-$0016(A5),D0
+		ADDQ.W	#2,D0
+		BSR.W	.HISub1
+		MOVE.W	-$0016(A5),D1
+		BSR.W	.HISub2
+		MOVE.W	D0,-$0016(A5)
+		ADDQ.W	#8,-$0010(A5)
+		MOVE.W	-$0010(A5),D0
+		ADD.W	D0,-$0016(A5)
+		BRA.B	.HI14
+.HI17		CMPI.W	#$018A,-2(A5)
+		BGE.B	.HI18
+		MOVE.W	#$0010,D0
+		BSR.W	.HISub1
+		MOVE.W	D0,-$0010(A5)
+		MOVE.W	#$0010,D0
+		BSR.B	.HISub1
+		MOVE.W	D0,-$0016(A5)
+		BRA.W	.HI14
+.HI18		CMPI.W	#$01A4,-2(A5)
+		BGE.B	.HI19
+		MOVEQ	#4,D2
+		MOVE.W	#$018A,D3
+		BRA.B	.HI22
+.HI19		CMPI.W	#$01C0,-2(A5)
+		BGE.B	.HI20
+		MOVEQ	#5,D2
+		MOVE.W	#$01A4,D3
+		BRA.B	.HI22
+.HI20		CMPI.W	#$01DC,-2(A5)
+		BGE.B	.HI21
+		MOVEQ	#6,D2
+		MOVE.W	#$01C0,D3
+		BRA.B	.HI22
+.HI21		MOVEQ	#7,D2
+		MOVE.W	#$01DC,D3
+.HI22		SUB.W	D3,D0
+		MOVE.W	D0,-$000E(A5)
+		LSR.W	#1,D0
+		ADDQ.W	#1,D0
+		BSR.B	.HISub1
+		ASL.W	#1,D0
+		MOVE.W	D0,D7
+		MOVE.W	-$000E(A5),D0
+		ANDI.W	#1,D0
+		OR.W	D0,D7
+		MOVE.W	D7,D0
+		MOVE.W	-$000E(A5),D1
+		LSR.W	#1,D1
+		BSR.W	.HISub2
+		ADD.W	D2,D0
+		MOVE.W	D0,-$0016(A5)
+		MOVE.W	D2,-$0010(A5)
+		BRA.W	.HI14
+.HI23		CMP.L	-8(A5),A6
+		BLT.W	.HI05
+		RTS	
+
+.HISub1		MOVEQ	#0,D4
+		MOVE.W	D0,D3
+.s1_01		MOVE.W	D3,D0
+		SUBQ.W	#1,D3
+		TST.W	D0
+		BEQ.B	.s1_02
+		BSR.B	.s1_03
+		MOVE.W	D4,D1
+		ASL.W	#1,D1
+		OR.W	D1,D0
+		MOVE.W	D0,D4
+		BRA.B	.s1_01
+.s1_02		MOVE.W	D4,D0
+		RTS
+.s1_03		MOVEQ	#0,D1
+		MOVE.L	$0840(A3),D0
+		LSR.L	#1,D0
+		MOVE.L	D0,$0840(A3)
+		MOVE.L	-$0014(A5),D0
+		CMP.L	$0840(A3),D0
+		BCS.B	.s1_04
+		MOVEQ	#1,D1
+		MOVE.L	$0840(A3),D0
+		SUB.L	D0,-$0014(A5)
+.s1_04		CMPI.L	#$01000000,$0840(A3)
+		BCC.B	.s1_05
+		MOVE.L	-$0014(A5),D0
+		ASL.L	#8,D0
+		MOVE.L	D0,-$0014(A5)
+		MOVEQ	#0,D0
+		MOVE.B	(A4)+,D0
+		OR.L	D0,-$0014(A5)
+		MOVE.L	$0840(A3),D0
+		ASL.L	#8,D0
+		MOVE.L	D0,$0840(A3)
+		BRA.B	.s1_04
+.s1_05		MOVE.W	D1,D0
+		RTS	
+
+.HISub2		LEA	.DataHI(PC),A0
+		ASL.W	#1,D1
+		MOVE.W	(A0,D1.W),D1
+		ADD.W	D1,D0
+		RTS	
+
+.HISub3		MOVEM.L	D1-D6,-(A7)
+		MOVEQ	#0,D6
+		MOVE.L	D0,D6
+		CMPI.L	#$00000030,D6
+		BGE.B	.s3_01
+		ADDI.L	#$00000105,D0
+		BSR.W	.s3_12
+.s3_01		MOVEQ	#4,D2
+		MOVEQ	#0,D4
+		BRA.B	.s3_03
+.s3_02		MOVE.L	D2,D0
+		ASL.L	#1,D0
+		MOVE.L	D0,D2
+		ADDQ.W	#1,D4
+.s3_03		MOVE.L	D6,D0
+		ADDQ.L	#4,D0
+		CMP.L	D0,D2
+		BLT.B	.s3_02
+		CMP.L	D2,D0
+		BNE.B	.s3_08
+		CMPI.W	#$000E,D4
+		BGE.B	.s3_08
+		CMPI.W	#$000D,D4
+		BGE.B	.s3_04
+		MOVE.W	D4,D0
+		ASL.W	#1,D0
+		MOVE.L	D0,D3
+		ADDI.W	#$018A,D0
+		BSR.W	.s3_12
+		ADDQ.W	#1,D0
+		BSR.W	.s3_12
+.s3_04		MOVE.W	D4,D0
+		ASL.W	#1,D0
+		ADDI.W	#$01A4,D0
+		BSR.B	.s3_12
+		ADDQ.W	#1,D0
+		BSR.B	.s3_12
+		ADDI.W	#$001B,D0
+		BSR.B	.s3_12
+		ADDQ.W	#1,D0
+		BSR.B	.s3_12
+		ADDI.W	#$001B,D0
+		BSR.B	.s3_12
+		ADDQ.W	#1,D0
+		BSR.B	.s3_12
+		CMPI.W	#7,D4
+		BGE.B	.s3_06
+		MOVEQ	#0,D5
+.s3_05		MOVE.W	D4,D0
+		LSL.W	#2,D0
+		ADD.W	D5,D0
+		ADDI.W	#$0135,D0
+		BSR.B	.s3_12
+		ADDQ.W	#1,D5
+		CMPI.W	#4,D5
+		BLT.B	.s3_05
+.s3_06		MOVEQ	#0,D5
+.s3_07		MOVE.W	D5,D0
+		MULS	#$000E,D0
+		ADD.W	D4,D0
+		ADDI.W	#$0151,D0
+		BSR.B	.s3_12
+		ADDQ.W	#1,D5
+		CMPI.W	#4,D5
+		BLT.B	.s3_07
+.s3_08		MOVE.L	D6,D0
+		ADDQ.L	#1,D0
+		CMP.L	#$00000030,D0
+		BGE.B	.s3_10
+.s3_09		MOVEM.L	(A7)+,D1-D6
+		RTS	
+.s3_10		MOVE.L	D6,D0
+		ADDQ.L	#1,D0
+		CMP.L	#$00000030,D0
+		BNE.B	.s3_11
+		MOVEQ	#$003C,D0
+		BRA.B	.s3_09
+.s3_11		MOVE.L	D6,D0
+		ADDQ.L	#4,D0
+		ASL.L	#1,D0
+		SUBQ.L	#4,D0
+		BRA.B	.s3_09
+.s3_12		MOVE.L	D0,-(A7)
+		ADDI.W	#$01F8,D0
+.s3_13		TST.W	D0
+		BEQ.B	.s3_14
+		MOVE.W	D0,D1
+		ASL.W	#1,D1
+		ADDQ.W	#1,(A3,D1.L)
+		ASR.W	#1,D0
+		BRA.B	.s3_13
+.s3_14		CMPI.W	#$2000,2(A3)
+		BCS.B	.s3_15
+		BSR.B	.HISub4
+.s3_15		MOVE.L	(A7)+,D0
+		RTS	
+
+.HISub4		MOVE.L	D4,-(A7)
+		MOVE.W	#$01F8,D4
+.s4_01		MOVE.W	D4,D0
+		ASL.W	#1,D0
+		TST.W	(A3,D0.W)
+		BEQ.B	.s4_02
+		MOVE.W	(A3,D0.W),D2
+		LSR.W	#1,D2
+		ADDQ.W	#1,D2
+		MOVE.W	D2,(A3,D0.L)
+.s4_02		ADDQ.W	#1,D4
+		CMP.W	#$03F0,D4
+		BLT.B	.s4_01
+		BSR.B	.HISub5
+		MOVE.L	(A7)+,D4
+		RTS	
+
+.HISub5		MOVE.W	#$01F7,D5
+		MOVEQ	#0,D3
+.s5_01		MOVE.W	D5,D0
+		ASL.W	#1,D0
+		MOVE.W	D0,D1
+		ASL.W	#1,D1
+		MOVE.W	D0,D2
+		ADDQ.W	#1,D2
+		ASL.W	#1,D2
+		MOVE.W	(A3,D1.W),D3
+		ADD.W	(A3,D2.W),D3
+		MOVE.W	D3,(A3,D0.L)
+		SUBQ.W	#1,D5
+		CMPI.W	#1,D5
+		BGE.B	.s5_01
+		RTS	
+
+.HISub6		BSR.B	.s6_06
+		MOVE.W	D0,D6
+		MOVEM.L	D4-D6,-(A7)
+		MOVE.W	2(A3),D0
+		MOVEQ	#$000A,D1
+		LSR.W	D1,D0
+		MOVE.W	D0,D5
+		ADDQ.W	#3,D5
+		ADDI.W	#$01F8,D6
+.s6_01		TST.W	D6
+		BEQ.B	.s6_02
+		MOVE.W	D6,D0
+		EXT.L	D0
+		ASL.L	#1,D0
+		ADD.W	D5,(A3,D0.L)
+		ASR.W	#1,D6
+		BRA.B	.s6_01
+.s6_02		CMPI.W	#$2000,2(A3)
+		BCS.B	.s6_03
+		BSR.W	.HISub4
+.s6_03		MOVEM.L	(A7)+,D4-D6
+.s6_04		CMPI.L	#$01000000,$0840(A3)
+		BCC.B	.s6_05
+		MOVE.L	-$0014(A5),D0
+		ASL.L	#8,D0
+		MOVE.L	D0,-$0014(A5)
+		MOVEQ	#0,D0
+		MOVE.B	(A4)+,D0
+		OR.L	D0,-$0014(A5)
+		MOVE.L	$0840(A3),D0
+		LSL.L	#8,D0
+		MOVE.L	D0,$0840(A3)
+		BRA.B	.s6_04
+.s6_05		MOVE.W	D6,D0
+		RTS	
+.s6_06		MOVEM.L	D2-D7,-(A7)
+		MOVEQ	#0,D4
+		MOVEQ	#0,D5
+		MOVE.W	2(A3),D3
+		MOVEQ	#0,D2
+.s6_07		CMPI.W	#$01F8,D2
+		BGE.B	.s6_08
+		MOVE.L	$0840(A3),D7
+		MOVEQ	#0,D0
+		MOVE.W	D2,D0
+		LSL.W	#2,D0
+		MOVEQ	#0,D1
+		MOVE.W	D4,D1
+		ADD.W	(A3,D0.W),D1
+		BSR.B	.s6_09
+		MOVE.L	D0,D6
+		ASL.W	#1,D2
+		MOVE.L	-$0014(A5),D1
+		CMP.L	D0,D1
+		BCS.B	.s6_07
+		MOVE.L	D6,D5
+		MOVE.W	D2,D0
+		ASL.W	#1,D0
+		ADD.W	(A3,D0.W),D4
+		ADDQ.W	#1,D2
+		BRA.B	.s6_07
+.s6_08		MOVE.L	D5,D0
+		SUB.L	D0,-$0014(A5)
+		MOVE.W	D2,D0
+		ASL.W	#1,D0
+		MOVEQ	#0,D1
+		MOVE.W	(A3,D0.W),D1
+		BSR.B	.s6_09
+		MOVE.L	D0,$0840(A3)
+		MOVE.W	D2,D0
+		SUBI.W	#$01F8,D0
+		MOVEM.L	(A7)+,D2-D7
+		RTS	
+.s6_09		MOVEM.L	D2-D3,-(A7)
+		MOVE.L	D1,D2
+		SWAP	D2
+		DIVU	D3,D2
+		MOVE.L	D2,D1
+		SWAP	D1
+		CLR.W	D2
+		DIVU	D3,D2
+		MOVE.W	D2,D1
+		MOVE.L	D7,D3
+		MOVEQ	#0,D0
+		MOVE.L	D1,D2
+		SWAP	D2
+		MULU	D3,D2
+		SWAP	D2
+		MOVE.W	D2,D0
+		SWAP	D3
+		MOVE.L	D3,D2
+		MULU	D1,D2
+		CLR.W	D2
+		SWAP	D2
+		ADD.L	D2,D0
+		SWAP	D1
+		MULU	D3,D1
+		ADD.L	D1,D0
+		MOVEM.L	(A7)+,D2-D3
+		RTS	
+
+.DataHI		DC.W	0,4,$C,$1C,$3C,$7C,$FC,$1FC,$3FC,$7FC,$FFC,$1FFC
+		DC.W	$3FFC,$7FFC,-4
+
+*************************************************************************
+*		 decrunch routine for FALH data				*
+*									*
+* This is made of reassembled code from PCompress2 and P-Reader.	*
+* I removed a lot of obsolete stuff and made the routine mem to mem	*
+* decrunching. Thus it should be a lot shorter and faster. I replaced   *
+* stack usage completely with register usage and I hope I catched all	*
+* the stuff and did not miss any obsolete code.				*
+*									*
+*	gets following parameters:					*
+*		A4	source buffer					*
+*		A2	destination buffer				*
+*************************************************************************
+
+D_PComp2FALH	CLR.L	D5			* current destination size
+		MOVEQ	#$10,D7
+		MOVE.L	4(A4),A3		* source size
+		MOVE.L	8(A4),D0		* packed size
+		LEA	14(A4),A4		* source buffer
+		LEA	(A4,D0.L),A6		* pack buffer end - part 1
+		MOVE.L	(A4)+,D6
+
+.FA01		CLR.L	D4
+		SUBA.L	A5,A5
+		MOVEQ	#1,D0
+		BSR.W	.FASub
+		TST.L	D0
+		BNE.B	.FA05
+		MOVEQ	#1,D1
+		MOVEQ	#2,D2
+.FA02		ADDQ.W	#1,D1
+		ASL.W	#1,D2
+		MOVE.L	D1,D0
+		BSR.W	.FASub
+		ADD.L	D0,D4
+		TST.L	D0
+		BNE.B	.FA03
+		ADD.L	D2,D4
+		SUBQ.L	#1,D4
+		BRA.B	.FA02
+.FA03		CMP.L	A3,D5			* end reached ?
+		BCC.W	.FAend
+
+		CMP.L	#0,A2
+		BEQ.B	.Skip1
+		MOVE.B	(A6),(A2,D5.L)
+.Skip1		ADDQ.L	#1,A6
+
+		ADDQ.L	#1,D5
+.FA04		SUBQ.L	#1,D4
+		BNE.B	.FA03
+.FA05		MOVEQ	#2,D0
+		BSR.W	.FASub
+		ADDQ.W	#1,D0
+		MOVE.L	D0,D3
+		CMPI.L	#2,D0
+		BNE.B	.FA06
+		MOVE.W	#2,A5		* 32 bit MOVE also with .W !!!
+		MOVEQ	#8,D0
+		BSR.W	.FASub
+		MOVE.L	D0,D1
+		BRA.B	.FA11
+.FA06		MOVE.L	D3,A5
+		CMPI.L	#1,D3
+		BNE.B	.FA09
+		ADDQ.L	#3,A5
+		MOVEQ	#2,D1
+		MOVEQ	#4,D2
+.FA07		ADDQ.W	#1,D1
+		ASL.W	#1,D2
+		MOVE.L	D1,D0
+		BSR.B	.FASub
+		MOVE.L	D0,D3
+		BNE.B	.FA08
+		ADD.L	D2,D0
+		SUBQ.L	#1,D0
+.FA08		ADD.L	D0,A5
+		TST.L	D3
+		BEQ.B	.FA07
+.FA09		MOVEQ	#3,D0
+		BSR.B	.FASub
+		TST.L	D0
+		BNE.B	.FA10
+		MOVEQ	#5,D0
+		BSR.B	.FASub
+		MOVE.L	D0,D1
+		MOVEQ	#1,D0
+		BSR.B	.FASub
+		TST.L	D0
+		BEQ.B	.FA11
+		ADDI.L	#$00000020,D1
+		BRA.B	.FA11
+.FA10		MOVE.L	D0,D1
+		ADD.L	D1,D1
+		LEA	.DataFA(PC),A0
+		MOVE.W	(A0,D1.L),D2
+		ADDQ.W	#5,D0
+		BSR.B	.FASub
+		ADD.L	D2,D0
+		MOVE.L	D0,D1
+		BEQ.B	.FAend
+.FA11		MOVE.L	D5,D3
+		LEA	(A2,D3.L),A1
+		SUB.L	D1,D3
+		LEA	(A2,D3.L),A0
+.FA12		CMP.L	A3,D5			* end reached ?
+		BCC.B	.FAend
+		MOVE.L	A5,D0
+		BEQ.B	.FAend
+		SUBQ.L	#1,A5
+		
+		CMP	#0,A2
+		BEQ.B	.Skip2
+		MOVE.B	(A0)+,(A1)+
+
+.Skip2		ADDQ.L	#1,D5
+		BRA.B	.FA12
+.FAend		CMP.L	A3,D5			* end reached ?
+		BLT.W	.FA01
+		RTS
+
+		* uses variables D6 and D7, returns D0
+.FASub		MOVEM.L	D1-D4,-(A7)
+		MOVE.L	D6,D1
+		SUBQ.W	#1,D0
+		MOVEQ	#0,D2
+.FAsub1		ADD.L	D1,D1
+		ADDX	D2,D2
+		SUBQ.L	#1,D7
+		BNE.B	.FAsub2
+		MOVE.W	(A4)+,D4
+		MOVEQ	#$10,D7
+		OR.W	D4,D1
+.FAsub2		DBRA	D0,.FAsub1
+		MOVE.L	D2,D0
+		MOVE.L	D1,D6
+		MOVEM.L	(A7)+,D1-D4
+		RTS	
+
+.DataFA		DC.W	$20,$40,$80,$100,$200,$400,$800,$1000
+
+S_PComp2_END

@@ -1,0 +1,207 @@
+The file format of AMOS source code and AMOS bank files.
+
+by Stuart Caie <kyzer@4u.net>
+
+First draft, 23 March 2004.
+
+All integers are big-endian.
+
+AMOS source code file format:
+16 bytes: "AMOS Pro101V\0\0\0\0" -> saved from AMOS Pro
+          "AMOS Pro101v\0\0\0\0"
+          "AMOS Basic v134 "     -> AMOS Pro saved, "AMOS1.3 compatible"
+          "AMOS Basic V134 "
+          "AMOS Basic v1.3 "     -> AMOS 1.3 saved
+          "AMOS Basic V1.3 "
+          "AMOS Basic v1.00"     -> AMOS 1.0-1.2 saved
+          "AMOS Basic V1.00"
+          "V" = program has been tested, "v" = program hasn't been tested.
+4 bytes: number of bytes of tokenised BASIC code
+x bytes: [above number of BASIC bytes]
+4 bytes: "AmBs"
+2 bytes: number of banks to follow, can be 0.
+x bytes: [the above-counted banks]
+
+Tokenised BASIC code format:
+- a stream of tokenised BASIC lines
+
+Tokenised BASIC line format:
+1 byte: length of line in words (2 bytes), including this byte.
+1 byte: indent level of line + 1, or less than 2 for no indent.
+x bytes: tokens (2+ bytes), individually parsed, ending in null token
+
+Token formats:
+0x0000 - null token
+
+0x0006 - variable reference,  e.g. 'X' in 'Print X'.
+0x000C - label,               e.g. 'X:' or '190' at the start of a line.
+0x0012 - procedure reference, e.g. 'X' in 'X["hello"]'.
+0x0018 - label reference,     e.g. 'X' in 'Goto X'.
+         - 2 bytes: token value (0x0006 through 0x0018)
+         - 2 bytes: unknown purpose
+         - 1 byte:  length of ASCII string for variable/label name
+         - 1 byte:  flags. for 0x0006, 0x0012 and 0x0018
+           - bit 1 -- this is a floating point ref (eg "X#")
+           - bit 2 -- this is a string ref (eg "X$")
+         - n bytes: ASCII string, with the above-given string length,
+                    rounded to a multiple of two, null terminated.
+
+0x001E - binary integer,      e.g. '%100101'.
+0x0036 - hexidecimal integer, e.g. '$80FAA010'.
+0x003E - decimal integer,     e.g. '1234567890'.
+         - 2 bytes: token value (0x001E, 0x0036 or 0x003E)
+         - 4 bytes: the integer value
+
+0x0026 - string with double quotes, e.g. '"hello"'.
+0x002E - string with single quotes, e.g. ''hello''.
+         - 2 bytes: token value (0x0026 or 0x002E)
+         - 2 bytes: the length of the string
+         - n bytes: ASCII string, with the above-given string length,
+                    rounded to a multiple of two, null terminated.
+
+0x0046 - floating-point number, e.g. '3.142'.
+         - 2 bytes: token value (0x0046)
+         - 4 bytes: the single-precision floating point value.
+           - bits 31-8: mantissa (24 bits)
+           - bit 7: sign bit. +ve if 0, -ve if 1
+           - bits 6-0: exponent.
+           - an exponent of 0 means 0.0, regardless of mantissa
+           - counting from mantissa MSB (23) to LSB (0), each bit
+             in the mantissa is worth 2^(mantissa_bit+exponent-88).
+
+0x004E - extension command
+         - 2 bytes: token value (0x004E)
+         - 1 byte:  extension number (1-26)
+         - 1 byte:  unused
+         - 2 bytes: offset into extension's token table
+
+All tokens above 0x004E are simple tokens in AMOS's internal token table.
+However, some special tokens have additional parsing.
+
+0x064A - REM token
+0x0652 - REM token type 2
+         - 2 bytes: token value (0x064A or 0x0652)
+         - 1 byte:  unused
+         - 1 byte:  length of the remark
+         - n bytes: ASCII string, with the above-given string length,
+                    rounded to a multiple of two, null terminated.
+
+0x023C - FOR token
+0x0250 - REPEAT token
+0x0268 - WHILE token
+0x027E - DO token
+0x02BE - IF token
+0x02D0 - ELSE token
+0x0404 - DATA token
+         - 2 bytes: token value (from the above list)
+         - 2 bytes: unknown purpose
+
+0x0290 - EXIT IF token
+0x029E - EXIT token
+0x0316 - ON token
+         - 2 bytes: token value (0x0290, 0x029E, 0x0316)
+         - 4 bytes: unknown purpose
+
+0x0376 - PROCEDURE token
+         - 2 bytes: 0x0376
+         - 4 bytes: number of bytes to corresponding ENDPROC line
+                    (start of line + 8 + above = start of ENDPROC line)
+                    (start of line + 8 + 6 + above = line _after_ ENDPROC)
+         - 2 bytes: part of seed for encryption
+         - 1 byte: flags:
+           - bit 7 -- procedure is folded
+           - bit 6 -- procedure is locked and should not be unfolded
+           - bit 5 -- procedure is currently encrypted
+           - bit 4 -- procedure contains compiled code, not tokens
+         - 1 byte: part of seed for encryption
+
+Decrypt Procedure source code:
+If you should find a procedure (0x376) token with the "is encrypted" bit
+set, run this function on the code and it will decrypt the contents of the
+procedure.
+
+/* fetches a 4-byte integer in big-endian format */
+#define EndGetM32(a)  ((((a)[0])<<24)|(((a)[1])<<16)|(((a)[2])<<8)|((a)[3]))
+/* fetches a 2-byte integer in big-endian format */
+#define EndGetM16(a)  ((((a)[0])<<8)|((a)[1]))
+
+void decrypt_procedure(unsigned char *src) {
+  unsigned char *line, *next, *endline;
+  unsigned int key, key2, key3, size;
+
+  /* ensure src is a pointer to a line with the PROCEDURE token on it */
+  if (EndGetM16(&src[2]) != 0x0376) return;
+
+  /* do not operate on compiled procedures */
+  if (src[10] & 0x10) return;
+
+  /* size+8+6 is the start of the line after ENDPROC */
+  size = EndGetM32(&src[4]);
+  endline = &src[size+8+6];
+  line = next = &src[src[0] * 2];
+
+  /* initialise encryption keys */
+  key = (size << 8) | src[11];
+  key2 = 1;
+  key3 = EndGetM16(&src[8]);
+
+  while (line < endline) {
+    line = next;
+    next = &line[line[0] * 2];
+
+    /* decrypt one line */
+    for (line += 4; line < next;) {
+      *line++ ^= (key >> 8) & 0xFF;
+      *line++ ^=  key       & 0xFF;
+      key  += key2;
+      key2 += key3;
+      key = (key >> 1) | (key << 31);
+    }
+  }
+  src[10] ^= 0x20; /* toggle "is encrypted" bit */
+}
+
+
+AmSp/AmIc Bank format:
+4 bytes: "AmSp" for sprites (bank 1), "AmIc" for Icons (bank 2)
+2 bytes: number of sprites/icons to follow
+x bytes: [the above-counted sprites/icons]
+64 bytes: palette 32 entries of (16 bit $0RGB)
+
+Sprite/Icon format:
+2 bytes: width (in 16-bit words)
+2 bytes: height (in lines)
+2 bytes: depth (in bitplanes, 1-5)
+2 bytes: hot-spot x
+2 bytes: hot-spot y
+x bytes: [width*height*depth*2 bytes of sprite data]
+
+AmBk Bank format:
+4 bytes: "AmBk"
+2 bytes: bank number (1-15)
+2 bytes: 0 for CHIP mem bank, 1 for FAST mem bank
+4 bytes: bits27-0=bank length, bit31=try fastmem, bit30=try chipmem
+8 bytes: bank name. Padded with spaces.
+         Reserved names: Music, Amal, Menu, Datas, Work, Asm
+x bytes: [the above-counted bank length, minus 8]
+
+
+AmBk "Music   " bank format:
+- see accompanying amos_music_format document.
+
+
+AmBk "Pac.Pic." Bank format:
+- see accompanying amos_pacpic_format document.
+
+
+AmBk "Samples " bank format:
+20 bytes: as per regular AmBk Bank format. Bank name is "Samples "
+2 bytes:  number of samples.
+x bytes:  offsets, each 4 bytes long, to each sample. The offset is relative
+          to the offset of the "number of samples" field above.
+
+Format of each sample:
+8 bytes: ASCII name of sample.
+2 bytes: frequency of sample, in hertz.
+4 bytes: length of sample.
+x bytes: signed, 8-bit sample data, always rounded to a multiple of 2 bytes.

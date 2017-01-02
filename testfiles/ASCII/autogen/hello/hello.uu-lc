@@ -1,0 +1,6 @@
+begin 644 hello
+.2&5L;&\L(%=O<FQD(0H`S
+``
+end
+sum -r/size 3900/46 section (from "begin" to "end")
+sum -r/size 51421/14 entire input file

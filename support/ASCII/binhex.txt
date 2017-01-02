@@ -1,0 +1,72 @@
+BINHEX 2.0:
+
+Format is lines of text, with potentially any kind of line-ending format
+(CR, LF, CRLF).
+
+First line: a comment beginning with "(This file "
+Second line: the file flags, and optional type/creator:
+  "#$FFFF"         - contains just flags FFFF (4 ascii hexdigits)
+  "#TTTT$FFFF"     - contains flags FFFF, file type TTTT (4 characters)
+  "#TTTTCCCC$FFFF" - contains flags FFFF, type TTTT and creator CCCC
+  (example: "#APPLmsft$D800" = flags 0xd800, type "APPL" creator 'msft'
+
+Next line:  either ***DATA or ***RESOURCE, to state the beginning of data
+            for either the data or resource fork.
+Next lines: actual encoded data, which is ascii hex digits (2 per byte).
+            finished with the line "***END"
+Next line:  either ***DATA or ***RESOURCE, for the fork not already done,
+            followed by data as described above.
+Next line:  "***CHECKSUM:" and the hex digits for a checksum value, which
+            is a single byte wraparound addition of all decoded bytes in
+            both forks.
+
+BINHEX 3.0:
+
+This is very similar to the BinHex 2.0 format, except a different encoding
+and CRC is introduced. The third line is "***COMPRESSED", then the first
+"***DATA" or "***RESOURCE" is the next line.
+
+
+
+
+BINHEX 4.0: [RFC 1741]
+
+The format is processed at three different levels:
+
+   1) 8 bit encoding of the file:
+
+Byte:    Length of FileName (1->63)
+Bytes:   FileName ("Length" bytes)
+Byte:    Version
+Long:    Type
+Long:    Creator
+Word:    Flags (And $F800)
+Long:    Length of Data Fork
+Long:    Length of Resource Fork
+Word:    CRC
+Bytes:   Data Fork ("Data Length" bytes)
+Word:    CRC
+Bytes:   Resource Fork ("Rsrc Length" bytes)
+Word:    CRC
+
+   2) Compression of repetitive characters.
+
+($90 is the marker, encoding is made for 3->255 characters)
+00 11 22 33 44 55 66 77   -> 00 11 22 33 44 55 66 77
+11 22 22 22 22 22 22 33   -> 11 22 90 06 33
+11 22 90 33 44            -> 11 22 90 00 33 44
+
+The whole file is considered as a stream of bits.  This stream will
+be divided in blocks of 6 bits and then converted to one of 64
+characters contained in a table.  The characters in this table have
+been chosen for maximum noise protection.  The format will start
+with a ":" (first character on a line) and end with a ":".
+There will be a maximum of 64 characters on a line.  It must be
+preceded, by this comment, starting in column 1 (it does not start
+in column 1 in this document):
+  (This file must be converted with BinHex 4.0)
+
+Any text before this comment is to be ignored.
+The characters used are:
+ !"#$%&'()*+,-012345689@ABCDEFGHIJKLMNPQRSTUVXYZ[`abcdefhijklmpqr
+

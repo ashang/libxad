@@ -1,0 +1,597 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+
+<html>
+
+<head>
+<title>FAT File System Disk Volume Structures</title>
+<LINK REV="made" HREF="mailto:webmaster@storagereview.com">
+<SCRIPT language="JavaScript1.2" type="text/javascript" src="/styles/load_css.js"></SCRIPT>
+</HEAD>
+
+<BODY bgcolor="#ffffff" leftmargin=0 topmargin=0 marginwidth=0 marginheight=0>
+<BASEFONT face=arial size=3>
+<TABLE border=0 cellspacing=0 cellpadding=0 width="100%" align=center>
+    <TR>
+	<TD width="1%" valign="top" background="/images/sideline.gif"><img border="0" src="/images/buffer.gif" width="35" height="5"></TD>
+	
+	<TD>
+	<TABLE border=0 width="97%" align=center>
+    	<TR>
+		<TD nowrap>
+			<P align=center>
+			<A HREF="http://www.maximumpc.com/" TARGET="_blank"><IMG SRC="/images/maxpcn.gif" WIDTH="60" HEIGHT="60" BORDER="0" ALT=""></A> &nbsp; <A HREF="http://maximumpcads.snv.futurenet.com/cgi-bin/accipiter/adclick.exe/area=PC.STORAGEREVIEW/adsize=468X60?963051271" TARGET="_blank"><IMG BORDER=0 SRC="http://maximumpcads.snv.futurenet.com/cgi-bin/accipiter/adserver.exe/area=PC.STORAGEREVIEW/adsize=468X60?963051271" HEIGHT=60 WIDTH=468 ALT=""></A> &nbsp; <A HREF="http://maximumpcads.snv.futurenet.com/cgi-bin/accipiter/adclick.exe/area=PC.STORAGEREVIEWBUYBTN/adsize=120X90?963051271" TARGET="_blank"><IMG BORDER=0 SRC="http://maximumpcads.snv.futurenet.com/cgi-bin/accipiter/adserver.exe/area=PC.STORAGEREVIEWBUYBTN/adsize=120X90?963051271" HEIGHT=90 WIDTH=120 ALT=""></A>
+			<BR><BR>
+			<FONT size=1>Reprinted, with permission, from</FONT><BR>
+			<A href="http://www.pcguide.com/" onmouseover="window.status='The PC Guide'; return true;" target="new_window"><FONT size=4>The PC Guide</FONT></A>
+			</P>
+		</TD>
+		</TR>
+    	<TR>
+		<TD>
+
+<center><hr width="95%" noshade><em><b>
+FAT File System Disk Volume Structures
+</b></em><hr width="95%" noshade></center>
+
+<table border=0 bgcolor=black cellpadding=1 cellspacing=0 align=center width="95%"><tr><td>
+<table border=0 cellpadding=0 cellspacing=0 width="100%" bgcolor="#eeeeee">
+<tr><th bgcolor="#a0b7c7">
+<a name="topics">Further Topics</a>
+</th></tr>
+<tr><td>
+
+<table border=0 cellpadding=0 cellspacing=0 width="100%">
+<tr><td>&nbsp;<img src="/images/openbook.gif" width=15 height=16 border=0 alt="">&nbsp;Hard Disk Drives</td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="/guide/guide_construct.html" onmouseover="window.status='Construction and Operation of the Hard Disk Drive'; return true;">Construction and Operation of the Hard Disk Drive</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="/guide/guide_geometry.html" onmouseover="window.status='Hard Disk Geometry and Low-Level Data Structures'; return true;">Hard Disk Geometry and Low-Level Data Structures</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="/guide/guide_performance.html" onmouseover="window.status='Hard Disk Performance'; return true;">Hard Disk Performance</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="/guide/guide_bios_capacity.html" onmouseover="window.status='Hard Disk BIOS and Capacity Factors'; return true;">Hard Disk BIOS and Capacity Factors</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="/guide/guide_interface_config.html" onmouseover="window.status='Hard Disk Interfaces and Configuration'; return true;">Hard Disk Interfaces and Configuration</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/openfolder.gif" width=16 height=14 border=0 alt="">&nbsp;<a href="/guide/guide_structures_filesys.html" onmouseover="window.status='Hard Disk Logical Structures and File Systems'; return true;">Hard Disk Logical Structures and File Systems</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="guide_structures_os.html" onmouseover="window.status='Operating Systems and File Systems'; return true;">Operating Systems and File Systems</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="guide_structures_pc.html" onmouseover="window.status='PC File Systems'; return true;">PC File Systems</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="guide_structures_boot.html" onmouseover="window.status='Major Disk Structures and the Boot Process'; return true;">Major Disk Structures and the Boot Process</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/doc.gif" width=13 height=16 border=0 alt="">&nbsp;FAT File System Disk Volume Structures</td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>&#183;</b>&nbsp;&nbsp;</font><a href="#Sector" onmouseover="window.status='Volume Boot Sector'; return true;">Volume Boot Sector</a></td><td align=right>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>&#183;</b>&nbsp;&nbsp;</font><a href="#FATs" onmouseover="window.status='File Allocation Tables'; return true;">File Allocation Tables</a></td><td align=right>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>&#183;</b>&nbsp;&nbsp;</font><a href="#Files" onmouseover="window.status='Files, Directories, Paths and the Directory Tree'; return true;">Files, Directories, Paths and the Directory Tree</a></td><td align=right>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>&#183;</b>&nbsp;&nbsp;</font><a href="#Internal" onmouseover="window.status='Internal Directory Structures'; return true;">Internal Directory Structures</a></td><td align=right>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>&#183;</b>&nbsp;&nbsp;</font><a href="#Root" onmouseover="window.status='Root Directory and Regular Directories'; return true;">Root Directory and Regular Directories</a></td><td align=right>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>&#183;</b>&nbsp;&nbsp;</font><a href="#Names" onmouseover="window.status='File Names and Extensions'; return true;">File Names and Extensions</a></td><td align=right>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>&#183;</b>&nbsp;&nbsp;</font><a href="#Long" onmouseover="window.status='Long File Names'; return true;">Long File Names</a></td><td align=right>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>&#183;</b>&nbsp;&nbsp;</font><a href="#Attributes" onmouseover="window.status='File Attributes'; return true;">File Attributes</a></td><td align=right>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="guide_structures_cluster.html" onmouseover="window.status='Clusters and File Allocation'; return true;">Clusters and File Allocation</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="guide_structures_partition.html" onmouseover="window.status='Partitioning, Partition Sizes and Drive Lettering'; return true;">Partitioning, Partition Sizes and Drive Lettering</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="guide_structures_programs.html" onmouseover="window.status='Disk Partitioning and Formatting Programs'; return true;">Disk Partitioning and Formatting Programs</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="guide_structures_compression.html" onmouseover="window.status='Disk Compression'; return true;">Disk Compression</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+</table>
+
+
+</td></tr></table>
+</td></tr></table>
+
+<p align=center>
+<!-- Group Bottom_Pool (24) -->
+ <!-- Client Quantum -->
+  <!-- Client Quantum Logged (wait: 0) -->
+   <a href="http://www.storagereview.com/tracker/tracker.cgi/72785?client=Quantum" target="_blank" onmouseover="window.status='The Fastest Drive in the World!!'; return true;" onmouseout="window.status='';return true;"><img src="http://www.storagereview.com/tracker/banners/DRIVEfinal.gif" width=468 height=60 border=0 alt="The Fastest Drive in the World!!" ></a>  
+</p>
+
+<table border=0 cellpadding=0 width="95%" align=center>
+<tr><td bgcolor="#0000A5" align=right><nobr><font size="-2" color="#ffff00"><em>
+<a name="Body">Author: Charles M. Kozierok</a>&nbsp;
+</em></font></nobr></td></tr>
+<tr><td bgcolor="#008000">
+<img src="/images/spacer.gif" width=1 height=2 alt=""></td></tr></table>
+
+<table border=0 cellpadding=0 cellspacing=0 align=center valign=top width="95%">
+<tr><td>
+<br>
+<p>The highest-level logical disk structures are the master boot record and partition
+tables, which define the way the entire disk is sized and organized. The next level down
+is the definition of each disk volume's structures. This is where we get down to the
+actual files and directories that are stored on the disk. This section takes a look at the
+disk volume structures used in the FAT file system.</p>
+
+<hr noshade>
+<u><b>
+
+<p><a name="Sector">Volume Boot Sector</a></b></u></p>
+
+<p>The <i>volume boot sector </i>is the &quot;master control&quot; for the disk volume,
+containing information about what the volume contains, and the volume boot program that is
+executed when the volume is booted (if it is bootable). <a href="guide_structures_boot.html" onmouseover="window.status='Major Disk Structures and the Boot Process'; return true;">This
+structure is discussed in detail here</a></p>
+
+<hr noshade>
+<u><b>
+
+<p><a name="FATs">File Allocation Tables</a></b></u></p>
+
+<p>The structure that gives the FAT file system its name is the <i>file allocation table</i>.
+In order to understand what this important table does, you must first understand how space
+on the hard disk is allocated under DOS (and its derivatives that also use FAT).</p>
+
+<p>While data is stored in 512-byte sectors on the hard disk, for performance reasons
+individual sectors are not normally allocated to files. The reason is that it would take a
+lot of overhead (time and space) to keep track of pieces of files that were this small.
+The hard disk is instead broken into larger pieces called <i>clusters</i>, or
+alternatively, <i>allocation units</i>. Each cluster contains a number of sectors.
+Typically, clusters range in size from 2,048 bytes to 32,768 bytes, which corresponds to 4
+to 64 sectors each. <a href="guide_structures_cluster.html" onmouseover="window.status='Clusters and File Allocation'; return true;">Clusters and how they work are described in full
+detail in this section</a>.</p>
+
+<p>The file allocation table is where information about clusters is stored. Each cluster
+has an entry in the FAT that describes how it used. This is what tells the operating
+system which parts of the disk are currently used by files, and which are free for use.
+The FAT entries are used by the operating system to <a href="guide_structures_cluster.html" onmouseover="window.status='Clusters and File Allocation'; return true;">chain
+together clusters to form files</a>.</p>
+
+<p>The file allocation tables are stored in the area of the disk immediately following the
+volume boot sector. Each volume actually contains two identical copies of the FAT;
+ostensibly, the second one is meant to be a backup of sorts in case of any damage to the
+first copy. Damage to the FAT can of course result in data loss since this is where the
+record is kept of which parts of the disk contain which files. The problem with this
+built-in backup is that the two copies are kept right next to each other on the disk, so
+that in the event that for example, bad sectors develop on the disk where the first copy
+of the FAT is stored, chances are pretty good that the second copy will be affected as
+well.</p>
+
+<hr noshade>
+<u><b>
+
+<p><a name="Files">Files, Directories, Paths and the Directory Tree</a></b></u></p>
+
+<p>The basis for the storage model on the PC, at a logical level, is the <i>file</i>. The
+universal concept of the file is one of the strengths of the PC file system, and is one
+that the PC shares with many other successful file systems such as that used by UNIX. A
+file is simply a collection of bytes stored together with a name to identify it. A file
+can contain anything: program code, data, pictures, a movie, you name it. The
+meaningfulness of a file, and what it is used for, is determined by what you put in it,
+and what software you use it with.</p>
+
+<p>As you probably know, files are stored in virtually every PC-based operating system
+using a paradigm known as the <i>directory tree</i>. The &quot;base&quot; of the tree is
+the (somewhat appropriately named) root directory. Within the root directory you can
+create either files or more directories (often called subdirectories). Each directory is a
+container that holds files or more subdirectories (or both). Taken as a whole, the
+structure of directories and subdirectories forms a logical tree.</p>
+
+<p>Each file or directory on the hard disk can be uniquely identified using two pieces of
+information: its filename, and the <i>path</i> along the directory tree that you traverse
+to get to it. For example, let's suppose you have a set of customer information files
+organized by region. The entire database is in a directory called &quot;Customers&quot;.
+Within this is a directory for each state. Within each of these state directories is a
+text file called &quot;customer-list&quot;. The file containing information about your
+customers in Texas would then be addressed as &quot;\Customers\Texas\customer-list&quot;.
+The filename is &quot;customer-list&quot;, and the path is &quot;\Customers\Texas&quot;.</p>
+
+<hr noshade>
+<u><b>
+
+<p><a name="Internal">Internal Directory Structures</a></b></u></p>
+
+<p>Every file on the system is stored in a <i>directory</i>. A directory is nothing more
+than a file itself, except that it is specially structured and marked on the disk so that
+it has special meaning. A directory is a table that contains information about files (and
+subdirectories) that it contains, and links to where the file (or subdirectory) data
+begins on the disk. The paper analogy would be a table of contents to a book, except that
+directories of course use a <a href="#Root">hierarchical tree structure</a> and
+books do not.</p>
+
+<p>Each entry in a directory is 32 bytes in length, and stores the following information: 
+
+<ul>
+  <li><b>File Name and Extension:</b> This is the 11-character name of the file using the
+    conventional 8.3 DOS file naming standard, for example, COMMAND.COM. Note that the
+    &quot;dot&quot; in &quot;COMMAND.COM&quot; is implied and not actually stored on the disk.
+    See here for more on file naming and also on VFAT long file names, <a href="#Long">which use a special structure</a>. The file name field is also used to indicate
+    <a href="guide_structures_cluster.html" onmouseover="window.status='Clusters and File Allocation'; return true;">directory entries that have been deleted</a>.</li>
+  <li><b>File Attribute Byte:</b> There are several different attributes which the operating
+    system uses to give special treatment to certain files; these are stored in a single byte
+    in each directory entry. <a href="#Attributes">These attributes are discussed
+    in detail here</a>. Note that it is one of these file attributes that indicates whether an
+    entry in the directory represents a &quot;real&quot; file, or a subdirectory.</li>
+  <li><b>Last Change Date/Time:</b> There is a space for each file to indicate the date and
+    time that it was created or modified. You should know that these fields can be arbitrarily
+    modified by any program to be whatever they want, so this date/time shouldn't be taken too
+    religiously. I occasionally am asked if the date/time on a file can be used to prove when
+    someone did something or not on their PC. It cannot, because it's too easy to change this
+    information.</li>
+  <li><b>File Size:</b> The size of the file in bytes.</li>
+  <li><b>Link to Start Cluster:</b> The number of the cluster that starts the file (or
+    subdirectory) is stored in the directory. This is what allows the operating system to find
+    a file when it is needed, and how all the different files and directories are linked
+    together on the disk. <a href="guide_structures_cluster.html" onmouseover="window.status='Clusters and File Allocation'; return true;">See here for more on cluster chaining</a>.</li>
+</ul>
+
+<p>Every regular directory on the disk has two special entries, that refer to the
+directory itself and to the parent directory. These are named &quot;.&quot; (single dot)
+and &quot;..&quot; (double dot) respectively. These entries are used for navigation
+purposes; if you type &quot;chdir ..&quot; then DOS will change your current directory to
+the parent of the one you were in.</p>
+
+<hr noshade>
+<u><b>
+
+<p><a name="Root">Root Directory and Regular Directories</a></b></u></p>
+
+<p>The directory at the &quot;base&quot; of the directory structure that defines the
+logical tree that organizes files on a hard disk is the <i>root directory</i>. The root
+directory is special because it follows special rules that do not apply to the other,
+&quot;regular&quot; directories on the hard disk.</p>
+
+<p>There can only be one root directory for any disk volume; obviously, having more than
+one would result in chaos, and there isn't any need to have more than one anyway. In order
+to &quot;anchor&quot; the directory tree, the root directory is fixed in place at the
+start of the DOS volume. It is located directly below the two copies of the <a href="#FATs">FAT</a>, which is itself directly below the other key disk
+structures. This contrasts with regular (sub) directories, which can be located anywhere
+on the disk.</p>
+
+<p>In addition to being fixed in location, the root directory is also fixed in size.
+Regular directories can have an arbitrary size; they use space on the disk much the way
+files do, and when more space is needed to hold more entries, the directory can be
+expanded the same way a file can. The root directory is limited to a specific number of
+entries because of its special status. The number of entries that the root directory can
+hold depends on the type of volume:</p>
+
+<table border=0 bgcolor=black cellpadding=1 cellspacing=0 align=center width="90%"><tr><td>
+<table border=0 cellpadding=0 cellspacing=0 width="100%" bgcolor="#eeeeee">
+  <tr align=center bgcolor="#a0b7c7">
+	<th width="50%">Volume Type</th>
+	<th width="50%">Maximum Number of Root Directory Entries</th>
+  </tr>
+  <tr bgcolor=black><td colspan=2><img src="/images/spacer.gif" width=1 height=1 alt=""></td></tr>
+  <tr align=center bgcolor="#dedede">
+    <td>360KB 5.25&quot; Floppy Disk</td>
+    <td>112</td>
+  </tr>
+  <tr align=center>
+    <td>720KB 3.5&quot; Floppy Disk</td>
+    <td>112</td>
+  </tr>
+  <tr align=center bgcolor="#dedede">
+    <td>1.2MB 5.25&quot; Floppy Disk</td>
+    <td>224</td>
+  </tr>
+  <tr align=center>
+    <td>1.44MB 3.5&quot; Floppy Disk</td>
+    <td>224</td>
+  </tr>
+  <tr align=center bgcolor="#dedede">
+    <td>2.88MB 3.5&quot; Floppy Disk</td>
+    <td>448</td>
+  </tr>
+  <tr align=center>
+    <td>Hard Disk</td>
+    <td>512</td>
+  </tr>
+</table></td></tr></table>
+
+<p>Note that the newer FAT32 version of the FAT file system does <i>not</i> have the
+restriction on placement and size of the root directory. In this enhancement the root
+directory is treated like a regular directory and can be relocated and expanded in size
+like any other.</p>
+
+<p>There are a couple of other special things about the root directory. One is that it
+cannot be deleted; the reason for this I would think to be obvious. Also, the root
+directory has no parent, since it is at the top of the tree structure. The root directory
+still contains a &quot;..&quot; entry, but instead of pointing to the cluster number of
+the parent directory like a regular directory's parent entry, it contains a null value
+(zero).</p>
+
+<hr noshade>
+<u><b>
+
+<p><a name="Names">File Names and Extensions</a></b></u></p>
+
+<p>As virtually every PC user knows, standard PC files are named using a fixed format
+convention that has been around since the &quot;beginning of time&quot; (i.e., the first
+IBM PC). The file name is comprised of two parts: 
+
+<ul>
+  <li><b>File Name:</b> The base name of the file itself. This part of the file name must be
+    between one and eight characters in length. A special code is used as the first character
+    of the file name to indicate <a href="guide_structures_cluster.html" onmouseover="window.status='Clusters and File Allocation'; return true;">deleted files</a>.</li>
+  <li><b>File Extension:</b> The extension of the file, which is optional and hence can be
+    from zero to three characters.</li>
+</ul>
+
+<p>The extension can be thought of as a &quot;file type&quot; of sorts. It tells you--and
+your computer--at a glance what kind of file you are looking at. For example, a file with
+an extension of &quot;EXE&quot; is a normally an executable program file, &quot;HTM&quot;
+usually means an HTML document, and &quot;BAT&quot; a DOS batch file.</p>
+
+<p>In actual fact, there is nothing special at all about these extension names. The reason
+I say an EXE file is <i>normally</i> an executable file is that the use of the EXE
+extension to refer to executable files is a convention, and not anything that is enforced
+by the system. You could open up your editor and type &quot;This is a test&quot;, and when
+you go to save the file, save it as &quot;TEST.EXE&quot;, and this will work perfectly
+fine.</p>
+
+<p>So why are file extensions used? They are essentially a shorthand way of organizing
+files by type, and they are used by various pieces of software, including DOS itself, to
+indicate which programs should be used with which files, without having to look into the
+structure of the file itself. The reason that having an EXE extension on a file matters is
+that DOS is pre-programmed so that when you type the name of a file, it will look for that
+file with certain types of extensions to try to execute them. One of those is
+&quot;EXE&quot;. So if you create this silly &quot;TEST.EXE&quot; file with a text line in
+it and then type &quot;TEST&quot; at the command line, DOS will try to run this
+&quot;program&quot;. What do you think will happen when it does? (Hint: don't try this if
+you have any unsaved work open anywhere else on your PC...)</p>
+
+<p>Similarly, other programs usually try by default to look only at files that have
+extensions that they are meant to use. If you run Microsoft Word and go to the
+&quot;Open&quot; dialog box, by default it will look for files with an extension of
+&quot;DOC&quot;, for &quot;document&quot;. This is why using consistent file extensions is
+important.</p>
+
+<p>This use of file extensions by software programs is quite prevalent, and there are in
+fact hundreds of different kinds in use. In fact, when you double-click on a file in
+Windows 95's Windows Explorer, for example, it will automatically launch the program that
+it knows uses the file you selected, and tell the program to open the file you clicked on.
+Just remember that Explorer is only determining the program to use by looking at the file
+extension, and not by analyzing anything within the file itself. (Also, many programs use
+the same file extensions, which can be confusing at times. If you've ever had Internet
+Explorer and Netscape Navigator fighting for the &quot;right&quot; to be associated with
+your &quot;HTM&quot; files you know exactly what I mean. :^) )</p>
+
+<p>The following characters are allowed in legal DOS file names: <i>A-Z 0-9 $ % ' - _ @ ~
+` ! ( ) ^ # &amp;</i>. Note that a space <i>is</i> an officially valid character for a
+file name, but I strongly recommend against using spaces in standard file names because
+many programs become very confused by file names with spaces in them. Even Windows 95
+specifically avoids using spaces in file names when it creates 8.3 aliases for its <a href="#Long">long file names</a>.</p>
+
+<hr noshade>
+<u><b>
+
+<p><a name="Long">Long File Names</a></b></u></p>
+
+<p>Until the release of Windows 95, all file names using DOS or Windows 3.x were limited
+to the standard eight character file name plus three character file extension. This
+restriction tends to result in users having to create incredibly cryptic names, and having
+the situation still like this 15 years after the PC was invented seemed laughable,
+especially with Microsoft wanting to compare its ease of use to that of the Macintosh.
+Users want to name their files &quot;Mega Corporation - fourth quarter results.DOC&quot;,
+not &quot;MGCQ4RST.DOC&quot;, because the second name will mean zippo to the user a few
+months after they create it.</p>
+
+<p>Microsoft was determined to bring <i>long file names</i> (<i>LFNs</i>) to Windows 95
+much as it had for Windows NT. The latter, however, has a new file system designed from
+the ground up to allow long file names. Microsoft had a big problem on its hands with
+Windows 95: it wanted to maintain compatibility with existing disk structures, older
+versions of DOS and Windows, and older applications. It couldn't just &quot;toss out&quot;
+everything that came before and start fresh, because doing this would have meant no older
+programs could read any files that used the new long file names. File names were
+restricted to &quot;8.3&quot; (standard file name sizes) within the directories on the
+disk.</p>
+
+<p>What Microsoft needed was a way to implement long file names so that the following
+goals were all met: 
+
+<ul>
+  <li>Windows 95 and applications written for Windows 95 could use file names much longer than
+    11 total characters.</li>
+  <li>The new long file names could be stored on existing DOS volumes using standard directory
+    structures, for compatibility.</li>
+  <li>Older pre-Windows-95 software would still be able to access the files that use these new
+    file names, somehow.</li>
+</ul>
+
+<p>The VFAT file system accomplishes these goals, for the mostpart, as follows. Long file
+names of up to 255 characters per file can be assigned to any file under Windows 95 or by
+any program written for Windows 95 (although file names under 100 characters are
+recommended so that they don't get cumbersome to use). Support for these long file names
+is also provided by the version of DOS (7.x) that comes with Windows 95. <a href="#Names">File extensions</a> are maintained, to preserve the way that they are used by
+software. The long file name is limited to the same characters as standard file names are,
+except that the following additional characters are allowed: <i>+ , ; = [ ]</i>.</p>
+
+<p>To allow access by older software, each file that uses a long file name also has a
+standard file name <i>alias</i> that is automatically assigned to it. This is done by
+truncating and modifying the file name as follows: 
+
+<ul>
+  <li>The long file name's extension (up to three characters after a &quot;.&quot;) are
+    transferred to the extension of the alias file name.</li>
+  <li>The first six non-space characters of the long file name are analyzed. Any characters
+    that are valid in long file names but not in standard file names (+ , ; = [ and ]) are
+    replaced by underscores. All lower-case letters are converted to upper case. These six
+    characters are stored as the first six characters of the file name.</li>
+  <li>The last two characters of the file name are assigned as &quot;~1&quot;. If that would
+    cause a conflict because there is already a file with this alias in the directory, then it
+    tries &quot;~2&quot;, and so on until it finds a unique alias.</li>
+</ul>
+
+<p>So to take our example from before, &quot;Mega Corporation - fourth quarter
+results.DOC&quot; would be stored as shown, but also under the alias
+&quot;MEGACO~1.DOC&quot;. If you had previously saved a file called &quot;Mega Corporation
+- third quarter results.DOC&quot; in the same directory, then <i>that</i> file would be
+&quot;MEGACO~1.DOC&quot; and the new one would be &quot;MEGACO~2.DOC&quot;. Any older
+software can reference the file using this older name. Note that using spaces in long file
+names really doesn't cause any problems because Windows 95 applications are designed
+knowing that they will be commonly used, and because the short file name alias has the
+spaces removed.</p>
+
+<p>Long file names are stored in regular directories using the standard directory entries,
+but using a couple of tricks. The Windows 95 file system creates a standard directory
+entry for the file, in which it puts the short file name alias. Then, it uses several
+additional directory entries to hold the rest of the long file name. A single long file
+name can use many directory entries (since each entry is only 32 bytes in length), and for
+this reason it is recommended that long file names not be placed in the <a href="#Root">root directory</a>, where the total number of directory entries is limited.</p>
+
+<p>In order to make sure that older versions of DOS don't get confused by this
+non-standard usage, each of the extra directory entries used to hold long file name
+information is tagged with the following odd combination of <a href="#Attributes">file attributes</a>: read-only, hidden, system and volume label. The objective
+here is to make sure that no older versions of DOS try to do anything with these long file
+name entries, and also to make sure they don't try to overwrite these entries because they
+think they aren't in use. That combination of file attributes causes older software to
+basically ignore the extra directory entries being used by VFAT.</p>
+
+<p>While long file names are a great idea and improve the usability of Windows 95,
+Microsoft's streeeeeetch to keep them compatible with old software kind of shows.
+Basically, the implementation is a <i>hack</i> built on top of the standard FAT file
+system, and there are numerous problems that you should be aware of when using LFNs: 
+
+<ul>
+  <li><b>Compatibility Problems with Older Utilities:</b> While marking its extra entries as
+    read-only, hidden, system and volume label will trick standard applications into leaving
+    these entries alone, a disk utility program like Norton Disk Doctor will not be fooled. If
+    you use the DOS version that is not aware of long file names, it will detect these entries
+    as errors on your disk and happily &quot;correct&quot; them for you, and that's that for
+    your long file names. Utilities run under Windows 95 must be aware of long file names to
+    work properly.</li>
+  <li><b>&quot;Loss&quot; of Long File Names with Older Software:</b> While older apps will
+    work with the long file names using the short name alias, they have no ability to access
+    the long file name at all. It is easy for one of these applications to &quot;drop&quot;
+    the long file name by accident. A common cause of frustration is that if you use older DOS
+    backup software that doesn't know about long file names, it will save only the alias, and
+    if you have a crash and need to restore, the long
+    file names will be lost.</li>
+  <li><b>Problems with Conflicting Alias File Names:</b> There are two problems with the long
+    file name aliasing scheme. The first is that the alias is not permanently linked to the
+    long file name, and can change. Let's suppose we take our &quot;Mega Corporation - fourth
+    quarter results.DOC&quot; and save it in a new empty directory. It will be assigned the
+    alias &quot;MEGACO~1.DOC&quot;. Now let's say we copy it to a directory that already has
+    the file &quot;Mega Corporation - Water Cooler Policy.DOC&quot; in it, which is using the
+    same &quot;MEGACO~1.DOC&quot; alias. When we do this, the alias for the fourth quarter
+    results file will magically change (well, the operating system does it) to
+    &quot;MEGACO~2.DOC&quot;. This can confuse some people who refer to the file both by the
+    long name and the alias.<br>
+    The second problem is more serious. Let's replay this same scenario using an older file
+    copy application that isn't aware of long file names. Since all it sees is
+    &quot;MEGACO~1.DOC&quot; in two different places, it thinks they are the same file, and
+    will overwrite the water cooler memo with the fourth quarter results when you do the copy!
+    If you are lucky it will ask &quot;Are you sure?&quot; first; otherwise...</li>
+</ul>
+
+<p>Overall, long file names are a useful advance in the usability of the FAT file system,
+but you need to be aware of problems when using them, especially with older software.</p>
+
+<hr noshade>
+<u><b>
+
+<p><a name="Attributes">File Attributes</a></b></u></p>
+
+<p>Each file is stored in a directory, and uses a directory entry that describes its
+characteristics such as its name and size, and also contains a pointer to where the file
+is stored on disk. One of the characteristics stored for each file is a set of <i>file
+attributes</i> that give DOS and application software more information about the file and
+how it is intended to be used.</p>
+
+<p>The use of attributes is &quot;voluntary&quot;. What this means is that any software
+program can look in the directory entry to discern the attributes of a file, and based on
+them, make intelligent decisions about how to treat the file. For example, a file
+management program's delete utility, seeing a file marked as a read-only system file,
+would be well-advised to at least warn the user before deleting it. However, it doesn't
+have to. Any program that knows what it is doing can override the attributes of a file,
+and certainly, viruses will do this
+routinely.</p>
+
+<p>That said, DOS and most other operating systems assign definite meanings to the
+attributes stored for files, and will alter their behavior according to what they see. If
+at a DOS prompt you type &quot;DIR&quot; to list the files in the directory, by default
+you will not see any files that have the &quot;hidden&quot; attribute set. You have to
+type &quot;DIR /AH&quot; to see the hidden files.</p>
+
+<p>A file can have more than one attribute attached to it, although only certain
+combinations really make any sense. The attributes are stored in a single byte, with each
+bit of the byte representing a specific attribute (actually, only six bits are used of the
+eight in the byte). Each bit that is set to a one means that the file has that attribute
+turned on. (These are sometimes called <i>attribute bits</i> or <i>attribute flags</i>).
+This method is a common way that a bunch of &quot;yes/no&quot; parameters are stored in
+computers to save space. The following are the attributes and the bits they use in the
+attribute byte:</p>
+
+<table border=0 bgcolor=black cellpadding=1 cellspacing=0 align=center width="90%"><tr><td>
+<table border=0 cellpadding=0 cellspacing=0 width="100%" bgcolor="#eeeeee">
+  <tr align=center bgcolor="#a0b7c7">
+	<th width="50%">Attribute</th>
+	<th width="50%">Bit Code</th>
+  </tr>
+  <tr bgcolor=black><td colspan=2><img src="/images/spacer.gif" width=1 height=1 alt=""></td></tr>
+  <tr align=center bgcolor="#dedede">
+    <td>Read-Only</td>
+    <td>00000001</td>
+  </tr>
+  <tr align=center>
+    <td>Hidden</td>
+    <td>00000010</td>
+  </tr>
+  <tr align=center bgcolor="#dedede">
+    <td>System</td>
+    <td>00000100</td>
+  </tr>
+  <tr align=center>
+    <td>Volume Label</td>
+    <td>00001000</td>
+  </tr>
+  <tr align=center bgcolor="#dedede">
+    <td>Directory</td>
+    <td>00010000</td>
+  </tr>
+  <tr align=center>
+    <td>Archive</td>
+    <td>00100000</td>
+  </tr>
+</table></td></tr></table>
+
+<p>So, the attribute byte for a hidden, read-only directory would be 00010011, which is
+simply the codes for those three attributes from the table above, added together. Here is
+a more detailed description of what these attributes mean (or more accurately, how they
+are normally used). Note that each of the attributes below apply equally to files and
+directories (except for the directory attribute of course!): 
+
+<ul>
+  <li><b>Read-Only:</b> Most software, when seeing a file marked read-only, will refuse to
+    delete or modify it. This is pretty straight-forward. For example, DOS will say
+    &quot;Access denied&quot; if you try to delete a read-only file. On the other hand,
+    Windows Explorer will happily munch it. Some will choose the middle ground: they will let
+    you modify or delete the file, but only after asking for confirmation.</li>
+  <li><b>Hidden:</b> This one is pretty self-explanatory as well; if the file is marked hidden
+    then under normal circumstances it is hidden from view. DOS will not display the file when
+    you type &quot;DIR&quot; unless a special flag is used, as shown in the earlier example.</li>
+  <li><b>System:</b> This flag is used to tag important files that are used by the system and
+    should not be altered or removed from the disk. In essence, this is like a &quot;more
+    serious&quot; read-only flag and is for the mostpart treated in this manner.</li>
+  <li><b>Volume Label:</b> Every disk volume can be assigned an identifying label, either when
+    it is formatted, or later through various tools such as the DOS command &quot;LABEL&quot;.
+    The volume label is stored in the root directory as a file entry with the label attribute
+    set.</li>
+  <li><b>Directory:</b> This is the bit that differentiates between entries that describe
+    files and those that describe subdirectories within the current directory. In theory you
+    can convert a file to a directory by changing this bit, but of course in practice trying
+    to do this would result in a mess because the entry for a directory has to be in a
+    specific format.</li>
+  <li><b>Archive:</b> This is a special bit that is used as a &quot;communications link&quot;
+    between software applications that modify files, and those that are used for backup. Most
+    backup software allows the user to do an incremental
+    backup, which only selects for backup any files that have changed since the last
+    backup. This bit is used for this purpose. When the backup software backs up
+    (&quot;archives&quot;) the file, it clears the archive bit (makes it zero). Any software
+    that modifies the file subsequently, is supposed to set the archive bit. Then, the next
+    time that the backup software is run, it knows by looking at the archive bits which files
+    have been modified, and therefore which need to be backed up. Again, this use of the bit
+    is &quot;voluntary&quot;; the backup software relies on other software to use the archive
+    bit properly; some programs could modify the file without setting the archive attribute,
+    but fortunately most software is &quot;well-behaved&quot; and uses the bit properly.</li>
+</ul>
+
+<p>Most of the attributes for files can be modified using the DOS ATTRIB command, or by
+looking at the file's properties through the Windows 95 Windows Explorer or other similar
+file navigation tools.</p>
+<p>
+<b><u>Next:</u></b> <a href="guide_structures_cluster.html" onmouseover="window.status='Clusters and File Allocation'; return true;">Clusters and File Allocation</a>
+</td></tr></table>
+
+<hr width="95%" noshade>
+<center><a href="#topics">Further Topics</a></center>
+<hr width="95%" noshade>
+
+<DIV align=center><BR>
+<A HREF="#top" onmouseover="window.status='Return to the top of this page'; return true;" onmouseout="window.status='';return true;"><IMG SRC="/images/blue_up_arrow.gif" width=32 height=32 border=0 alt="Return to the top of this page"></A>
+<BR>
+<FONT size=1>Copyright &copy; 1998-1999 Charles M. Kozierok. All rights reserved.</FONT>
+</DIV>
+</TD></TR></TABLE></TD></TR></TABLE>
+
+</BODY></HTML>

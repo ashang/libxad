@@ -1,0 +1,118 @@
+begin 600 hello/hello
+.2&5L;&\L(%=O<FQD(0H`
+`
+end
+begin-base64 600 hello/hello
+SGVsbG8sIFdvcmxkIQo=
+====
+begin 644 hello
+.2&5L;&\L(%=O<FQD(0H`S
+``
+end
+size 14
+begin 644 hello
+.2&5L;&\L(%=O<FQD(0H`
+`
+end
+sum -r/size 34737/44 section (from "begin" to "end")
+sum -r/size 51421/14 entire input file
+filetime 728016960
+begin 644 hello
+.2&5L;&\L(%=O<FQD(0H`
+`
+end
+size 14
+begin 644 hello
+.2&5L;&\L(%=O<FQD(0H`S
+``
+end
+sum -r/size 3900/46 section (from "begin" to "end")
+sum -r/size 51421/14 entire input file
+section 1 of 1 of file hello FILE HEADER
+
+begin 644 hello
+.2&5L;&\L(%=O<FQD(0H`
+`
+end
+size 14
+section 1 of 1 of file hello FILE HEADER
+
+filetime 728016960
+begin 644 hello
+.2&5L;&\L(%=O<FQD(0H`S
+``
+end
+sum -r/size 3900/46 section (from "begin" to "end")
+sum -r/size 51421/14 entire input file
+begin 600 hello/hello
+CG4JgP4wg63RjQalY6Ede
++
+end
+xbtoa5 78 hello Begin
+87cURD_*#4DfTZ)+US2LT
+xbtoa End N 14 e E 1b S 583 R 402a2f4
+xbtoa Begin
+87cURD_*#4DfTZ)+US2L
+xbtoa End N 14 e E 27 S 483 R 56a7f0
+HELLO/HELLO
+B6E\K6l\85M_LVaT8@X0
+
+(This file must be converted with BinHex 4.0)
+
+:$fKPE'a[,QKaH#eKE@PRB3!rN!J!N!81!*!%#9Y)C@aXEb`J9fpbE'3K#XjK!!!
+!!!!:
+
+Content-Type: application/mac-binhex40; name="hello/hello.hqx-amiga-mime"
+
+(This file must be converted with BinHex 4.0)
+
+:&'KPE'a[,QKaH#eKE@PRB5eYD@eP!$q3#!#3"3i!N!5Sj%KPE'a[,#"AEh*XC#%
++cQ%!!!!!!!!:
+
+(This file must be converted; you knew that already.)
+
+:#fKPE'a[,fKPE'a[!&4&@&40380"!*!&$J!!!!"I18KPE'a[,#"AEh*XC#%+cQ%
+!!!:
+(This file must be converted; you knew that already.)
+
+:#fKPE'a[,fKPE'a[!&4&@&40380"!*!&$J!!!!"I18KPE'a[,#"AEh*XC#%+cQ%
+!!!:
+$
+ship hello
+RZ{nC4&0{=):H8AtFIvSnC'
+$
+end
+-bcode-begin 1 hello/hello
+SGVsbG8sIFdvcmxkIQo=
+-bcode-end 1 14 b4e89e84
+--bcode-begin 1 hello/hello
+SGVsbG8sIFdvcmxkIQo=
+--bcode-end 1 14 b4e89e84
+-hexcode-begin 1 hello/hello
+000000:48656c6c6f2c20576f726c64210a:73
+-hexcode-end 1 14 b4e89e84
+--hexcode-begin 1 hello/hello
+000000:48656c6c6f2c20576f726c64210a:73
+--hexcode-end 1 14 b4e89e84
+-nucode-begin 1 hello/hello
+begin 640 hello/hello
+.2&5L;&\L(%=O<FQD(0H`
+`
+end
+-nucode-end 1 14 b4e89e84
+--nucode-begin 1 hello/hello
+begin 640 hello/hello
+.2&5L;&\L(%=O<FQD(0H`
+`
+end
+--nucode-end 1 14 b4e89e84
+
+!start hello
+A@l^[Mh3,=Mo]c2##+8U
+!end 14 6653DDA9
+
+
+!start hello
+A@l^[Mh3,=Mo]c2##+8U
+!end 14 6653DDA9
+

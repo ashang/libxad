@@ -1,0 +1,240 @@
+------------------------------------------------------------------------------
+  VFAT Directory (with Long Filenames)
+------------------------------------------------------------------------------
+
+  by: VAJDA Ferenc (Hungary)
+      vajda@email.com
+
+------------------------------------------------------------------------------
+
+All records in a directory sector are 32 byte long.
+In DOS we can use only STD records, which can be a file record, a directory
+record, or a Volume label record (depends on attribute). in Windows 95/98 and
+Windows NT we can use long filenames. New records are LFN (Long FileName)
+records.
+
+STD record
+(off: offset in record, bytn: number of bytes, bit: bitfield number)
+
+off bytn bit     description
+------------------------------------------
+00   8           Filename (8 character)
+                 If first character = 0xe5, record is deleted
+                 If first character = 0x00, close record
+                   (after this record no record available)
+08   3           Extension (3 character)
+0b   1           Attribute of record
+         [7..6]  reserved
+         [5]     Archive
+         [4]     Directory
+         [3]     Volume label
+         [2]     System
+         [1]     Hidden
+         [0]     Read only
+0c   1           Filename/extension small letters* (only Windows NT)
+0d   1           Creation time (hundred)*
+         [7]     Second[0]
+         [6..0]  Hundreds
+0e   2           Creation time (hour, minute, second)*
+         [f..b]  Hour (intel byte structure in sector: LSB, MSB)
+         [a..5]  Minute
+         [4..0]  Second[5..1] LSB in 0d
+10   2           Creation date (year - from 1980, month, day)*
+         [f..9]  Year (real year = 1980 + year)
+         [8..5]  Month
+         [4..0]  Day
+12   2           Last access date (year - from 1980, month, day)*
+         [f..9]  Year (real year = 1980 + year)
+         [8..5]  Month
+         [4..0]  Day
+14   2           reserved
+16   2           Last modification time (hour, minute, second)
+         [f..b]  Hour
+         [a..5]  Minute
+         [4..0]  Second[5..1]
+18   2           Last modification date (year - from 1980, month, day)
+         [f..9]  Year (real year = 1980 + year)
+         [8..5]  Month
+         [4..0]  Day
+1a   2           Start cluster
+1c   4           Length of file
+
+first two records in a directory are:
+.  - this directory
+.. - parent directory
+
+example (not VFAT, creation time, modification time = 0)
+000: 2e 20 20 20 20 20 20 20 - 20 20 20 10 00 00 00 00  .          
+010: 00 00 00 00 00 00 1d a3 - 32 23 52 04 00 00 00 00        £2#R
+
+020: 2e 2e 20 20 20 20 20 20 - 20 20 20 10 00 00 00 00  ..         
+030: 00 00 00 00 00 00 1d a3 - 32 23 00 00 00 00 00 00        £2#
+
+* only VFAT (in case STD FAT all are reserved)
+
+------------------------------------------------------------------------------
+
+Long Filename record (VFAT)
+
+off bytn bit     description
+------------------------------------------
+00   1           counter
+         [7]     reserved ???
+         [6]     1 if last record
+         [5..0]  A counter for tiles of the LFN
+01   10          First 5 character of record
+                 (1 character: 2 bytes - Unicode**)
+0b   1           Attribute (for compatibility with Standard FAT)
+                 Always 0x0f - never used elsewhere
+                   Volume label - DOS don't use it as a file
+                   System - System administrations record
+                   Hidden - DOS Hides it
+                   Read only - DOS don't delete it
+0c   1           reserved (0x00)
+0d   1           checksum***
+0e   12          6 characters (Unicode)
+1a   2           Start cluster (for compatibility)
+                 Must be 0 (It would be a problem with FAT)
+1c   4           2 characters (Unicode)
+
+Usage of LFN records (in the directory sector...)
+[last LFN record]
+[before last]
+...
+[second LFN record]
+[first LFN record]
+[STD record] - DOS (<=6.22) use only this record - 8+3 filename
+
+STD record name for LFN:
+if LFN: 8+3 or smaller and contains no spaces (eg.: McDon.gz)
+  the same, but without case sensitivity: MCDON.GZ
+else:
+  first maximum 6 charcters + '~' + identifnum, ext: last extensions first 3 letter
+  "a b.w" -> AB~1.W
+  "a b.abcd"-> AB~1.ABC
+  "a.b.w" -> AB~2.W
+  "What is this.doc.tgz" -> WHATIS~1.TGZ
+  "What is that.jpg.tgz" -> WHATIS~2.TGZ
+  ...
+  "What is your name.tgz" -> WHATI~10.TGZ
+NB: the DOS filename can be total other then LFN, but these are standards.
+    eg.: "Apples and Oranges.jpeg" -> FRUITS.JPG
+    This doesn't work always!
+
+------------------------------------------------------------------------------
+Example:
+"This is a very-very long filename.txt.tar.Z"
+For DOS: "THISIS~1.Z"
+
+000: 44 61 00 72 00 2e 00 5a - 00 00 00 0f 00 75 ff ff  Da r . Z   * u
+010: ff ff ff ff ff ff ff ff - ff ff 00 00 ff ff ff ff
+
+020: 03 69 00 6c 00 65 00 6e - 00 61 00 0f 00 75 6d 00  i l e n a * um
+030: 65 00 2e 00 74 00 78 00 - 74 00 00 00 2e 00 74 00  e . t x t   . t
+
+040: 02 79 00 2d 00 76 00 65 - 00 72 00 0f 00 75 79 00  y - v e r * uy
+050: 20 00 6c 00 6f 00 6e 00 - 67 00 00 00 20 00 66 00    l o n g   . f
+
+060: 01 54 00 68 00 69 00 73 - 00 20 00 0f 00 75 69 00  T h i s   * ui
+070: 73 00 20 00 61 00 20 00 - 76 00 00 00 65 00 72 00  s   a   v   e r
+
+080: 54 48 49 53 49 53 7e 31 - 5a 20 20 20 00 c2 1a 06  THISIS~1Z    Â
+090: 79 26 79 26 00 00 1a 06 - 79 26 f2 22 e8 03 00 00  y&y&  y&ò"è
+
+explanation (5 records):
+080: DOS filename: "THISIS~1" + Extension "Z  "
+08b: Attribute: Archive
+08c: 
+08d: Creation: 1999-03-25(YMD), 0:48:53:66(HMSH)
+092: Access: 1999-03-25(YMD)
+096: Modify: 1999-03-25(YMD), 0:48:52(HMS)
+     further then creation: the last bit of seconds is not available!
+     it should be also 53, but we can't save the last bit.
+09a: Start cluster: 8946
+09c: File length: 1000 (bytes)
+
+061:  1. character of LFN: 'T' [061..062]=0x0054 (Unicode)
+063:  2. character of LFN: 'h' [063..064]=0x0068 (Unicode)
+07e: 13. character of LFN: 'r' [07e..07f]=0x0072 (Unicode)
+041: 14. character of LFN: 'y' [041..042]=0x0079 (Unicode)
+007: 43. character of LFN: 'Z' [007..008]=0x005a (Unicode)
+009: NULL character [009..00a]=0x0000 (Unicode) - close filename
+00e: not used character [00e..00f]=0xffff (Unicode)
+
+080: STD record
+060: 1. LFN record
+040: 2. LFN record
+020: 3. LFN record
+000: 4. (Last) LFN record
+
+06b, 04b, 02b, 00b: attribute: 0x0f (always)
+06d, 04d, 02d, 00d: checksum*** (from DOS - 8+3 filename)
+
+------------------------------------------------------------------------------
+
+** Unicode characters:
+Always 2 bytes
+0x0000 - NULL (After the last character)
+0xffff - Not used
+example: 0x0043 (43 00) - 'C'
+         0x0171 (71 01) - a hungarian û(code page 852), u with two accent marks
+
+***:
+A C code for counting checksum.
+Perhaps, it can be computed in an easier way, but I didn't have any time
+to work it out. I spend some hours with experiments to get this one.
+
+format of "name": char[11], where name[0]..name[ 7] - filename
+                                  name[8]..name[10] - extension
+                                  (both filled with spaces if need)
+usage:
+  char fn[11]="MCDON   GZ "; /* MCDON.GZ */
+  char fn[11]="WHATIS~1TGZ"; /* WHATIS~1.TGZ */
+
+  char cs = checksum(fn);
+
+unsigned char checksum(unsigned char *name)
+{
+	unsigned char t[256], n;
+	int i, j, k, l;
+
+	for (i=0; i<256; i++) t[i]=(char)(i>>2)|(char)(i<<6);
+
+	for (i=2; i>=0; i--) for (j=0; j<name[i+8]; j++)
+	{
+		for (k=0; k<(1<<i); k++)
+		{
+			n=t[0];
+			for (l=0; l<255; l++) t[l]=t[l+1];
+			t[255]=n;
+		}
+		n=t[256-(1<<i)];
+		for (l=256-(1<<i); l<255 ; l++) t[l]=t[l+1];
+		t[255]=n;
+	}
+	for (i=7; i>=0; i--) for (j=0; j<name[i]; j++)
+	{
+		for (k=0; k<(1<<i); k++)
+		{
+			n=t[0];
+			for (l=0; l<255; l++) t[l]=t[l+1];
+			t[255]=n;
+		}
+		n=t[256-(1<<i)];
+		for (l=256-(1<<i); l<255 ; l++) t[l]=t[l+1];
+		t[255]=n;
+	}
+	return t[0];
+}
+
+------------------------------------------------------------------------------
+
+  Good luck to use this information, if You have any problems, please
+  write me.
+
+  Best regards,
+
+  VAJDA Ferenc
+  HUNGARY
+  vajda@email.com
+  fercsi@indigo2.hszk.bme.hu

@@ -1,0 +1,1533 @@
+<!-- X-URL: http://home.columbus.rr.com/ksiders/dos.htm -->
+<BASE HREF="http://home.columbus.rr.com/ksiders/dos.htm">
+
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.04 [en] (Win95; U) [Netscape]">
+   <META NAME="Author" CONTENT="Ken Siders">
+   <META NAME="Description" CONTENT="Contains a description of the various disk formats used on Atari 8-bit computers">
+   <META NAME="KeyWords" CONTENT="MyDos,SpartaDos,Atari,8-bit,8 bit,KBoot,MakeAtr,AtrUtil,Atari Dos">
+   <TITLE>Atari 8-bit Disk Formats</TITLE>
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#E0E0E0" LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
+
+<CENTER>
+<H1>
+<U><FONT COLOR="#993366">Atari 8-bit Disk Formats</FONT></U></H1></CENTER>
+
+<CENTER><B><I><FONT COLOR="#009900">By Ken Siders, Last Update: July 27,
+1998</FONT></I></B></CENTER>
+
+
+<P>Disclaimer: This document is a work in progress. Please mail any corrections
+to <A HREF="mailto:atari@columbus.rr.com">atari@columbus.rr.com</A> Most
+of this information has been derived from my work on AtrUtil, a windows
+95 Disk Image Utility. Information comes from a variety of documents and
+Usenet.
+<CENTER><A HREF="#atsd">Atari Dos 2.x - Single Density</A></CENTER>
+
+<CENTER><A HREF="#ated">Atari Dos 2.5 - Enhanced Density</A></CENTER>
+
+<CENTER><A HREF="#mydos">Mydos 4.5x</A></CENTER>
+
+<CENTER><A HREF="#kboot">KBoot Image</A></CENTER>
+
+<CENTER>&nbsp;<A HREF="#sparta">Sparta Dos</A></CENTER>
+
+<CENTER>Other Dos's</CENTER>
+&nbsp;
+<BR>&nbsp;
+
+<P>
+<HR>
+<BR><A NAME="atsd"></A>
+<H2>
+Atari Dos 2.x - Single Density</H2>
+
+<H3>
+<A NAME="atsecranges"></A>Sector Ranges</H3>
+
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Sectors</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>1 to 3</TD>
+
+<TD><A HREF="#boot1">Boot Sectors</A></TD>
+</TR>
+
+<TR>
+<TD>4 to 359</TD>
+
+<TD><A HREF="#data1">Data Sectors</A></TD>
+</TR>
+
+<TR>
+<TD>360</TD>
+
+<TD><A HREF="#vtoc1">VTOC</A></TD>
+</TR>
+
+<TR>
+<TD>361 to 368</TD>
+
+<TD><A HREF="#dir1">Directory Sectors</A></TD>
+</TR>
+
+<TR>
+<TD>369 to 719</TD>
+
+<TD><A HREF="#data1">Data Sectors</A></TD>
+</TR>
+
+<TR>
+<TD>720</TD>
+
+<TD><A HREF="#unused1">Unused</A></TD>
+</TR>
+</TABLE>
+
+<H3>
+<A NAME="boot1"></A>Boot Sectors</H3>
+On start up the first three sectors are read and they contain information
+on how to boot the disk. For Atari Dos Disks sector 1 has the following
+special bytes (The remaining bytes are just the code to load DOS.SYS) :
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Byte Offset</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+
+<TD>Unused. Usually 0 for Atari Dos</TD>
+</TR>
+
+<TR>
+<TD>1</TD>
+
+<TD>Number of sectors to boot. For Atari Dos this is 3. The first three
+sectors are enough to get as loaded into memory to load the DOS.SYS.</TD>
+</TR>
+
+<TR>
+<TD>2 to 3</TD>
+
+<TD>Boot Load Address. For Atari Dos it is 1792 ($700)</TD>
+</TR>
+
+<TR>
+<TD>4 to 5</TD>
+
+<TD>Initialization Address. Called after booting requested number of sectors.&nbsp;</TD>
+</TR>
+
+<TR>
+<TD>6 to 8</TD>
+
+<TD>JMP to Boot Continuation Address. This should be a 6502 jump instruction
+(76/$4C) followed by the address to jump to after booting the requested
+number of sectors.</TD>
+</TR>
+
+<TR>
+<TD>9</TD>
+
+<TD>Maximim number of files that can be open at once. This value can be
+set by POKEing location 1801 and writing DOS. Default is 3.</TD>
+</TR>
+
+<TR>
+<TD>10</TD>
+
+<TD>Drive Bits. There is one bit for each drive. Bit 0 is drive D1:, Bit
+1 is Drive D2:, etc. This can be set by poking location 1803 and writing
+DOS. The Default is 3 to include only drives 1 and 2.</TD>
+</TR>
+</TABLE>
+
+<H3>
+<A NAME="data1"></A>Data Sectors</H3>
+Each data sector holds up to 125 bytes of data and the remaining three
+bytes hold a link to the next sector, which file the sector belongs to
+and how many bytes of data in the sector. The number of bytes in the sector
+may be less than 125 if it is the last sector in the file or it was the
+last sector in the file before an append operation.
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Byte Offset</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0 to 124</TD>
+
+<TD>File Data</TD>
+</TR>
+
+<TR>
+<TD>125 (left 6 bits)</TD>
+
+<TD>File #0 to 63 (which corresponding directory this sector belongs to.)
+Incorrect values will give Error #164 (File # Mismatch)</TD>
+</TR>
+
+<TR>
+<TD>125 (right two bits) and 126</TD>
+
+<TD>Link to next sector. 10 bits allow for 1024 sectors. The two bits at
+offset are the most significant byte.</TD>
+</TR>
+
+<TR>
+<TD>127</TD>
+
+<TD>Number of bytes in sector. Can be up to 125 bytes.</TD>
+</TR>
+</TABLE>
+
+<H3>
+<A NAME="vtoc1"></A>VTOC (Volume table of Contents)</H3>
+This consists of 10 special purpose bytes and 90 bytes used to hold a sector
+bit map to track used sectors. 720 sectors / 8 bits per byte requires 90
+bytes. The bytes in the VTOC are as follows:
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Byte Offset</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+
+<TD>Dos code. This seems to be 2 for Atari Dos (Mapping the Atari Revised
+Edition claims it is 0)&nbsp;</TD>
+</TR>
+
+<TR>
+<TD>1 to 2</TD>
+
+<TD>Total number of available sectors on the disk (used and unused). This
+should be 707 on a freshly formatted Atari Dos disk.</TD>
+</TR>
+
+<TR>
+<TD>3 to 4</TD>
+
+<TD>Number of currently unused sectors. This can range from 0 to 707.</TD>
+</TR>
+
+<TR>
+<TD>5 to 9</TD>
+
+<TD>Unused</TD>
+</TR>
+
+<TR>
+<TD>10 to 99</TD>
+
+<TD>Bitmap for sectors 0 to 719. A bit value of 0 means in use, a value
+of 1 means the sector is free. Sector 0 doesn't exist. Sectors 1 to 3 are
+reserved for booting the disk, sector 360 is the VTOC, and sectors 361
+to 368 are the directory sectors. Sector 720 is unused because sector 0
+is used in the map, with 90 bytes there is only enough bits to map sectors
+0 through 719. The number of available sectors can be calcualted 721-1-3-1-8-1=707
+bytes. (721 bits are used since we started counting at 0.)</TD>
+</TR>
+
+<TR>
+<TD>100-127</TD>
+
+<TD>Unused. These should all be set to 0 so the sectors are marked as used
+and therefore unavailable. Note: Mydos uses the first bit of byte 100 to
+allow sector 720 to used for a total of 708 free sectors.</TD>
+</TR>
+</TABLE>
+
+<H3>
+<A NAME="dir1"></A>Directory Sectors</H3>
+Each entry is 16 bytes so there can be 8 entries per sector. There are
+8 sectors, so 8 sectors times 8 entries = a maximum of 64 files.
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Byte Offset</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+
+<TD><A HREF="#flag1">Flag Byte</A></TD>
+</TR>
+
+<TR>
+<TD>1 to 2</TD>
+
+<TD>Total number of sectors in file. Can be up to 65535 although obviously
+there can only be up to 707 on the disk</TD>
+</TR>
+
+<TR>
+<TD>3 to 4</TD>
+
+<TD>Starting sector number. Can be 1 to 65535 although obviously the hightest
+usable sector is sector 719.</TD>
+</TR>
+
+<TR>
+<TD>5 to 12</TD>
+
+<TD>8 character filename padded with spaces at end</TD>
+</TR>
+
+<TR>
+<TD>13 to 15</TD>
+
+<TD>3 character filename extension padded with spaces at end</TD>
+</TR>
+</TABLE>
+
+<H4>
+<A NAME="flag1"></A>Directory Sectors Flag Byte</H4>
+Five bits are used to keep various file attributes. The normal value for
+an unused entry is $0. The normal value for a non-locked properly closed
+file is $42. If the "Deleted" bit is set or the "Open for Output" bit is
+set the file will not appear in the directory. $43 is the normal value
+for a file that was open for output but not closed. This file will not
+appear in the directory and will in fact waste some sectors.
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Bit/Value</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0/$01</TD>
+
+<TD>File Opened for Output.</TD>
+</TR>
+
+<TR>
+<TD>1/$02</TD>
+
+<TD>File Created by Dos 2.</TD>
+</TR>
+
+<TR>
+<TD>5/$20</TD>
+
+<TD>File Locked (appears with '*' in directory).</TD>
+</TR>
+
+<TR>
+<TD>6/$40</TD>
+
+<TD>File In use (normal)</TD>
+</TR>
+
+<TR>
+<TD>7/$80</TD>
+
+<TD>File Deleted</TD>
+</TR>
+</TABLE>
+
+<H4>
+<A NAME="unused1"></A>Unused Sector</H4>
+Sector 720 is usused because only 90 sectors will allocated for a bitmap
+and sector 0 doesn't actually exist but wastes one of those bytes. Mydos
+uses one more byte in the VTOC and can make use of sector 720. It is the
+only major difference between Mydos single density disk format and Atari
+single density disk format.
+<BR>&nbsp;
+
+<P>
+<HR>
+<BR><A NAME="ated"></A>
+<H2>
+Atari Dos 2.5 - 1050 Double (Enhanced) Density</H2>
+
+<H3>
+<A NAME="at25secranges2"></A>Sector Ranges</H3>
+
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Sectors</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>1 to 3</TD>
+
+<TD><A HREF="#boot2">Boot Sectors</A></TD>
+</TR>
+
+<TR>
+<TD>4 to 359</TD>
+
+<TD><A HREF="#data2">Data Sectors</A></TD>
+</TR>
+
+<TR>
+<TD>360</TD>
+
+<TD><A HREF="#vtoc2">VTOC</A></TD>
+</TR>
+
+<TR>
+<TD>361 to 368</TD>
+
+<TD><A HREF="#dir2">Directory Sectors</A></TD>
+</TR>
+
+<TR>
+<TD>369 to 1023</TD>
+
+<TD><A HREF="#data2">Data Sectors</A></TD>
+</TR>
+
+<TR>
+<TD>1024</TD>
+
+<TD><A HREF="#vtoc2b">VTOC2</A></TD>
+</TR>
+
+<TR>
+<TD>1025-1040</TD>
+
+<TD><A HREF="#unused2">Unused</A></TD>
+</TR>
+</TABLE>
+
+<H3>
+<A NAME="boot2"></A>Boot Sectors</H3>
+There is no difference in the special boot bytes on a single density Atari
+Dos Disk and an Enhanced Density formated disk. On start up the first three
+sectors are read and they contain information on how to boot the disk.
+For Atari Dos Disks sector 1 has the following special bytes (The remaining
+bytes are just the code to load DOS.SYS) :
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Byte Offset</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+
+<TD>Unused. Usually 0 for Atari Dos</TD>
+</TR>
+
+<TR>
+<TD>1</TD>
+
+<TD>Number of sectors to boot. For Atari Dos this is 3. The first three
+sectors are enough to get as loaded into memory to load the DOS.SYS.</TD>
+</TR>
+
+<TR>
+<TD>2 to 3</TD>
+
+<TD>Boot Load Address. For Atari Dos it is 1792 ($700)</TD>
+</TR>
+
+<TR>
+<TD>4 to 5</TD>
+
+<TD>Initialization Address. Called after booting requested number of sectors.&nbsp;</TD>
+</TR>
+
+<TR>
+<TD>6 to 8</TD>
+
+<TD>JMP to Boot Continuation Address. This should be a 6502 jump instruction
+(76/$4C) followed by the address to jump to after booting the requested
+number of sectors.</TD>
+</TR>
+
+<TR>
+<TD>9</TD>
+
+<TD>Maximim number of files that can be open at once. This value can be
+set by POKEing location 1801 and writing DOS. Default is 3.</TD>
+</TR>
+
+<TR>
+<TD>10</TD>
+
+<TD>Drive Bits. There is one bit for each drive. Bit 0 is drive D1:, Bit
+1 is Drive D2:, etc. This can be set by poking location 1803 and writing
+DOS. The Default is 3 to include only drives 1 and 2.</TD>
+</TR>
+</TABLE>
+
+<H3>
+<A NAME="data2"></A>Data Sectors</H3>
+Each data sector holds up to 125 bytes of data and the remaining three
+bytes hold a link to the next sector, which file the sector belongs to
+and how many bytes of data in the sector. The number of bytes in the sector
+may be less than 125 if it is the last sector in the file or it was the
+last sector in the file before an append operation.
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Byte Offset</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0 to 124</TD>
+
+<TD>File Data</TD>
+</TR>
+
+<TR>
+<TD>125 (left 6 bits)</TD>
+
+<TD>File #0 to 63 (which corresponding directory this sector belongs to.)
+Incorrect values will give Error #164 (File # Mismatch)</TD>
+</TR>
+
+<TR>
+<TD>125 (right two bits) and 126</TD>
+
+<TD>Link to next sector. 10 bits allow for 1024 sectors (Thats why only
+all 1040 sectors are not available). The two bits at offset are the most
+significant byte.</TD>
+</TR>
+
+<TR>
+<TD>127</TD>
+
+<TD>Number of bytes in sector. Can be up to 125 bytes.</TD>
+</TR>
+</TABLE>
+
+<H3>
+<A NAME="vtoc2"></A>VTOC (Volume table of Contents)</H3>
+This consists of 10 special purpose bytes and 90 bytes used to hold a sector
+bit map to track used sectors for sectors 0 through 719 on the disk (for
+compability reasons with Dos 2.0) Sector 1024 is used to track the remaining
+sectors. The bytes in the VTOC are as follows:
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Byte Offset</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+
+<TD>Dos code. This is 2 for Atari Dos.&nbsp;</TD>
+</TR>
+
+<TR>
+<TD>1 to 2</TD>
+
+<TD>Total number of available sectors on the disk below sector 720(used
+and unused). This should be 707 on a freshly formatted Atari Dos disk.</TD>
+</TR>
+
+<TR>
+<TD>3 to 4</TD>
+
+<TD>Number of currently unused sectors below sector 720. This can range
+from 0 to 707.</TD>
+</TR>
+
+<TR>
+<TD>5 to 9</TD>
+
+<TD>Unused</TD>
+</TR>
+
+<TR>
+<TD>10 to 99</TD>
+
+<TD>Bitmap for sectors 0 to 719. A bit value of 0 means in use, a value
+of 1 means the sector is free. Sector 0 doesn't exist. Sectors 1 to 3 are
+reserved for booting the disk, sector 360 is the VTOC, and sectors 361
+to 368 are the directory sectors. Sector 720 through 1023 are tracked in
+sector 1023.</TD>
+</TR>
+
+<TR>
+<TD>100-127</TD>
+
+<TD>Unused. These should all be set to 0 so the sectors are marked as used
+and therefore unavailable.</TD>
+</TR>
+</TABLE>
+
+<H3>
+<A NAME="vtoc2b"></A>VTOC2 (Volume table of Contents - Part II)</H3>
+This is a continuation of the VTOC since the VTOC at sector 360 would only
+be able to handle 944 sectors.
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Byte Offset</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0 to 83</TD>
+
+<TD>Repeat of sectors 48 to 719. I would only use the values in sector
+360 for these since Dos 2.0 will not update this sector if the disk is
+written to.</TD>
+</TR>
+
+<TR>
+<TD>84 to 121</TD>
+
+<TD>Bitmap of sectors 720 to 1023. Bit set equals available.</TD>
+</TR>
+
+<TR>
+<TD>122 to 123</TD>
+
+<TD>Number of free sectors above sector 719. This should be 304 on a freshly
+formatted disk.</TD>
+</TR>
+
+<TR>
+<TD>124 to 127</TD>
+
+<TD>Unused. These should all be set to 0.</TD>
+</TR>
+</TABLE>
+
+<H3>
+<A NAME="dir2"></A>Directory Sectors</H3>
+Each entry is 16 bytes so there can be 8 entries per sector. There are
+8 sectors, so 8 sectors times 8 entries = a maximum of 64 files.
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Byte Offset</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+
+<TD><A HREF="#flag2">Flag Byte</A></TD>
+</TR>
+
+<TR>
+<TD>1 to 2</TD>
+
+<TD>Total number of sectors in file. Can be up to 65535 although obviously
+it can't be anywhere near that big.</TD>
+</TR>
+
+<TR>
+<TD>3 to 4</TD>
+
+<TD>Starting sector number. Can be 1 to 65535 although obviously the hightest
+usable sector is much less.</TD>
+</TR>
+
+<TR>
+<TD>5 to 12</TD>
+
+<TD>8 character filename padded with spaces at end</TD>
+</TR>
+
+<TR>
+<TD>13 to 15</TD>
+
+<TD>3 character filename extension padded with spaces at end</TD>
+</TR>
+</TABLE>
+
+<H4>
+<A NAME="flag2"></A>Directory Sectors Flag Byte</H4>
+Five bits are used to keep various file attributes. The normal value for
+an unused entry is $0. The normal value for a non-locked properly closed
+file is $42 if the file is accessible from Dos 2.0. If it is not the normal
+value is $03. This will keep the file from showing up under Dos 2.0. Dos
+2.5 will display this file within the "&lt;" and ">" symbols if the appropriate
+directory function is used. $43 I believe still always indicates a file
+that was open for ouput and not closed which will not show up in the directory.
+If the "Deleted" bit is set or the "Open for Output" bit is set the file
+will not appear in the directory.
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Bit/Value</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0/$01</TD>
+
+<TD>File Opened for Output. (Also will be set for Files using sectors above
+sector 719 but bit 6 will not be set. This is to make a Dos 2.5 file using
+extended sectors invisible to Dos 2.0)</TD>
+</TR>
+
+<TR>
+<TD>1/$02</TD>
+
+<TD>File Created by Dos 2.</TD>
+</TR>
+
+<TR>
+<TD>5/$20</TD>
+
+<TD>File Locked (appears with '*' in directory).</TD>
+</TR>
+
+<TR>
+<TD>6/$40</TD>
+
+<TD>File In use (normal). This will not be set if the file is usable only
+by Dos 2.5 and not Dos 2.0 (It is located above the sector 719 threshold)</TD>
+</TR>
+
+<TR>
+<TD>7/$80</TD>
+
+<TD>File Deleted</TD>
+</TR>
+</TABLE>
+&nbsp;
+<H4>
+<A NAME="unused2"></A>Unused Sectors</H4>
+Sectors 1025 to 1040 are unused because sector links are only 10 bits and
+can only hold a value up to 1023.
+<BR>&nbsp;
+
+<P>
+<HR>
+<BR><A NAME="mydos"></A>
+<H2>
+MyDos 4.5x</H2>
+
+<H3>
+<A NAME="mydossecranges"></A>Sector Ranges</H3>
+
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Sectors</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>1 to 3</TD>
+
+<TD><A HREF="#boot3">Boot Sectors</A></TD>
+</TR>
+
+<TR>
+<TD>4 to (360-#vtoc_sectors)</TD>
+
+<TD><A HREF="#data3">Data Sectors</A></TD>
+</TR>
+
+<TR>
+<TD>(360-#vtoc_sectors+1) to 360</TD>
+
+<TD><A HREF="#vtoc3">VTOC</A></TD>
+</TR>
+
+<TR>
+<TD>361 to 368</TD>
+
+<TD><A HREF="#dir3">Directory Sectors</A></TD>
+</TR>
+
+<TR>
+<TD>369 to total # sectors</TD>
+
+<TD><A HREF="#data3">Data Sectors</A></TD>
+</TR>
+</TABLE>
+
+<H3>
+<A NAME="boot3"></A>Boot Sectors</H3>
+There is no real important difference in the special boot bytes on a MyDos
+disk and an Atari Dos Disk. On start up the first three sectors are read
+and they contain information on how to boot the disk. For MyDos Disks sector
+1 has the following special bytes (The remaining bytes are just the code
+to load DOS.SYS) :
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Byte Offset</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+
+<TD>Unused. Usually 0.</TD>
+</TR>
+
+<TR>
+<TD>1</TD>
+
+<TD>Number of sectors to boot. For Atari Dos this is 3. The first three
+sectors are enough to get as loaded into memory to load the DOS.SYS.</TD>
+</TR>
+
+<TR>
+<TD>2 to 3</TD>
+
+<TD>Boot Load Address. Same as Atari Dos: 1792 ($700)</TD>
+</TR>
+
+<TR>
+<TD>4 to 5</TD>
+
+<TD>Initialization Address. Called after booting requested number of sectors.&nbsp;</TD>
+</TR>
+
+<TR>
+<TD>6 to 8</TD>
+
+<TD>JMP to Boot Continuation Address. This should be a 6502 jump instruction
+(76/$4C) followed by the address to jump to after booting the requested
+number of sectors.</TD>
+</TR>
+
+<TR>
+<TD>9</TD>
+
+<TD>Maximim number of files that can be open at once. This value can be
+set by POKEing location 1801 and writing DOS. Default is 3.</TD>
+</TR>
+</TABLE>
+
+<H3>
+<A NAME="data3"></A>Data Sectors</H3>
+Each data sector holds up to 125(SD)/253(DD) bytes of data and the remaining
+three bytes hold a link to the next sector, and the number of bytes in
+the sector. For small images that are Atari Dos compatable, the file# is
+also stored within the last three bytes. Slashes seperate single density
+and true double density (256 bytes sector) values. A flag byte in the directory
+indicates if the file is Atari Dos compatable or not.
+<TABLE BORDER=2 >
+<TR>
+<TD COLSPAN="2"><B>Atari Dos Compatable (less than 1024 sectors)</B></TD>
+</TR>
+
+<TR>
+<TD><B>Byte Offset</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0 to 124/252</TD>
+
+<TD>File Data</TD>
+</TR>
+
+<TR>
+<TD>125/253 (left 6 bits)</TD>
+
+<TD>File #0 to 63 (which corresponding directory this sector belongs to.)
+Incorrect values will give Error #164 (File # Mismatch)</TD>
+</TR>
+
+<TR>
+<TD>125/253 (right two bits) and 126/254</TD>
+
+<TD>Link to next sector. 10 bits allow for 1024 sectors. The two bits at
+offset are the most significant byte.</TD>
+</TR>
+
+<TR>
+<TD>127/255</TD>
+
+<TD>Number of bytes in sector. Can be up to 125/253 bytes.</TD>
+</TR>
+
+<TR>
+<TD COLSPAN="2"><B>MyDos Compatable (1024 or more sectors)</B></TD>
+</TR>
+
+<TR>
+<TD><B>Byte Offset</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0 to 124/252</TD>
+
+<TD>File Data</TD>
+</TR>
+
+<TR>
+<TD>(125 to 126)/(253 to 254)</TD>
+
+<TD>Link to next sector. All 16 bits are available allowing for up to 65536
+sectors.&nbsp;</TD>
+</TR>
+
+<TR>
+<TD>127/255</TD>
+
+<TD>Number of bytes in sector. Can be up to 125/253 bytes.</TD>
+</TR>
+</TABLE>
+
+<H3>
+<A NAME="vtoc3"></A>VTOC (Volume table of Contents)</H3>
+The first vtoc sector consists of 10 special purpose bytes and 118 bytes
+used to hold a sector bit map to track used sectors for sectors 0 through
+943(max) on the disk. Sectors 359 and down are used to store additional
+sectors. For sectors 359 or less, all 256 bytes in each sector may be used
+on double density disks and sectors are always allocated in pairs on single
+density disks (excluding the first sector which is for Atari Dos compatability).
+The bytes in the first VTOC sector are as follows:
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Byte Offset</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+
+<TD>code indicating #of vtoc sectors code. For single density the # of
+vtoc sectors is (code * 2)-3. Note: this is always an odd number( sectors
+after the first vtoc sector are always allocated in pairs).&nbsp; For double
+density #vtoc_sectors = code-1.</TD>
+</TR>
+
+<TR>
+<TD>1 to 2</TD>
+
+<TD>Total number of available sectors on the disk.</TD>
+</TR>
+
+<TR>
+<TD>3 to 4</TD>
+
+<TD>Number of currently unused sectors.</TD>
+</TR>
+
+<TR>
+<TD>5 to 9</TD>
+
+<TD>Unused</TD>
+</TR>
+
+<TR>
+<TD>10 to 127</TD>
+
+<TD>Bitmap for sectors 0 to 943. A bit value of 0 means in use, a value
+of 1 means the sector is free. Sector 0 doesn't exist. Sectors 1 to 3 are
+reserved for booting the disk, sector 360 and possibly some below it are
+used to hold the VTOC, and sectors 361 to 368 are the directory sectors.
+Sectors above 943 are tracked in sector 359, 358, etc.</TD>
+</TR>
+</TABLE>
+
+<H3>
+<A NAME="dir3"></A>Directory Sectors</H3>
+Each entry is 16 bytes so there can be 8 entries per sector. There are
+8 sectors, so 8 sectors times 8 entries = a maximum of 64 files.
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Byte Offset</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+
+<TD><A HREF="#flag3">Flag Byte</A></TD>
+</TR>
+
+<TR>
+<TD>1 to 2</TD>
+
+<TD>Total number of sectors in file. Can be up to 65535.</TD>
+</TR>
+
+<TR>
+<TD>3 to 4</TD>
+
+<TD>Starting sector number. Can be 1 to 65535.</TD>
+</TR>
+
+<TR>
+<TD>5 to 12</TD>
+
+<TD>8 character filename padded with spaces at end</TD>
+</TR>
+
+<TR>
+<TD>13 to 15</TD>
+
+<TD>3 character filename extension padded with spaces at end</TD>
+</TR>
+</TABLE>
+
+<H4>
+<A NAME="flag3"></A>Directory Sectors Flag Byte</H4>
+
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Bit/Value</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0/$01</TD>
+
+<TD>File Opened for Output.</TD>
+</TR>
+
+<TR>
+<TD>1/$02</TD>
+
+<TD>File Created by Dos 2.</TD>
+</TR>
+
+<TR>
+<TD>2/$04</TD>
+
+<TD>File doesn't use file# in sector links (not Atari Dos compatible)</TD>
+</TR>
+
+<TR>
+<TD>4/$10</TD>
+
+<TD>File is actually a directory (all other bits clear except possible
+bit 5.</TD>
+</TR>
+
+<TR>
+<TD>5/$20</TD>
+
+<TD>File Locked (appears with '*' in directory).</TD>
+</TR>
+
+<TR>
+<TD>6/$40</TD>
+
+<TD>File In use (normal).</TD>
+</TR>
+
+<TR>
+<TD>7/$80</TD>
+
+<TD>File Deleted</TD>
+</TR>
+</TABLE>
+
+<H2>
+<A NAME="kboot"></A></H2>
+
+<H2>
+KBoot Disk</H2>
+KBoot disks are created with my AtrUtil win 95 utility or MakeAtr Dos utility.&nbsp;
+They contain a minimally sized ATR image that contains three boot sectors
+and the original file.&nbsp; <I>Note: Only single density disks (128 byte
+sectors) are supported.&nbsp; </I>This allows each executable to be stored
+in an ATR file to itself without wasting much space.&nbsp; No menu disks
+or H: drives are necessary, just install the KBoot ATR in drive 1 and boot.
+<H3>
+<A NAME="kbootranges"></A>Sector Ranges</H3>
+
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Sectors</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>1 to 3</TD>
+
+<TD><A HREF="#boot4">Boot Sectors</A></TD>
+</TR>
+
+<TR>
+<TD>4 to ???</TD>
+
+<TD><A HREF="#data4">Data Sectors</A></TD>
+</TR>
+</TABLE>
+
+<H3>
+<A NAME="boot4"></A>Boot Sectors</H3>
+Sectors 1 to 3 contain necessary information to boot the disk and load
+the executable file located at sector 4 and above.
+<BR>The function of the first 13 bytes of sector one is indicated in the
+table, the remaining bytes of sector one, as well as sectors two and three
+contain the code to load the file.
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Byte Offset</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+
+<TD>Unused. Usually 0.</TD>
+</TR>
+
+<TR>
+<TD>1</TD>
+
+<TD>Number of sectors to initially boot.&nbsp; This is set to three which
+is enough to get the loader into memory&nbsp;</TD>
+</TR>
+
+<TR>
+<TD>2 to 3</TD>
+
+<TD>Boot Load Address. 1792 ($700)</TD>
+</TR>
+
+<TR>
+<TD>4 to 5</TD>
+
+<TD>Initialization Address. Called after booting requested number of sectors.&nbsp;</TD>
+</TR>
+
+<TR>
+<TD>6 to 8</TD>
+
+<TD>JMP to Boot Continuation Address. This is a 6502 jump instruction (76/$4C)
+followed by the address to jump to after booting the requested number of
+sectors. This routine will then load the actual file which is located at
+sectors 4 and above</TD>
+</TR>
+
+<TR>
+<TD>9 to 11</TD>
+
+<TD>Number of bytes to load (number of bytes in original executable)&nbsp;
+This is a three byte value.&nbsp; The least significant byte is stored
+first.</TD>
+</TR>
+
+<TR>
+<TD>12</TD>
+
+<TD>Unused.&nbsp; Set to 0</TD>
+</TR>
+</TABLE>
+
+<H3>
+<A NAME="data4"></A>Data Sectors</H3>
+Each sector holds a full 128 bytes of data -- there is no sector link information
+stored in a sector. The file contains all of the bytes verbatim from the
+original file including the $FF $FF header, multiple load segments, initialization,
+and run addresses.&nbsp; The file should be processed exactly as it would
+be by Dos.&nbsp; The last sector may only be partially filled and may be
+padded with random data.&nbsp; The length to load is determined from sector
+1, bytes 9 to 11.&nbsp; Extracting the original file is easy.&nbsp; If
+processing from an ATR file read and verify the 16 byte ATR header.&nbsp;
+Read the first three sectors (384 bytes).&nbsp; Get the length from bytes
+9 to 11.&nbsp; Read that many bytes from the KBoot file and write to the
+output file.&nbsp; Done.
+<BR>&nbsp;
+<BR>&nbsp;
+<HR>
+<BR><A NAME="sparta"></A>
+<H2>
+SpartaDos</H2>
+
+<H3>
+<A NAME="spartasecranges"></A>Sector Ranges</H3>
+
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Sectors</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>1 to 3</TD>
+
+<TD><A HREF="#spartaboot">Boot Sectors</A></TD>
+</TR>
+
+<TR>
+<TD>4-?&nbsp;</TD>
+
+<TD><A HREF="#spartabitmap1">Bitmap Sectors</A>&nbsp; Does not necessarily
+have to start at sector 4, the sector number is at offset 16/17 in sector
+1&nbsp;</TD>
+</TR>
+
+<TR>
+<TD>varies</TD>
+
+<TD><A HREF="#spartamap1">Main Directory Sector Map</A></TD>
+</TR>
+
+<TR>
+<TD>varies</TD>
+
+<TD><A HREF="#spartadir1">Main Directory</A></TD>
+</TR>
+
+<TR>
+<TD>varies</TD>
+
+<TD><A HREF="#spartadata1">Data Sectors</A></TD>
+</TR>
+</TABLE>
+
+<H3>
+<A NAME="spartaboot"></A>Boot Sectors</H3>
+On start up the first three sectors are read and they contain information
+on how to boot the disk. For SpartaDos Disks sector 1 has the following
+special bytes:
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Byte Offset</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+
+<TD>Unused. Usually 0.</TD>
+</TR>
+
+<TR>
+<TD>1</TD>
+
+<TD>Number of sectors to boot. For Atari Dos this is 3. The first three
+sectors are enough to get as loaded into memory to load the DOS.SYS.</TD>
+</TR>
+
+<TR>
+<TD>2 to 3</TD>
+
+<TD>Boot Load Address. Same as Atari Dos: 1792 ($700)</TD>
+</TR>
+
+<TR>
+<TD>4 to 5</TD>
+
+<TD>Initialization Address. Called after booting requested number of sectors.&nbsp;</TD>
+</TR>
+
+<TR>
+<TD>6 to 8</TD>
+
+<TD>JMP to Boot Continuation Address. This should be a 6502 jump instruction
+(76/$4C) followed by the address to jump to after booting the requested
+number of sectors.</TD>
+</TR>
+
+<TR>
+<TD>7</TD>
+
+<TD>$80 for Sparta Dos.&nbsp; (note: this is also the low byte of the boot
+continuation adress)</TD>
+</TR>
+
+<TR>
+<TD>9/10</TD>
+
+<TD>First sector of sector map for main directory.</TD>
+</TR>
+
+<TR>
+<TD>11/12</TD>
+
+<TD>Total number of sectors on disk</TD>
+</TR>
+
+<TR>
+<TD>13/14</TD>
+
+<TD>Number of free sectors on disk</TD>
+</TR>
+
+<TR>
+<TD>15</TD>
+
+<TD>#of bitmap sectors (used to track free sectors)&nbsp; One byte is needed
+for every 8 sectors.</TD>
+</TR>
+
+<TR>
+<TD>16/17</TD>
+
+<TD>Sector for first bitmap (usually 4?)</TD>
+</TR>
+
+<TR>
+<TD>18/19</TD>
+
+<TD>First available sector (to save time from having to search though bitmap)</TD>
+</TR>
+
+<TR>
+<TD>20/21</TD>
+
+<TD>First available directory sector.&nbsp; This is the sector the next
+new directory entry will need to be added to.</TD>
+</TR>
+
+<TR>
+<TD>22-29</TD>
+
+<TD>Volume Name (8 characters - padded with spaces)</TD>
+</TR>
+
+<TR>
+<TD>30</TD>
+
+<TD>bits 0-6: Number of Tracks.&nbsp; bit 7:Set for double sided.</TD>
+</TR>
+
+<TR>
+<TD>31</TD>
+
+<TD>Size of sectors.&nbsp; 128 for 128 bytes/ 0 for 256 bytes.</TD>
+</TR>
+
+<TR>
+<TD>32</TD>
+
+<TD>Dos major version $11 for sparta 1.1.&nbsp; $20 for sparta 3.2.</TD>
+</TR>
+
+<TR>
+<TD>38</TD>
+
+<TD>Sequence Number.&nbsp; Incremented whenever a file is opened for write?</TD>
+</TR>
+
+<TR>
+<TD>39</TD>
+
+<TD>Random Number - filled in at format.</TD>
+</TR>
+
+<TR>
+<TD>40/41</TD>
+
+<TD>First sector map for file being booted.</TD>
+</TR>
+
+<TR>
+<TD>42</TD>
+
+<TD>Write Lock Flag?</TD>
+</TR>
+
+<TR>
+<TD>43-47</TD>
+
+<TD>Reserved.</TD>
+</TR>
+</TABLE>
+
+<H3>
+<A NAME="spartadata1"></A>Data Sectors</H3>
+The entire sector can be used for data unlike Atari Dos.&nbsp; There is
+no link information necessary like with Atari Dos.&nbsp; The link information
+is maintained in the sector map for the file.
+<BR>&nbsp;
+<H3>
+<A NAME="spartabitmap1"></A>Bitmap</H3>
+This is a simple map of every sector on the disk.&nbsp; One bit is used
+per sector so 8 bytes are available per byte.&nbsp; There are as many bytes
+allocated for the bitmap is as necessary to track every sector on the disk.
+<BR>&nbsp;
+<H3>
+<A NAME="spartadir1"></A>Directory Sectors (root and subdirectories)</H3>
+Each entry is 23 bytes and entries can span sector boundries.&nbsp; Sectors
+are not necessarily contigous.&nbsp; The sectors are determine from the
+sector map for the directory which is simply a sector list.&nbsp; The first
+directory entry is a special entry that holds information about the directory
+itself.&nbsp; It's format is as follows:
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Byte Offset</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+
+<TD>?</TD>
+</TR>
+
+<TR>
+<TD>1 to 2</TD>
+
+<TD>Sector of first map of parent directory.&nbsp; For the Root directory
+this is 0.</TD>
+</TR>
+
+<TR>
+<TD>3,4,5</TD>
+
+<TD>Length of directory in bytes.</TD>
+</TR>
+
+<TR>
+<TD>6-13</TD>
+
+<TD>Directory Name (8 characters padded with spaces).&nbsp; This will be
+MAIN for the root directory</TD>
+</TR>
+
+<TR>
+<TD>14-22</TD>
+
+<TD>Unused</TD>
+</TR>
+</TABLE>
+
+
+<P>The format of each 23 byte directory entry is.
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Byte Offset</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+
+<TD><A HREF="#spartaflag">Flag Byte</A></TD>
+</TR>
+
+<TR>
+<TD>1 to 2&nbsp;</TD>
+
+<TD>First sector of file's sector map.</TD>
+</TR>
+
+<TR>
+<TD>3,4,5</TD>
+
+<TD>Length of file in bytes.</TD>
+</TR>
+
+<TR>
+<TD>6-13</TD>
+
+<TD>File Name (8 characters padded with spaces)</TD>
+</TR>
+
+<TR>
+<TD>14-16</TD>
+
+<TD>File Extension (8 characters padded with spaces.)</TD>
+</TR>
+
+<TR>
+<TD>17-22</TD>
+
+<TD>Time and Date Stamp.&nbsp; Format????</TD>
+</TR>
+</TABLE>
+
+<H4>
+<A NAME="spartaflag"></A>Directory Sectors Flag Byte</H4>
+
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Bit/Value</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0/$01</TD>
+
+<TD>File is Write Protecter.</TD>
+</TR>
+
+<TR>
+<TD>3/$08</TD>
+
+<TD>Directory entry is in use.&nbsp; (contains a file or directory entry)</TD>
+</TR>
+
+<TR>
+<TD>4/$10</TD>
+
+<TD>File has been deleted.</TD>
+</TR>
+
+<TR>
+<TD>5/$20</TD>
+
+<TD>Subdirectory flag.</TD>
+</TR>
+</TABLE>
+
+<H4>
+&nbsp;<A NAME="spartamap1"></A>Sector Maps</H4>
+Sector maps are used for directories and files to hold a list of sectors
+used for directories or files.&nbsp; The sector maps sectors themselves
+are not necessary located in contigous sectors.&nbsp; The first four sector
+bytes of each map has a pointer to the previous and next sector map.&nbsp;
+Sector maps allow files to be deleted or written over much faster than
+in Atari Dos since the entire file does not have to be traced through.&nbsp;
+It also allows directories to grow in size (although a limit is set I believe
+which varies between the disk versions and SpartaDos X.
+<BR>&nbsp;
+<TABLE BORDER=2 >
+<TR>
+<TD><B>Byte Offset</B></TD>
+
+<TD><B>Function</B></TD>
+</TR>
+
+<TR>
+<TD>0 to 1</TD>
+
+<TD>Pointer to next sector map.</TD>
+</TR>
+
+<TR>
+<TD>2 to 3</TD>
+
+<TD>Pointer to previous sector map.</TD>
+</TR>
+
+<TR>
+<TD>4 to 127/255</TD>
+
+<TD>Every 2 bytes holds a sector number for the file or directory.</TD>
+</TR>
+</TABLE>
+&nbsp;
+</BODY>
+</HTML>

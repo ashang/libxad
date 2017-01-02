@@ -1,0 +1,526 @@
+*****************************************************************************
+*   $Id: SoundPacker.a,v 1.2 2005/06/23 14:39:16 stoecker Exp $
+*   StoneCracker and related types decrunching slave
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+
+S_STC		dc.l	S_STCData
+		dc.w	2
+		dc.w	39
+		dc.l	N_STC
+		dc.w	XFDPFF_DATA|XFDPFF_USERTARGET|XFDPFF_RECOGLEN
+		dc.w	0
+		dc.l	RB_STC
+		dc.l	DB_STC
+		dc.l	0
+		dc.l	0
+		dc.w	XFDID_STCruncher10
+		dc.w	0
+		dc.l	$83c+8+4+1
+
+N_STC		dc.b	'ST Cruncher 1.0',0
+		even
+
+;-------------------------------------------------
+
+RB_STC		MOVEQ	#0,D0
+		cmp.l	#$43fa079c,$a2(a0)
+		bne.s	.Exit
+		cmp.l	#$49fa05cd,$f6(a0)
+		bne.s	.Exit
+		cmp.l	#$86342005,$140(a0)
+		bne.s	.Exit
+		MOVE.L	$83C(A0),D1
+		CMP.L	#4,D1
+		BLS.S	.Exit
+		MOVE.L	$838(A0),D0
+		BEQ.S	.Exit
+		MOVE.L	D1,xfdrr_FinalTargetLen(A1)
+		MOVE.L	D1,xfdrr_MinTargetLen(A1)
+		ADD.L	#$83C+4,D0
+		MOVE.L	D0,xfdrr_MinSourceLen(A1)
+		moveq	#1,d0
+.Exit		rts
+
+;-------------------------------------------------
+
+DB_STC		movem.l	d2-d7/a2-a6,-(a7)
+		MOVE.L	xfdbi_SourceBuffer(A0),A2
+		MOVE.L	xfdbi_UserTargetBuf(A0),A1
+		MOVE.L	$838(A2),D0
+		ADDQ.L	#4,D0
+		lea	$83c(a2),a0
+		bsr	D_STC
+
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+**************************************************
+
+S_STCData
+		IFND	XFD_LASTSLAVE
+		dc.l	S_SoundPacker_END
+		ELSE
+		dc.l	0
+		ENDIF
+		dc.w	2
+		dc.w	39
+		dc.l	N_STCData
+		dc.w	XFDPFF_DATA|XFDPFF_USERTARGET|XFDPFF_RECOGLEN
+		dc.w	0
+		dc.l	RB_STCData
+		dc.l	DB_STCData
+		dc.l	SD_STCData
+		dc.l	VD_STCData
+		dc.w	XFDID_STCruncher10Data
+		dc.w	0
+		dc.l	8+4+1
+
+N_STCData	dc.b	'ST Cruncher 1.0 Data',0
+		even
+
+;-------------------------------------------------
+
+RB_STCData	moveq	#0,d0
+		cmp.l	#'STC'<<8,(a0)
+		bne.s	.Exit
+		MOVE.L	4(A0),D1
+		CMP.L	#4,D1
+		BLS.S	.Exit
+		MOVE.L	D1,xfdrr_FinalTargetLen(A1)
+		MOVE.L	D1,xfdrr_MinTargetLen(A1)
+		moveq	#1,d0
+.Exit		rts
+
+SD_STCData	moveq	#0,d0
+		cmp.l	#'STC'<<8,(a0)
+		bne.s	.Exit
+		CMP.L	#4,4(A0)
+		BLS.S	.Exit
+		moveq	#1,d0
+.Exit		rts
+
+;-------------------------------------------------
+
+VD_STCData	movem.l	d2-d7/a2-a6,-(a7)
+
+		MOVE.L	A0,A1
+
+		addq.w	#4,a0
+		bsr	TD_STC
+
+		TST.L	D0
+		BEQ.S	.Exit
+
+		SUB.L	A1,A2		;sourcelen
+		MOVE.L	A2,D0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;-----------------------------------------------------------
+
+;		Used registers: A0,A2,A4, D0,D1,D2,D3,D4,D5,D6,D7
+
+;		A0 -> Source
+;		D0 =  Input size
+
+;		Return D0 =  0 = Error
+;		Return A2 -> End of source
+
+TD_STC		MOVE.L	D0,D7			; Buffer size
+		lea	STCruncher_Table-3(pc),a4
+		move.l	(a0)+,d1		; Decrunched size
+;;;		MOVE.L	(A0)+,(A1)+		; Copy first LONG
+		ADDQ.L	#4,A0
+		SUBQ.L	#8,D7
+		subq.l	#4,d1
+		moveq	#0,d0
+
+.lbC0000EA	moveq	#2,d2
+		bsr.s	.lbC00015E
+		beq.s	.lbC00012E
+		subq.w	#2,d3
+		bmi.s	.lbC000150
+		bne.s	.lbC00010C
+		bsr.s	.lbC00015E
+		beq.s	.lbC000108
+		subq.w	#2,d3
+		beq	.lbC0001CA
+		bmi	.lbC0001C6
+;;;		moveq	#0,d4
+		bra.s	.lbC000154
+
+.lbC000108	moveq	#7,d2
+		bra.s	.lbC000112
+
+.lbC00010C	bsr.s	.lbC00015E
+		move.l	d3,d2
+		addq.l	#3,d2
+.lbC000112
+;;;		move.b	-1(a1),d4
+.lbC000116	bsr.s	.lbC00015E
+
+		TST.L	D7		; Check read pointer
+		BMI.S	.ExitError
+
+		cmp.b	(a4,d2.w),d3
+		beq.s	.TestExit
+;;;		blt.s	.lbC000124
+;;;		or.b	5(a4,d2.w),d3
+;;; .lbC000124	add.b	d3,d4
+;;;		move.b	d4,(a1)+
+		subq.l	#1,d1
+		bne.s	.lbC000116
+		bra.s	.Exit
+
+.lbC00012E	bsr.s	.lbC000188
+		moveq	#8,d2
+.lbC000132	bsr.s	.lbC00015E
+
+		TST.L	D7		; Check read pointer
+		BMI.S	.ExitError
+
+;;;		move.b	d3,(a1)+
+		subq.l	#1,d1
+		beq.s	.Exit
+		subq.l	#1,d5
+		bne.s	.lbC000132
+.TestExit	tst.l	d1
+		bne.s	.lbC0000EA
+.Exit		MOVEQ	#1,D0
+		rts				; Exit the decruncher
+
+.ExitError	MOVEQ	#0,D0
+		RTS
+
+.lbC000150
+;;;		move.b	-1(a1),d4
+.lbC000154	bsr.s	.lbC000188
+
+		TST.L	D7		; Check read pointer
+		BMI.S	.ExitError
+
+.lbC000156
+;;;		move.b	d4,(a1)+
+
+		; If D5>=D1 then Exit
+		; If D5<D1 then D1 = D1 - D5, TextExit
+
+		CMP.L	D1,D5
+		BHS.S	.Exit
+		SUB.L	D5,D1
+		BRA.S	.TestExit
+
+;;;		subq.l	#1,d1
+;;;		beq.s	.Exit
+;;;		subq.l	#1,d5
+;;;		bne.s	.lbC000156
+;;;		bra.s	.TestExit
+
+.lbC00015E	move.l	(a0),d3
+		lsl.l	d0,d3
+		rol.l	d2,d3
+		add.w	d2,d0
+
+		MOVE.W	D0,D4		; Used bits
+		ADDQ.W	#7,D4
+		LSR.W	#3,D4		; Used bytes
+		LEA	(A0,D4.W),A2	; Actually used data
+
+		cmp.w	#16,d0
+		blt.s	.lbC000176
+		and.w	#$F,d0
+		addq.w	#2,a0
+		SUBQ.L	#2,D7
+.lbC000176	move.l	#$ffff0000,d6
+		rol.l	d2,d6
+		and.l	#$0000ffff,d6
+		and.l	d6,d3
+		rts
+
+
+.lbC000188	moveq	#6,d2
+		bsr.s	.lbC00015E
+		move.l	d3,d5
+		cmp.w	#$30,d5
+		blt.s	.lbC0001BC
+		moveq	#$10,d2
+		cmp.w	#$36,d5
+		blt.s	.lbC0001B0
+		beq.s	.lbC0001AA
+		cmp.w	#$37,d5
+		bgt.s	.lbC0001C2
+		bsr.s	.lbC00015E
+		move.l	d3,d5
+		swap	d5
+.lbC0001AA	bsr.s	.lbC00015E
+		move.w	d3,d5
+		bra.s	.lbC0001BC
+
+.lbC0001B0	and.w	#7,d5
+		lsl.l	#7,d5
+		moveq	#7,d2
+		bsr.s	.lbC00015E
+		or.l	d3,d5
+.lbC0001BC	addq.l	#1,d5
+		rts
+
+.lbC0001C2	moveq	#-1,d5
+		rts
+
+
+.lbC0001C6	moveq	#4,d5
+		bra.s	.lbC0001CC
+
+.lbC0001CA	moveq	#$C,d5
+.lbC0001CC	moveq	#4,d2
+		bsr.s	.lbC00015E
+
+		TST.L	D7		; Check read pointer
+		BMI	.ExitError
+
+		cmp.w	#8,d3
+		beq	.TestExit
+		cmp.w	#7,d3
+		bne.s	.lbC0001E4
+		bchg	#3,d5
+		bra.s	.lbC0001CC
+
+.lbC0001E4
+;;;		move.l	d3,d4
+;;;		lsl.w	#4,d4
+;;;		ext.w	d4
+;;;		ext.l	d4
+;;;		asr.w	#4,d4
+;;;		asl.l	d5,d4
+		move.l	d5,d2
+		bsr	.lbC00015E
+
+		TST.L	D7		; Check read pointer
+		BMI	.ExitError
+
+;;;		or.l	d3,d4
+;;;		add.l	-4(a1),d4
+;;;		move.l  d4,(a1)+
+		subq.l	#4,d1
+		bgt.s	.lbC0001CC
+		bra	.Exit
+
+;-------------------------------------------------
+
+DB_STCData	movem.l	d2-d7/a2-a6,-(a7)
+		MOVE.L	xfdbi_SourceBuffer(A0),A2
+		MOVE.L	xfdbi_UserTargetBuf(A0),A1
+		MOVE.L	xfdbi_SourceBufLen(A0),D0
+		SUBQ.L	#4,D0
+		LEA	4(A2),A0
+		BSR.B	D_STC
+		moveq	#1,d0
+		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;-----------------------------------------------------------
+
+;		Used registers: A0,A1,A4, D0,D1,D2,D3,D4,D5,D6,D7
+
+;		A0 -> Source
+;		A1 -> Destination
+;		D0 =  Input size
+
+D_STC		MOVE.L	D0,D7			; Buffer size
+		lea	STCruncher_Table-3(pc),a4
+		move.l	(a0)+,d1		; Decrunched size
+		MOVE.L	(A0)+,(A1)+		; Copy first LONG
+		SUBQ.L	#8,D7
+		subq.l	#4,d1
+		moveq	#0,d0
+
+.lbC0000EA	moveq	#2,d2
+		bsr.s	.lbC00015E
+		beq.s	.lbC00012E
+		subq.w	#2,d3
+		bmi.s	.lbC000150
+		bne.s	.lbC00010C
+		bsr.s	.lbC00015E
+		beq.s	.lbC000108
+		subq.w	#2,d3
+		beq	.lbC0001CA
+		bmi	.lbC0001C6
+		moveq	#0,d4
+		bra.s	.lbC000154
+
+.lbC000108	moveq	#7,d2
+		bra.s	.lbC000112
+
+.lbC00010C	bsr.s	.lbC00015E
+		move.l	d3,d2
+		addq.l	#3,d2
+.lbC000112	move.b	-1(a1),d4
+.lbC000116	bsr.s	.lbC00015E
+		cmp.b	(a4,d2.w),d3
+		beq.s	.lbC00013A
+		blt.s	.lbC000124
+		or.b	5(a4,d2.w),d3
+.lbC000124	add.b	d3,d4
+		move.b	d4,(a1)+
+		subq.l	#1,d1
+		bne.s	.lbC000116
+		bra.s	.lbC00013A
+
+.lbC00012E	bsr.s	.lbC000188
+		moveq	#8,d2
+.lbC000132	bsr.s	.lbC00015E
+		move.b	d3,(a1)+
+		subq.l	#1,d1
+		beq.s	.lbC00013A
+		subq.l	#1,d5
+		bne.s	.lbC000132
+.lbC00013A	tst.l	d1
+		bne.s	.lbC0000EA
+		rts				; Exit the decruncher
+
+.lbC000150	move.b	-1(a1),d4
+.lbC000154	bsr.s	.lbC000188
+.lbC000156	move.b	d4,(a1)+
+		subq.l	#1,d1
+		beq.s	.lbC00013A
+		subq.l	#1,d5
+		bne.s	.lbC000156
+		bra.s	.lbC00013A
+
+.lbC00015E
+		MOVEQ	#0,D3
+		TST.L	D7
+		BLE.B	.GotData	; D7 <= 0, read 0 bytes
+		MOVE.L	(A0),D3
+		CMP.L	#4,D7		; D7 >= 4, read 4 bytes
+		BGE.B	.GotData
+		CLR.B	D3
+		CMP.L	#3,D7		; D7 == 3, read 3 bytes
+		BEQ.B	.GotData
+		CLR.W	D3
+		CMP.L	#2,D7		; D7 == 2, read 2 bytes
+		BEQ.B	.GotData
+		AND.L	#$FF000000,D3	; D7 == 1, read 1 byte
+.GotData
+
+;;		tst.w	d0
+;;		beq.s	.lbC000166
+		lsl.l	d0,d3
+.lbC000166	rol.l	d2,d3
+		add.w	d2,d0
+		cmp.w	#16,d0
+		blt.s	.lbC000176
+		and.w	#$F,d0
+		addq.w	#2,a0
+		SUBQ.L	#2,D7
+.lbC000176	move.l	#$ffff0000,d6
+		rol.l	d2,d6
+		and.l	#$0000ffff,d6
+		and.l	d6,d3
+		rts
+
+.lbC000188	moveq	#6,d2
+		bsr.s	.lbC00015E
+		move.l	d3,d5
+		cmp.w	#$30,d5
+		blt.s	.lbC0001BC
+		moveq	#$10,d2
+		cmp.w	#$36,d5
+		blt.s	.lbC0001B0
+		beq.s	.lbC0001AA
+		cmp.w	#$37,d5
+		bgt.s	.lbC0001C2
+		bsr.s	.lbC00015E
+		move.l	d3,d5
+		swap	d5
+.lbC0001AA	bsr.s	.lbC00015E
+		move.w	d3,d5
+		bra.s	.lbC0001BC
+
+.lbC0001B0	and.w	#7,d5
+		lsl.l	#7,d5
+		moveq	#7,d2
+		bsr.w	.lbC00015E
+		or.l	d3,d5
+.lbC0001BC	addq.l	#1,d5
+		rts
+
+.lbC0001C2	moveq	#-1,d5
+		rts
+
+.lbC0001C6	moveq	#4,d5
+		bra.s	.lbC0001CC
+
+.lbC0001CA	moveq	#$C,d5
+.lbC0001CC	moveq	#4,d2
+		bsr.w	.lbC00015E
+		cmp.w	#8,d3
+		beq	.lbC00013A
+		cmp.w	#7,d3
+		bne.s	.lbC0001E4
+		bchg	#3,d5
+		bra.s	.lbC0001CC
+
+.lbC0001E4	move.l	d3,d4
+		lsl.w	#4,d4
+		ext.w	d4
+		ext.l	d4
+		asr.w	#4,d4
+		asl.l	d5,d4
+		move.l	d5,d2
+		bsr	.lbC00015E
+		or.l	d3,d4
+		add.l	-4(a1),d4
+
+;;;;;		move.l	d4,(a1)+
+
+		ROL.L	#8,D4
+		MOVE.B	D4,(A1)+
+		SUBQ.L	#1,D1
+		BEQ	.lbC00013A
+
+		ROL.L	#8,D4
+		MOVE.B	D4,(A1)+
+		SUBQ.L	#1,D1
+		BEQ	.lbC00013A
+
+		ROL.L	#8,D4
+		MOVE.B	D4,(A1)+
+		SUBQ.L	#1,D1
+		BEQ	.lbC00013A
+
+		ROL.L	#8,D4
+		MOVE.B	D4,(A1)+
+		SUBQ.L	#1,D1
+		BEQ	.lbC00013A
+
+;;;;;		subq.l	#4,d1
+;;;;;		bgt.s	.lbC0001CC
+;;;;;		bra	.lbC00013A
+
+		BRA.S	.lbC0001CC
+
+STCruncher_Table
+		dc.b	%00000100,%00001000,%00010000,%00100000,%01000000
+		dc.b	%11111000,%11110000,%11100000,%11000000,%10000000
+
+S_SoundPacker_END

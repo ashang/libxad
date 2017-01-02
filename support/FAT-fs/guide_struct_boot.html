@@ -1,0 +1,405 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+
+<html>
+
+<head>
+<title>Major Disk Structures and the Boot Process</title>
+<LINK REV="made" HREF="mailto:webmaster@storagereview.com">
+<SCRIPT language="JavaScript1.2" type="text/javascript" src="/styles/load_css.js"></SCRIPT>
+</HEAD>
+
+<BODY bgcolor="#ffffff" leftmargin=0 topmargin=0 marginwidth=0 marginheight=0>
+<BASEFONT face=arial size=3>
+<TABLE border=0 cellspacing=0 cellpadding=0 width="100%" align=center>
+    <TR>
+	<TD width="1%" valign="top" background="/images/sideline.gif"><img border="0" src="/images/buffer.gif" width="35" height="5"></TD>
+	
+	<TD>
+	<TABLE border=0 width="97%" align=center>
+    	<TR>
+		<TD nowrap>
+			<P align=center>
+			<A HREF="http://www.maximumpc.com/" TARGET="_blank"><IMG SRC="/images/maxpcn.gif" WIDTH="60" HEIGHT="60" BORDER="0" ALT=""></A> &nbsp; <A HREF="http://maximumpcads.snv.futurenet.com/cgi-bin/accipiter/adclick.exe/area=PC.STORAGEREVIEW/adsize=468X60?963051318" TARGET="_blank"><IMG BORDER=0 SRC="http://maximumpcads.snv.futurenet.com/cgi-bin/accipiter/adserver.exe/area=PC.STORAGEREVIEW/adsize=468X60?963051318" HEIGHT=60 WIDTH=468 ALT=""></A> &nbsp; <A HREF="http://maximumpcads.snv.futurenet.com/cgi-bin/accipiter/adclick.exe/area=PC.STORAGEREVIEWBUYBTN/adsize=120X90?963051318" TARGET="_blank"><IMG BORDER=0 SRC="http://maximumpcads.snv.futurenet.com/cgi-bin/accipiter/adserver.exe/area=PC.STORAGEREVIEWBUYBTN/adsize=120X90?963051318" HEIGHT=90 WIDTH=120 ALT=""></A>
+			<BR><BR>
+			<FONT size=1>Reprinted, with permission, from</FONT><BR>
+			<A href="http://www.pcguide.com/" onmouseover="window.status='The PC Guide'; return true;" target="new_window"><FONT size=4>The PC Guide</FONT></A>
+			</P>
+		</TD>
+		</TR>
+    	<TR>
+		<TD>
+
+<center><hr width="95%" noshade><em><b>
+Major Disk Structures and the Boot Process
+</b></em><hr width="95%" noshade></center>
+
+<table border=0 bgcolor=black cellpadding=1 cellspacing=0 align=center width="95%"><tr><td>
+<table border=0 cellpadding=0 cellspacing=0 width="100%" bgcolor="#eeeeee">
+<tr><th bgcolor="#a0b7c7">
+<a name="topics">Further Topics</a>
+</th></tr>
+<tr><td>
+
+<table border=0 cellpadding=0 cellspacing=0 width="100%">
+<tr><td>&nbsp;<img src="/images/openbook.gif" width=15 height=16 border=0 alt="">&nbsp;Hard Disk Drives</td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="/guide/guide_construct.html" onmouseover="window.status='Construction and Operation of the Hard Disk Drive'; return true;">Construction and Operation of the Hard Disk Drive</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="/guide/guide_geometry.html" onmouseover="window.status='Hard Disk Geometry and Low-Level Data Structures'; return true;">Hard Disk Geometry and Low-Level Data Structures</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="/guide/guide_performance.html" onmouseover="window.status='Hard Disk Performance'; return true;">Hard Disk Performance</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="/guide/guide_bios_capacity.html" onmouseover="window.status='Hard Disk BIOS and Capacity Factors'; return true;">Hard Disk BIOS and Capacity Factors</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="/guide/guide_interface_config.html" onmouseover="window.status='Hard Disk Interfaces and Configuration'; return true;">Hard Disk Interfaces and Configuration</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/openfolder.gif" width=16 height=14 border=0 alt="">&nbsp;<a href="/guide/guide_structures_filesys.html" onmouseover="window.status='Hard Disk Logical Structures and File Systems'; return true;">Hard Disk Logical Structures and File Systems</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="guide_structures_os.html" onmouseover="window.status='Operating Systems and File Systems'; return true;">Operating Systems and File Systems</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="guide_structures_pc.html" onmouseover="window.status='PC File Systems'; return true;">PC File Systems</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/doc.gif" width=13 height=16 border=0 alt="">&nbsp;Major Disk Structures and the Boot Process</td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>&#183;</b>&nbsp;&nbsp;</font><a href="#MBR" onmouseover="window.status='Master Boot Record (MBR)'; return true;">Master Boot Record (MBR)</a></td><td align=right>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>&#183;</b>&nbsp;&nbsp;</font><a href="#Partitions" onmouseover="window.status='Primary, Extended and Logical Partitions'; return true;">Primary, Extended and Logical Partitions</a></td><td align=right>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>&#183;</b>&nbsp;&nbsp;</font><a href="#Volume" onmouseover="window.status='Volume Boot Sectors'; return true;">Volume Boot Sectors</a></td><td align=right>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>&#183;</b>&nbsp;&nbsp;</font><a href="#Active" onmouseover="window.status='Active Partitions and Boot Managers'; return true;">Active Partitions and Boot Managers</a></td><td align=right>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>&#183;</b>&nbsp;&nbsp;</font><a href="#Boot" onmouseover="window.status='The DOS Boot Process'; return true;">The DOS Boot Process</a></td><td align=right>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>&#183;</b>&nbsp;&nbsp;</font><a href="#Viruses" onmouseover="window.status='Boot Sector Viruses'; return true;">Boot Sector Viruses</a></td><td align=right>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="guide_structures_fat.html" onmouseover="window.status='FAT File System Disk Volume Structures'; return true;">FAT File System Disk Volume Structures</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="guide_structures_cluster.html" onmouseover="window.status='Clusters and File Allocation'; return true;">Clusters and File Allocation</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="guide_structures_partition.html" onmouseover="window.status='Partitioning, Partition Sizes and Drive Lettering'; return true;">Partitioning, Partition Sizes and Drive Lettering</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="guide_structures_programs.html" onmouseover="window.status='Disk Partitioning and Formatting Programs'; return true;">Disk Partitioning and Formatting Programs</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/images/closedfolder.gif" width=15 height=15 border=0 alt="">&nbsp;<a href="guide_structures_compression.html" onmouseover="window.status='Disk Compression'; return true;">Disk Compression</a></td><td align=right><font size=1><em>11/29/99</em></font>&nbsp;&nbsp;</td></tr>
+</table>
+
+
+</td></tr></table>
+</td></tr></table>
+
+<p align=center>
+<!-- Group Bottom_Pool (31) -->
+ <!-- Client VXA_Pool1 -->
+  <!-- Client VXA_Pool1 Logged (wait: 0) -->
+   <a href="http://www.storagereview.com/tracker/tracker.cgi/195338?client=VXA_Pool1" target="_blank" onmouseover="window.status='VXA Reliable Tape Backups!!'; return true;" onmouseout="window.status='';return true;"><img src="http://www.storagereview.com/tracker/banners/vxa_dantz_banner31.gif" width=468 height=60 border=0 alt="VXA Reliable Tape Backups!!" ></a>  
+</p>
+
+<table border=0 cellpadding=0 width="95%" align=center>
+<tr><td bgcolor="#0000A5" align=right><nobr><font size="-2" color="#ffff00"><em>
+<a name="Body">Author: Charles M. Kozierok</a>&nbsp;
+</em></font></nobr></td></tr>
+<tr><td bgcolor="#008000">
+<img src="/images/spacer.gif" width=1 height=2 alt=""></td></tr></table>
+
+<table border=0 cellpadding=0 cellspacing=0 align=center valign=top width="95%">
+<tr><td>
+<br>
+<p>There are several major disk structures that are used to organize and control the
+storage of information on the PC using the FAT (FAT32, VFAT) file system. These structures
+are important to understand, since they control the way the hard disk works from a
+software perspective.</p>
+
+<hr noshade>
+<u><b>
+
+<p><a name="MBR">Master Boot Record (MBR)</a></b></u></p>
+
+<p>When you turn on your PC, the processor has to begin processing. However, your system
+memory is empty, and the processor doesn't have anything to execute, or really even know
+where it is. To ensure that the PC can always boot regardless of which BIOS is in the
+machine, chip makers and BIOS manufacturers arrange so that the processor, once turned on,
+always starts executing at the same place, FFFF0h.</p>
+
+<p>In a similar manner, every hard disk must have a consistent &quot;starting point&quot;
+where key information is stored about the disk, such as how many partitions it has, what
+sort of partitions they are, etc. There also needs to be somewhere that the BIOS can load
+the initial boot program that starts the process of loading the operating system. The
+place where this information is stored is called the <i>master boot record</i> (<i>MBR</i>).
+It is also sometimes called the <i>master boot sector</i> or even just the <i>boot sector</i>.</p>
+
+<p>The master boot record is always located at cylinder 0, head 0, and sector 1, the first
+sector on the disk. This is the consistent &quot;starting point&quot; that the disk always
+uses. When the BIOS boots the machine, it will look here for instructions and information
+on how to boot the disk and load the operating system. The master boot record contains the
+following structures: 
+
+<ul>
+  <li><b>Master Partition Table:</b> This small table contains the descriptions of the
+    partitions that are contained on the hard disk. There is only room in the master partition
+    table for the information describing four partitions. Therefore, a hard disk can have only
+    four true partitions, also called <i>primary partitions</i>. Any additional partitions are
+    logical partitions that are linked to one of the primary partitions. <a href="#Partitions">Partitions are discussed here</a>.</li>
+  <li><b>Master Boot Code:</b> The master boot record contains the small initial boot program
+    that the BIOS loads and executes to start the boot process. This program eventually
+    transfers control to the boot program stored on whichever partition is used for booting
+    the PC. </li>
+</ul>
+
+<p>Due to the great importance of the information stored in the master boot record, if it
+ever becomes damaged or corrupted in some way, serious data loss can be--in fact, often
+will be--the result. Since the master boot code is the first program executed when you
+turn on your PC, <a href="#Viruses">this is a favorite place for virus writers
+to target</a>.</p>
+
+<hr noshade>
+<u><b>
+
+<p><a name="Partitions">Primary, Extended and Logical Partitions</a></b></u></p>
+
+<p>In order to use the space in a hard disk, it must be <i>partitioned</i>. Partitioning
+is the process of dividing the hard disk's space into pieces, so they can be prepared for
+use, or even dedicated to different uses. Even if the entire disk is intended to be left
+in one piece, it must be partitioned so that the operating system knows that it is
+intended to be left in one piece. <a href="guide_structures_partition.html" onmouseover="window.status='Partitioning, Partition Sizes and Drive Lettering'; return true;">There are many different
+considerations that go into deciding how to partition a hard disk</a>.</p>
+
+<p>Each hard disk can contain up to four different &quot;true&quot; partitions, which are
+called <i>primary partitions</i>. The limitation of four is one that is imposed on the
+system by the way that the master boot record is structured. Normally, if you are only
+using DOS, Windows 3.x or Windows 95, you will have a single primary partition. Multiple
+primary partitions can be used if you want to set your machine up for use by multiple
+operating systems. Partitions are also sometimes called <i>volumes</i>, especially in
+reference to DOS.</p>
+
+<p>DOS itself can only have one primary partition per hard disk. You may find this
+statement confusing, since you have no doubt seen PCs that have four or more DOS
+partitions. A hard disk that has four DOS partitions still has only (at most) one primary
+DOS partition. The others are <i>logical partitions</i> that are stored in the disk's <i>extended
+DOS partition</i>.</p>
+
+<p>OK, this sounds confusing so I will try to clarify somewhat. The original designers of
+DOS obviously did not foresee multi-gigabyte hard disks containing large numbers of
+partitions. Later versions of DOS were enhanced to allow DOS to use up to 24 total disk
+partitions. In order to preserve compatibility with the original DOS structures that only
+allow four partitions, the extra partitions are stored in an extended partition.</p>
+
+<p>The extended partition counts as one of the four partitions on the disk, so if you are
+using an extended DOS partition you are limited to three primaries. When you set up an
+extended partition, it is initially empty; you use up the space in it by adding <i>logical
+partitions</i> (sometimes also called <i>logical DOS drives</i> or <i>logical volumes</i>).
+You can store up to 24 logical drives in the extended partition if you are not using a DOS
+primary partition on the disk, or 23 if you are using a primary. The limiting factor here
+is drive letters: hard disks start with C: and end with Z:. Of course virtually nobody
+uses that many partitions on their system.</p>
+
+<p>Internally, the logical drives are stored in a linked structure. The extended
+partition's information is contained in the master partition table (since the extended
+partition is one of the four partitions stored in the master boot record). It contains a
+link to an <i>extended partition table</i> that describes the first logical partition for
+the disk. That table contains information about that first logical partition, and a link
+to the <i>next</i> extended partition table which describes the second logical partition
+on the disk, and so on. The extended partition tables are linked in a chain starting from
+the master partition table.</p>
+
+<p>In terms of how the disk is used, there are only two main differences between a primary
+and a logical partition or volume. The first is that a primary partition can be set as <a href="#Active">bootable (active)</a> while a logical cannot. The second is that
+<a href="guide_structures_partition" onmouseover="window.status='Partitioning, Partition Sizes and Drive Lettering'; return true;">DOS assigns drive letters</a> (C:, D: etc.) differently to
+primary and logical volumes.</p>
+
+<p>Here's an example to hopefully make all of this a bit more clear. Let's suppose you are
+setting up a new system and starting with an empty 2 GB hard disk. For efficiency purposes
+you have decided to partition the system into four equal 500 MB partitions. I'm assuming
+no complicating factors here, just a simple example.</p>
+
+<p>To do this, you will first set up a primary DOS partition 500 MB in size. This is the
+first of your four partitions. You will then create an extended DOS partition that is 1500
+MB in size. Within the extended DOS partition you will create three logical volumes, 500
+MB in each, which are your second, third and fourth volumes. The first partition will be
+your C: drive from which you boot the machine, and DOS will (normally) assign D:, E: and
+F: to the other three partitions. Your hard disk will have one primary DOS partition, and
+one extended DOS partition containing three logical DOS volumes.</p>
+
+<p>Once the system is set up, there is no functional difference between these partitions,
+other than the fact that C: is the only bootable one and is where all the DOS system files
+reside. Regular files can reside wherever you want them to.</p>
+
+<hr noshade>
+<u><b>
+
+<p><a name="Volume">Volume Boot Sectors</a></b></u></p>
+
+<p>Each DOS partition (also called a DOS volume) has its own <i>volume boot sector</i>.
+This is distinct from the <i>master</i> boot sector (or record) that controls the entire
+disk, but is similar in concept. Each volume boot sector contains the following: 
+
+<ul>
+  <li><b>Disk Parameter Block:</b> Also sometimes called the <i>media parameter block</i>,
+    this is a data table that contains specific information about the volume, such as its
+    specifications (size, number of sectors it contains, etc.), label name, etc.</li>
+  <li><b>Volume Boot Code:</b> This is code that is specific to the operating system that is
+    using this volume and is used to start the load of the operating system. This code is
+    called by the master boot code that is stored in the master boot record, but only for the
+    primary partition that is set as active. For other partitions, this code sits unused.</li>
+</ul>
+
+<p>The volume boot sector is created when you do a <a href="/guide/guide_format.html" onmouseover="window.status='Formatting and Capacity'; return true;">high-level
+format of a hard disk partition</a>. The boot sector's code is executed directly when the
+disk is booted, making it a <a href="#Viruses">favorite target for virus
+writers</a>.</p>
+
+<hr noshade>
+<u><b>
+
+<p><a name="Active">Active Partitions and Boot Managers</a></b></u></p>
+
+<p>Only primary partitions can be used to boot the operating system, and of these, only
+the primary partition that is set to be bootable. Only one can be set bootable at a time
+because otherwise, the master boot record does not know to which volume's boot code to
+give control of the boot process when the machine is turned on. DOS calls the bootable
+partition the <i>active</i> partition.</p>
+
+<p>If you partition a new hard disk and create a primary DOS partition using the standard
+DOS utility <a href="guide_structures_programs" onmouseover="window.status='Disk Partitioning and Formatting Programs'; return true;">FDISK</a>, but forget to set the primary partition
+active, the BIOS will be unable to boot the operating system. This usually results in an
+error message like &quot;No boot device available&quot;. Some BIOSes will give much more
+cryptic messages; AMI BIOSes are famous for giving the bizarre &quot;NO ROM BASIC - SYSTEM
+HALTED&quot; message when it cannot find a boot device. The reason for this error is that
+older IBM systems had a hard-coded version of the BASIC language built into its BIOS ROM. If no boot device could be found, the
+BIOS would execute this hard-coded BASIC interpreter instead. Since non-IBM systems don't
+have this BASIC ROM, their BIOSes must display an error message instead of going into
+BASIC. Why AMI chose this confusing message is a mystery to me.</p>
+
+<p>Most people are only going to have one primary partition on their PC, because most
+people only use one operating system. If you are using more than one operating system
+however--I mean incompatible ones that use different file formats, like Windows 95 with
+UNIX, not DOS and Windows 95, which use the same file systems generally--then you may want
+to set up multiple primary partitions, one per operating system. You then have the problem
+of telling the system at boot time which operating system you want to use.</p>
+
+<p>There are programs specifically designed for this task; they are usually called <i>boot
+managers</i>. What a boot manager does is insert itself into the very beginning of the
+boot process, normally by setting up a special boot manager partition and making itself
+the active partition. When you boot up the PC, the code in this partition runs. It
+analyzes the primary partitions on the disk and then presents a menu to you and asks which
+operating system you want to use. Whichever one you select, it marks as active, and then
+continues the boot process from there.</p>
+
+<p>Boot managers are in many ways indispensable when working with multiple operating
+systems. However, you still want to take care when using one, since it does modify the
+disk at a very low level. Some boot managers require their own, dedicated partitions to
+hold their own code, which complicates slightly the setup of the disk. One common boot
+manager is IBM's boot manager, which ships as one component of <a href="http://www.powerquest.com" target="new_window"><em>PowerQuest's PartitionMagic 3</em></a>.</p>
+
+<hr noshade>
+<u><b>
+
+<p><a name="Boot">The DOS Boot Process</a></b></u></p>
+
+<p>The system boot sequence is the series of steps that the system performs when it is
+turned on (or rebooted with the reset switch, for example). This always starts with the
+special boot program software that is in the system BIOS ROM. The BIOS has several steps
+that it must perform to test the system and set it up, before any operating system can be
+loaded.</p>
+
+<p>Once the BIOS has completed its startup activities, the last thing it does is to begin
+the process of loading the operating system. It does this by searching for a boot device
+containing boot code to which it can hand off the boot process. It will search for boot
+devices in the order specified by the BIOS setting that controls the boot sequence. If it
+cannot find a boot device it will terminate with an error.</p>
+
+<p>Assuming that the BIOS finds a boot sector on a device, the process of loading DOS
+begins. The process below outlines booting from the hard disk. Booting from the floppy
+disk differs only in the first few steps, because the floppy disk's structures are
+slightly different. Floppies cannot be partitioned, and hence have no master boot record
+or partitions. This means that the steps where the master boot record are searched are
+skipped.</p>
+
+<p>Here are the steps in the DOS boot process: 
+
+<ol>
+  <li>The BIOS, having completed its functions, loads the boot code in the master boot record
+    and transfers control to it. The master boot record code begins execution. If the boot
+    device is a floppy disk, the process continues with step 6.</li>
+  <li>The master boot code examines the master partition table. It is searching for two
+    things. First, it must determine if there is an extended DOS partition. Second, it must
+    determine if there is a bootable partition specified in the partition table.</li>
+  <li>If the master boot code finds an <a href="#Partitions">extended partition</a>
+    on the disk, it loads the extended partition table that describes the first logical volume
+    in the extended partition. This extended partition table is examined to see if it points
+    to another extended partition table. If it does, then that table contains information
+    about the <i>second</i> logical volume in the extended partition, so it is loaded and
+    examined. (Recall that logical volumes in the extended partition have their extended
+    partition table chained one to the next.) This process is continued until all of the
+    extended partitions have been loaded and recognized by the system.</li>
+  <li>After loading the extended partition information (if any), the code attempts to boot the
+    primary partition that is marked active (bootable). If there are no partitions marked
+    active, then the boot process will terminate with an error. The error message is often the
+    same one that occurs if the BIOS finds no boot device, and is generally something like
+    &quot;No boot device&quot;, but can be the infamous &quot;NO ROM BASIC - SYSTEM
+    HALTED&quot;.</li>
+  <li>If there is a primary partition marked active, the code will boot it. The rest of the
+    steps assume this is a DOS primary partition.</li>
+  <li>The volume boot sector is loaded into memory and tested, and the boot code that it
+    contains is given control of the remainder of the boot process.</li>
+  <li>The volume boot code examines the structures on the disk that it is booting to ensure
+    that everything is correct and in the right place. If not, the boot process will end in an
+    error here as well.</li>
+  <li>The code searches the root directory of the device being booted for the operating system
+    files that contain the operating system. For a system running MS-DOS these are the files
+    &quot;IO.SYS&quot;, &quot;MSDOS.SYS&quot; and &quot;COMMAND.COM&quot;.</li>
+  <li>If the operating system files are not found, the boot program will display an error
+    message, which is usually something like &quot;Non-system disk or disk error - Replace and
+    press any key when ready&quot;. Some people think that this message means the system was
+    never booted, that the BIOS examined the floppy disk for example and just rejected it
+    because it couldn't boot it. As you can see from this description of the boot process, the
+    volume boot code was indeed loaded and executed, and in fact it is what prints the message
+    when it can't find the operating system files! <a href="#Viruses">See here for
+    an explanation of why this distinction is so important</a>.</li>
+  <li>If the operating system files are found, the boot program will load them into memory and
+    transfer control to them. These larger files contain the more complete operating system
+    code that loads and initializes the rest of the operating system structures. For MS-DOS,
+    this means loading the command interpreter and then reading and interpreting the contents
+    of the CONFIG.SYS and AUTOEXEC.BAT system control files. </li>
+</ol>
+
+<p>At this point the operating system code itself has control of the PC. In the case of an
+operating system like Windows 95 the initial operating system files control the loading
+and execution of many more routines as the boot progresses. In fact, it is surprising in
+some ways just how many different pieces of code have a hand in starting up the PC.</p>
+
+<hr noshade>
+<u><b>
+
+<p><a name="Viruses">Boot Sector Viruses</a></b></u></p>
+
+<p>Computer viruses are small programs designed to attach themselves to your computer,
+running without your knowledge and spreading themselves to &quot;infect&quot; other
+systems. Sometimes malicious, and sometimes just annoying, they are always a concern to
+the modern computer user.</p>
+
+<p>The boot code that is stored on the hard disk and executed when the disk is booted up,
+is a prime target for viruses. The reason is simple: the goal of the virus writer is to
+get the virus code executed as often as possible, to allow it to spread and cause whatever
+other mischief it is written to create. What better place to put the virus than in code
+that is executed every time the PC is run, automatically, and before anything else is in
+memory?</p>
+
+<p>One of the two major classes of viruses, called <i>boot sector infectors</i>, targets
+the vulnerable boot areas of the hard disk. (The other major group of viruses attacks
+individual files.) Some infect the code in the <a href="#MBR">master boot
+record</a> while others infect the code in the volume boot sector(s). By infecting this
+code, the virus assures itself of always being able to load into memory when the machine
+is booted, as long as you boot from the volume that is infected. There is always code in
+any disk (hard or floppy) that is formatted, whether or not the system files are present
+on the disk.</p>
+
+<p>Many people think that when you boot a system from a floppy or hard disk that has no
+system files--because it was formatted without transferring them--that the system doesn't
+boot. It's worth pointing out that in truth, it <i>does</i> boot; the boot process just
+halts very quickly when no operating system files can be found, <a href="#Boot">as
+described here</a>. In fact, the error message &quot;Non-system disk or disk error -
+Replace and press any key when ready&quot;, is printed by the volume boot code that is
+read from the volume boot sector on the disk.</p>
+
+<p>The importance of this distinction has to do with the spread of viruses. Since the
+volume boot code is always executed when the system attempts to boot from a device, a
+virus can be present on a floppy disk even if you don't format it with the system files on
+it using &quot;FORMAT /S&quot; or the &quot;SYS&quot; command. As soon as you see the
+&quot;Non-system disk...&quot; message, the virus could already be in your system memory.</p>
+<p>
+<b><u>Next:</u></b> <a href="guide_structures_fat.html" onmouseover="window.status='FAT File System Disk Volume Structures'; return true;">FAT File System Disk Volume Structures</a>
+</td></tr></table>
+
+<hr width="95%" noshade>
+<center><a href="#topics">Further Topics</a></center>
+<hr width="95%" noshade>
+
+<DIV align=center><BR>
+<A HREF="#top" onmouseover="window.status='Return to the top of this page'; return true;" onmouseout="window.status='';return true;"><IMG SRC="/images/blue_up_arrow.gif" width=32 height=32 border=0 alt="Return to the top of this page"></A>
+<BR>
+<FONT size=1>Copyright &copy; 1998-1999 Charles M. Kozierok. All rights reserved.</FONT>
+</DIV>
+</TD></TR></TABLE></TD></TR></TABLE>
+
+</BODY></HTML>

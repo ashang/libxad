@@ -1,0 +1,3563 @@
+*****************************************************************************
+*   $Id: PowerPacker.a,v 1.2 2005/06/23 14:39:16 stoecker Exp $
+*   PowerPacker and related types decrunching slave
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+
+S_PP20Comm	dc.l	S_PP23Comm
+		dc.w	2
+		dc.w	39
+		dc.l	N_PP20Comm
+		dc.w	XFDPFF_RELOC!XFDPFF_RELMODE
+		dc.w	0
+		dc.l	RB_PP20Comm
+		dc.l	DB_PP20Comm
+		dc.l	RS_PP20Comm
+		dc.l	DS_PP20Comm
+		dc.w	XFDID_PowerPacker20
+		dc.w	0
+		dc.l	$238+4+4
+
+N_PP20Comm	dc.b	'PowerPacker 2.0',0
+		even
+
+;-------------------------------------------------
+
+RB_PP20Comm	cmp.w	#$6620,$1a0(a0)	;normal
+		beq.s	.Ok
+		cmp.w	#$6720,$1a0(a0)	;master
+		bne.s	.Exit
+
+.Ok		cmp.l	#$3ea,$230(a0)	;hunk
+		bne.s	.Exit
+		cmp.l	#$45fa0138,$44(a0)
+		bne.s	.Exit
+		cmp.l	#$61000134,$4c(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_PP20Comm	movem.l	d2-d7/a2-a6,-(a7)
+		move.w	#$17e,d2
+		move.w	#$1a0,d3
+		bra	DB_PP2xComm
+
+;-------------------------------------------------
+
+RS_PP20Comm	add.l	a0,a0
+		add.l	a0,a0
+		cmp.l	#($83*4)+8,-4(a0)	;segment len
+		bne.s	.Exit
+
+		cmp.w	#$6620,$180(a0)	;normal
+		beq.s	.Ok
+		cmp.w	#$6720,$180(a0)	;master
+		bne.s	.Exit
+
+.Ok		cmp.l	#$45fa0138,$24(a0)
+		bne.s	.Exit
+		cmp.l	#$61000134,$2c(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DS_PP20Comm	movem.l	d2-d7/a2-a6,-(a7)
+		move.w	#$15e,d2
+		move.w	#$180,d3
+		bra	DS_PP2xComm
+
+**************************************************
+
+S_PP23Comm	dc.l	S_PP30Comm
+		dc.w	2
+		dc.w	39
+		dc.l	N_PP23Comm
+		dc.w	XFDPFF_RELOC!XFDPFF_RELMODE
+		dc.w	0
+		dc.l	RB_PP23Comm
+		dc.l	DB_PP23Comm
+		dc.l	RS_PP23Comm
+		dc.l	DS_PP23Comm
+		dc.w	XFDID_PowerPacker23
+		dc.w	0
+		dc.l	$238+4+4
+
+N_PP23Comm	dc.b	'PowerPacker 2.3',0
+		even
+
+;-------------------------------------------------
+
+RB_PP23Comm	;cmp.l	#$48808216,$22c(a0)	;id
+		;bne.s	.Exit
+		cmp.w	#$6620,$19e(a0)	;normal
+		beq.s	.Ok
+		cmp.w	#$6720,$19e(a0)	;master
+		bne.s	.Exit
+
+.Ok		cmp.l	#$3ea,$230(a0)	;hunk
+		bne.s	.Exit
+		cmp.l	#$45fa0136,$44(a0)
+		bne.s	.Exit
+		cmp.l	#$61000132,$4c(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_PP23Comm	movem.l	d2-d7/a2-a6,-(a7)
+		move.w	#$17c,d2
+		move.w	#$19e,d3
+
+DB_PP2xComm	move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a4
+
+		lea	$238(a4),a1
+		add.l	(a4,d2.w),a1	;ende 2. hunk
+		move.l	-(a1),d0
+		lsr.l	#8,d0		;laenge decrunched
+		move.l	d0,xfdbi_TargetBufSaveLen(a5)		
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit
+
+		move.l	d0,a1
+		lea	$238(a4),a0
+		move.l	(a4,d2.w),d0
+		move.l	$228(a4),-(a7)
+		move.l	a7,a6
+		cmp.w	#$6720,(a4,d3.w)	;master
+		beq.s	.Master
+		bsr	D_PPNormalS
+		bra.s	.Cont
+.Master		bsr	D_PPMasterS
+.Cont		addq.w	#4,a7
+		tst.l	d0
+		bne.s	.Exit
+
+		move.l	xfdbi_TargetBuffer(a5),a1
+		move.l	xfdbi_TargetBufLen(a5),d0
+		move.l	4.w,a6
+		jsr	-210(a6)
+		move.w	#XFDERR_CORRUPTEDDATA,xfdbi_Error(a5)
+		moveq	#0,d0
+
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;-------------------------------------------------
+
+RS_PP23Comm	add.l	a0,a0
+		add.l	a0,a0
+		cmp.l	#($83*4)+8,-4(a0)	;segment len
+		bne.s	.Exit
+
+		cmp.w	#$6620,$17e(a0)	;normal
+		beq.s	.Ok
+		cmp.w	#$6720,$17e(a0)	;master
+		bne.s	.Exit
+
+.Ok		;cmp.l	#$48808216,$20c(a0)	;id
+		;bne.s	.Exit
+		cmp.l	#$45fa0136,$24(a0)
+		bne.s	.Exit
+		cmp.l	#$61000132,$2c(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DS_PP23Comm	movem.l	d2-d7/a2-a6,-(a7)
+		move.w	#$15c,d2
+		move.w	#$17e,d3
+
+DS_PP2xComm	move.l	a0,a5
+		move.l	xfdsi_SegList(a5),a4
+		clr.l	xfdsi_SegList(a5)
+		add.l	a4,a4
+		add.l	a4,a4
+
+		move.l	(a4),a0
+		add.l	a0,a0
+		add.l	a0,a0
+		addq.w	#4,a0		;source
+		move.l	a0,a1
+		add.l	$18(a4),a1	;target
+		move.l	(a4,d2.w),d0	;sourcelen
+		move.l	-4(a0,d0.l),d1
+		lsr.l	#8,d1
+
+		movem.l	d1/a1/a6,-(a7)
+		move.l	$208(a4),-(a7)
+		move.l	a7,a6
+		cmp.w	#$6720,(a4,d3.w)	;master
+		beq.s	.Master
+		bsr	D_PPNormalS
+		bra.s	.Cont
+.Master		bsr	D_PPMasterS
+.Cont		addq.w	#4,a7
+		tst.l	d0
+		bne.s	.DecrOk
+		add.w	#12,a7
+		move.w	#XFDERR_CORRUPTEDDATA,xfdsi_Error(a5)
+		moveq	#0,d1
+		bra.s	.FreeSeg
+
+.DecrOk		movem.l	(a7)+,d0/a0/a6
+		lea	xfdsi_SegList(a5),a1
+		move.w	xfdsi_RelMode(a5),d1
+		jsr	_LVOxfdRelocate(a6)
+		moveq	#0,d1
+		move.w	d0,xfdsi_Error(a5)
+		bne.s	.FreeSeg
+		moveq	#1,d1
+
+.FreeSeg	move.l	d1,-(a7)
+		move.l	a4,d1
+		lsr.l	#2,d1
+		move.l	xfdm_DosBase(a6),a6
+		jsr	-156(a6)
+		move.l	(a7)+,d0
+
+		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+**************************************************
+
+S_PP30Comm	dc.l	S_PP30EncComm
+		dc.w	2
+		dc.w	39
+		dc.l	N_PP30Comm
+		dc.w	XFDPFF_RELOC!XFDPFF_RELMODE
+		dc.w	0
+		dc.l	RB_PP30Comm
+		dc.l	DB_PP30Comm
+		dc.l	RS_PP30Comm
+		dc.l	DS_PP30Comm
+		dc.w	XFDID_PowerPacker30
+		dc.w	0
+		dc.l	$254+4+4
+
+N_PP30Comm	dc.b	'PowerPacker 3.0',0
+		even
+
+;-------------------------------------------------
+
+RB_PP30Comm	;cmp.w	#$8082,$246(a0)	;id
+		;bne.s	.Exit
+		cmp.w	#$653e,$1c0(a0)	;normal
+		beq.s	.Ok
+		cmp.w	#$643e,$1c0(a0)	;master
+		bne.s	.Exit
+
+.Ok	;	cmp.l	#$3ea,$24c(a0)	; disabled - there are files without hunk_end!
+	;	bne.s	.Exit
+		cmp.l	#$487a0178,$24(a0)
+		bne.s	.Exit
+		cmp.l	#$61000156,$48(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_PP30Comm	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a4
+		move.l	a4,a0
+		move.l	xfdbi_SourceBufLen(a5),d0
+		moveq	#1,d1
+		bsr	xfdGetHunk
+		move.l	d0,d3
+		beq.b	.err
+		addq.l	#8,d3
+		movea.l	d3,a1
+
+		add.l	$44(a4),a1	;ende 2. hunk
+		move.l	-(a1),d0
+		lsr.l	#8,d0		;laenge decrunched
+		move.l	d0,xfdbi_TargetBufSaveLen(a5)		
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit
+
+		move.l	d0,a1
+		movea.l	d3,a0
+		move.l	$44(a4),d0
+		move.l	$240(a4),-(a7)
+		move.l	a7,a6
+		cmp.w	#$643e,$1c0(a4)	;master
+		beq.s	.Master
+		bsr	D_PPNormalS
+		bra.s	.Cont
+.Master		bsr	D_PPMasterS
+.Cont		addq.w	#4,a7
+		tst.l	d0
+		bne.s	.Exit
+
+		move.l	xfdbi_TargetBuffer(a5),a1
+		move.l	xfdbi_TargetBufLen(a5),d0
+		move.l	4.w,a6
+		jsr	-210(a6)
+.err		move.w	#XFDERR_CORRUPTEDDATA,xfdbi_Error(a5)
+		moveq	#0,d0
+
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;-------------------------------------------------
+
+RS_PP30Comm	add.l	a0,a0
+		add.l	a0,a0
+		cmp.l	#($89*4)+8,-4(a0)	;segment len
+		bne.s	.Exit
+
+		;cmp.w	#$8082,$226(a0)	;id
+		;bne.s	.Exit
+		cmp.w	#$653e,$1a0(a0)	;normal
+		beq.s	.Ok
+		cmp.w	#$643e,$1a0(a0)	;master
+		bne.s	.Exit
+
+.Ok		cmp.l	#$487a0178,$4(a0)
+		bne.s	.Exit
+		cmp.l	#$61000156,$28(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DS_PP30Comm	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdsi_SegList(a5),a4
+		clr.l	xfdsi_SegList(a5)
+		add.l	a4,a4
+		add.l	a4,a4
+
+		move.l	(a4),a0
+		add.l	a0,a0
+		add.l	a0,a0
+		addq.w	#4,a0		;source
+		move.l	a0,a1
+		addq.w	#8,a1		;target
+		move.l	$24(a4),d0	;sourcelen
+		move.l	-4(a0,d0.l),d1
+		lsr.l	#8,d1
+
+		movem.l	d1/a1/a6,-(a7)
+		move.l	$220(a4),-(a7)
+		move.l	a7,a6
+		cmp.w	#$643e,$1a0(a4)	;master
+		beq.s	.Master
+		bsr	D_PPNormalS
+		bra.s	.Cont
+.Master		bsr	D_PPMasterS
+.Cont		addq.w	#4,a7
+		tst.l	d0
+		bne.s	.DecrOk
+		add.w	#12,a7
+		move.w	#XFDERR_CORRUPTEDDATA,xfdsi_Error(a5)
+		moveq	#0,d1
+		bra.s	.FreeSeg
+
+.DecrOk		movem.l	(a7)+,d0/a0/a6
+		lea	xfdsi_SegList(a5),a1
+		move.w	xfdsi_RelMode(a5),d1
+		jsr	_LVOxfdRelocate(a6)
+		moveq	#0,d1
+		move.w	d0,xfdsi_Error(a5)
+		bne.s	.FreeSeg
+		moveq	#1,d1
+
+.FreeSeg	move.l	d1,-(a7)
+		move.l	a4,d1
+		lsr.l	#2,d1
+		move.l	xfdm_DosBase(a6),a6
+		jsr	-156(a6)
+		move.l	(a7)+,d0
+
+		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+**************************************************
+
+S_PP30EncComm	dc.l	S_PP30OvlComm
+		dc.w	2
+		dc.w	39
+		dc.l	N_PP30EncComm
+		dc.w	XFDPFF_RELOC!XFDPFF_PASSWORD!XFDPFF_RELMODE
+		dc.w	16
+		dc.l	RB_PP30EncComm
+		dc.l	DB_PP30EncComm
+		dc.l	RS_PP30EncComm
+		dc.l	DS_PP30EncComm
+		dc.w	XFDID_PowerPacker30Enc
+		dc.w	0
+		dc.l	$310+4+4
+
+N_PP30EncComm	dc.b	'PowerPacker 3.0 Encrypted',0
+		even
+
+;-------------------------------------------------
+
+RB_PP30EncComm	;cmp.w	#$8082,$302(a0)	;id
+		;bne.s	.Exit
+		cmp.w	#$653e,$23c(a0)	;normal
+		beq.s	.Ok
+		cmp.w	#$643e,$23c(a0)	;master
+		bne.s	.Exit
+
+.Ok		cmp.l	#$3ea,$308(a0)	;hunk
+		bne.s	.Exit
+		cmp.l	#$487a01f6,$24(a0)
+		bne.s	.Exit
+		cmp.l	#$61000156,$c6(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_PP30EncComm	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a4
+
+		move.w	#XFDERR_WRONGPASSWORD,xfdbi_Error(a5)
+		move.l	xfdbi_Special(a5),d0
+		beq	.Exit
+		move.l	d0,a0
+		bsr	PP_GetCode
+		cmp.w	$8e(a4),d0				
+		bne	.Error
+		move.l	d1,d6
+
+		lea	$310(a4),a1
+		add.l	$c2(a4),a1	;ende 2. hunk
+		move.l	-(a1),d0
+		lsr.l	#8,d0		;laenge decrunched
+		move.l	d0,xfdbi_TargetBufSaveLen(a5)		
+		addq.l	#8,d0
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit
+
+		move.l	d0,a1
+		move.l	d0,a2
+		add.l	$c2(a4),a2
+		lea	$310(a4),a0
+		move.w	$b2(a4),d0
+.Crypt		move.l	(a0)+,d1
+		eor.l	d6,d1
+		move.l	d1,(a1)+
+		dbf	d0,.Crypt
+.Copy		move.l	(a0)+,(a1)+
+		cmp.l	a1,a2
+		bne.s	.Copy
+
+		move.l	xfdbi_TargetBuffer(a5),a0
+		lea	8(a0),a1
+		move.l	$c2(a4),d0
+		move.l	$2fe(a4),-(a7)
+		move.l	a7,a6
+		cmp.w	#$643e,$23c(a4)	;master
+		beq.s	.Master
+		bsr	D_PPNormalS
+		bra.s	.Cont
+.Master		bsr	D_PPMasterS
+.Cont		addq.w	#4,a7
+		tst.l	d0
+		bne.s	.Ok
+
+		move.l	xfdbi_TargetBuffer(a5),a1
+		move.l	xfdbi_TargetBufLen(a5),d0
+		move.l	4.w,a6
+		jsr	-210(a6)
+		move.w	#XFDERR_CORRUPTEDDATA,xfdbi_Error(a5)
+		bra.s	.Error
+
+.Ok		move.l	xfdbi_TargetBuffer(a5),a1
+		lea	8(a1),a0
+		move.l	xfdbi_TargetBufSaveLen(a5),d0
+		lsr.l	#2,d0
+.Copy2		move.l	(a0)+,(a1)+
+		subq.l	#1,d0
+		bne.s	.Copy2
+
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+.Error		moveq	#0,d0
+		bra.s	.Exit
+
+;-------------------------------------------------
+
+RS_PP30EncComm	add.l	a0,a0
+		add.l	a0,a0
+		cmp.l	#($b8*4)+8,-4(a0)	;segment len
+		bne.s	.Exit
+
+		;cmp.w	#$8082,$2e2(a0)	;id
+		;bne.s	.Exit
+		cmp.w	#$653e,$21c(a0)	;normal
+		beq.s	.Ok
+		cmp.w	#$643e,$21c(a0)	;master
+		bne.s	.Exit
+
+.Ok		cmp.l	#$487a01f6,$4(a0)
+		bne.s	.Exit
+		cmp.l	#$61000156,$a6(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DS_PP30EncComm	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdsi_SegList(a5),a4
+		add.l	a4,a4
+		add.l	a4,a4
+
+		move.w	#XFDERR_WRONGPASSWORD,xfdsi_Error(a5)
+		move.l	xfdsi_Special(a5),d0
+		beq	.Exit
+		move.l	d0,a0
+		bsr	PP_GetCode
+		cmp.w	$6e(a4),d0				
+		beq.s	.PWOk
+		moveq	#0,d0
+		bra.b	.Exit
+
+.PWOk		clr.l	xfdsi_SegList(a5)
+
+		move.l	(a4),a0
+		add.l	a0,a0
+		add.l	a0,a0
+		addq.w	#4,a0		;source
+		move.l	a0,-(a7)
+		move.w	$92(a4),d0
+.Crypt		eor.l	d1,(a0)+
+		dbf	d0,.Crypt
+		move.l	(a7)+,a0
+		move.l	a0,a1
+		addq.w	#8,a1		;target
+		move.l	$a2(a4),d0	;sourcelen
+		move.l	-4(a0,d0.l),d1
+		lsr.l	#8,d1
+
+		movem.l	d1/a1/a6,-(a7)
+		move.l	$2de(a4),-(a7)
+		move.l	a7,a6
+		cmp.w	#$643e,$21c(a4)	;master
+		beq.s	.Master
+		bsr	D_PPNormalS
+		bra.s	.Cont
+.Master		bsr	D_PPMasterS
+.Cont		addq.w	#4,a7
+		tst.l	d0
+		bne.s	.DecrOk
+		add.w	#12,a7
+		move.w	#XFDERR_CORRUPTEDDATA,xfdsi_Error(a5)
+		moveq	#0,d1
+		bra.s	.FreeSeg
+
+.DecrOk		movem.l	(a7)+,d0/a0/a6
+		lea	xfdsi_SegList(a5),a1
+		move.w	xfdsi_RelMode(a5),d1
+		jsr	_LVOxfdRelocate(a6)
+		moveq	#0,d1
+		move.w	d0,xfdsi_Error(a5)
+		bne.s	.FreeSeg
+		moveq	#1,d1
+
+.FreeSeg	move.l	d1,-(a7)
+		move.l	a4,d1
+		lsr.l	#2,d1
+		move.l	xfdm_DosBase(a6),a6
+		jsr	-156(a6)
+		move.l	(a7)+,d0
+
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+**************************************************
+
+S_PP30OvlComm	dc.l	S_PP40Comm
+		dc.w	2
+		dc.w	39
+		dc.l	N_PP30OvlComm
+		dc.w	XFDPFF_RELOC!XFDPFF_RELMODE
+		dc.w	0
+		dc.l	RB_PP30OvlComm
+		dc.l	DB_PP30OvlComm
+		dc.l	RS_PP30OvlComm
+		dc.l	DS_PP30OvlComm
+		dc.w	XFDID_PowerPacker30Ovl
+		dc.w	0
+		dc.l	$268+4+4+12
+
+N_PP30OvlComm	dc.b	'PowerPacker 3.0 Overlayed',0
+		even
+
+;-------------------------------------------------
+
+RB_PP30OvlComm	;cmp.w	#$8082,$25a(a0)	;id
+		;bne.s	.Exit
+		cmp.w	#$653e,$1d6(a0)	;normal
+		beq.s	.Ok
+		cmp.w	#$643e,$1d6(a0)	;master
+		bne.s	.Exit
+
+.Ok		cmp.l	#$3ea,$260(a0)	;hunk
+		bne.s	.Exit
+		cmp.w	#$abcd,$2a(a0)
+		bne.s	.Exit
+		cmp.l	#$487a0176,$3c(a0)
+		bne.s	.Exit
+		cmp.l	#$61000154,$60(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_PP30OvlComm	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a4
+
+		lea	$268(a4),a0		;anfang 2. hunk
+		add.l	$5c(a4),a0		;ende 2. hunk
+		move.l	-(a0),d1
+		lsr.l	#8,d1		;laenge decrunched
+		move.l	d1,xfdbi_TargetBufSaveLen(a5)		
+
+		addq.w	#8,a0
+		move.l	a0,a3
+		sub.l	a4,a0
+		move.l	xfdbi_SourceBufLen(a5),d0
+		sub.l	a0,d0
+		add.l	d1,d0
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq	.Exit
+
+		move.l	d0,a1
+		lea	$268(a4),a0
+		move.l	$5c(a4),d0
+		move.l	$256(a4),-(a7)
+		move.l	a7,a6
+		move.l	a3,-(a7)
+		cmp.w	#$643e,$1d6(a4)	;master
+		beq.s	.Master
+		bsr	D_PPNormalS
+		bra.s	.Cont
+.Master		bsr	D_PPMasterS
+.Cont		move.l	(a7)+,a3
+		addq.w	#4,a7
+		tst.l	d0
+		bne.s	.Ok
+
+		move.l	xfdbi_TargetBuffer(a5),a1
+		move.l	xfdbi_TargetBufLen(a5),d0
+		move.l	4.w,a6
+		jsr	-210(a6)
+		move.w	#XFDERR_CORRUPTEDDATA,xfdbi_Error(a5)
+		moveq	#0,d0
+		bra.s	.Exit
+
+.Ok		move.l	a3,a0
+		move.l	xfdbi_TargetBuffer(a5),a1
+		move.l	a1,a2
+		add.l	xfdbi_TargetBufLen(a5),a2
+		add.l	xfdbi_TargetBufSaveLen(a5),a1
+
+		move.l	xfdbi_TargetBufSaveLen(a5),d0
+		move.l	a0,d1
+		sub.l	xfdbi_SourceBuffer(a5),d1
+		sub.l	d1,d0
+
+		move.l	(a0)+,(a1)+
+		move.l	(a0)+,(a1)+
+		move.l	(a0)+,d1
+		move.l	d1,(a1)+
+.CorrectOffsets	move.l	(a0)+,(a1)
+		add.l	d0,(a1)+
+		move.l	(a0)+,(a1)+
+		subq.l	#1,d1
+		bne.s	.CorrectOffsets
+
+.Copy		move.l	(a0)+,(a1)+
+		cmp.l	a1,a2
+		bne.s	.Copy
+
+		move.l	xfdbi_TargetBufLen(a5),xfdbi_TargetBufSaveLen(a5)
+
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;-------------------------------------------------
+
+RS_PP30OvlComm	add.l	a0,a0
+		add.l	a0,a0
+		cmp.l	#($8e*4)+8,-4(a0)	;segment len
+		bne.s	.Exit
+
+		;cmp.w	#$8082,$23a(a0)	;id
+		;bne.s	.Exit
+		cmp.w	#$653e,$1b6(a0)	;normal
+		beq.s	.Ok
+		cmp.w	#$643e,$1b6(a0)	;master
+		bne.s	.Exit
+
+.Ok		cmp.w	#$abcd,$a(a0)
+		bne.s	.Exit
+		cmp.l	#$487a0176,$1c(a0)
+		bne.s	.Exit
+		cmp.l	#$61000154,$40(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DS_PP30OvlComm	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdsi_SegList(a5),a4
+		clr.l	xfdsi_SegList(a5)
+		add.l	a4,a4
+		add.l	a4,a4
+
+		move.l	(a4),a0
+		add.l	a0,a0
+		add.l	a0,a0
+		addq.w	#4,a0		;source
+		move.l	a0,a1
+		addq.w	#8,a1		;target
+		move.l	$3c(a4),d0	;sourcelen
+		move.l	-4(a0,d0.l),d1
+		lsr.l	#8,d1
+
+		movem.l	d1/a1/a6,-(a7)
+		move.l	$236(a4),-(a7)
+		move.l	a7,a6
+		cmp.w	#$643e,$1b6(a4)	;master
+		beq.s	.Master
+		bsr	D_PPNormalS
+		bra.s	.Cont
+.Master		bsr	D_PPMasterS
+.Cont		addq.w	#4,a7
+		tst.l	d0
+		bne.s	.DecrOk
+		add.w	#12,a7
+		move.w	#XFDERR_CORRUPTEDDATA,xfdsi_Error(a5)
+		moveq	#0,d1
+		bra.s	.FreeSeg
+
+.DecrOk		movem.l	(a7)+,d0/a0/a6
+		lea	xfdsi_SegList(a5),a1
+		move.w	xfdsi_RelMode(a5),d1
+		jsr	_LVOxfdRelocate(a6)
+		moveq	#0,d1
+		move.w	d0,xfdsi_Error(a5)
+		bne.s	.FreeSeg
+
+		lea	$8(a4),a0
+		move.l	xfdsi_SegList(a5),a1
+		add.l	a1,a1
+		add.l	a1,a1
+		add.w	#$c,a1
+		not.l	(a0)+
+		move.l	(a0)+,(a1)+
+		move.l	(a0)+,(a1)+
+		move.l	(a0)+,(a1)+
+		move.l	(a0)+,(a1)
+
+		move.l	-(a1),a1
+		add.l	a1,a1
+		add.l	a1,a1
+		move.l	-4(a1),d0
+		subq.w	#8,d0
+		move.l	xfdsi_SegList(a5),a0
+.EnterHunk	move.l	a0,(a1)+
+		subq.w	#4,d0
+		beq.s	.Exit
+		add.l	a0,a0
+		add.l	a0,a0
+		tst.l	(a0)
+		beq.s	.ClearHunks
+		move.l	(a0),a0
+		bra.s	.EnterHunk
+.ClearHunks	clr.l	(a1)+
+		subq.w	#4,d0
+		bgt.s	.ClearHunks
+
+.Exit		moveq	#1,d1
+
+.FreeSeg	move.l	d1,-(a7)
+		move.l	a4,d1
+		lsr.l	#2,d1
+		move.l	xfdm_DosBase(a6),a6
+		jsr	-156(a6)
+		move.l	(a7)+,d0
+
+		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+**************************************************
+
+S_PP40Comm	dc.l	S_PP40LibComm
+		dc.w	2
+		dc.w	39
+		dc.l	N_PP40Comm
+		dc.w	XFDPFF_RELOC!XFDPFF_RELMODE
+		dc.w	0
+		dc.l	RB_PP40Comm
+		dc.l	DB_PP40Comm
+		dc.l	RS_PP40Comm
+		dc.l	DS_PP40Comm
+		dc.w	XFDID_PowerPacker40
+		dc.w	0
+		dc.l	$2a8+4+4
+
+N_PP40Comm	dc.b	'PowerPacker 4.0',0
+		even
+
+;-------------------------------------------------
+
+RB_PP40Comm	;cmp.w	#$8280,$29a(a0)	;id
+		;bne.s	.Exit
+		cmp.l	#$3ea,$2a0(a0)	;hunk
+		bne.s	.Exit
+
+		cmp.l	#$487a01c8,$24(a0)
+		bne.s	.Exit
+		cmp.l	#$610001a6,$48(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_PP40Comm	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a4
+
+		move.l	$290(a4),d7
+		move.l	$44(a4),d6
+		lea	$2a8(a4),a2
+		move.l	$294(a4),d5
+
+DB_PP40LibComm1	move.l	a2,a0
+		add.l	d6,a0		;ende 2. hunk
+		move.l	-(a0),d1
+		lsr.l	#8,d1		;laenge decrunched
+		move.l	d1,xfdbi_TargetBufSaveLen(a5)		
+		move.l	d5,d0
+		move.l	d0,xfdbi_TargetBufLen(a5)
+		BEQ.B	.Corrupt
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit
+
+		move.l	d0,a1
+		move.l	a2,a0
+		move.l	d6,d0
+		move.l	d7,-(a7)
+		move.l	a7,a6
+		bsr	D_PPNormalS
+		addq.w	#4,a7
+		tst.l	d0
+		beq.s	.Error
+
+		move.l	xfdbi_TargetBuffer(a5),a0
+		move.l	xfdbi_TargetBufSaveLen(a5),d0
+		bsr	PP_Correct40
+		tst.l	d0
+		bne.s	.Ok
+
+.Error		move.l	xfdbi_TargetBuffer(a5),a1
+		move.l	xfdbi_TargetBufLen(a5),d0
+		move.l	4.w,a6
+		jsr	-210(a6)
+.Corrupt	move.w	#XFDERR_CORRUPTEDDATA,xfdbi_Error(a5)
+		moveq	#0,d0
+		bra.s	.Exit
+		
+.Ok		move.l	xfdbi_TargetBufLen(a5),xfdbi_TargetBufSaveLen(a5)
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;-------------------------------------------------
+
+RS_PP40Comm	add.l	a0,a0
+		add.l	a0,a0
+		cmp.l	#($9e*4)+8,-4(a0)	;segment len
+		bne.s	.Exit
+		;cmp.w	#$8280,$27a(a0)	;id
+		;bne.s	.Exit
+
+		cmp.l	#$487a01c8,$4(a0)
+		bne.s	.Exit
+		cmp.l	#$610001a6,$28(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DS_PP40Comm	move.w	#$270,d0
+		moveq	#$24,d1
+
+DS_PP40LibComm1	movem.l	d2-d7/a2-a6,-(a7)
+		move.w	d0,d7
+		move.w	d1,d6
+		move.l	a0,a5
+		move.l	xfdsi_SegList(a5),a4
+		clr.l	xfdsi_SegList(a5)
+		add.l	a4,a4
+		add.l	a4,a4
+
+		move.l	(a4),a0
+		add.l	a0,a0
+		add.l	a0,a0
+		addq.w	#4,a0		;source
+		move.l	a0,a1
+		addq.w	#8,a1		;target
+		move.l	(a4,d6.w),d0	;sourcelen
+		move.l	-4(a0,d0.l),d1
+		lsr.l	#8,d1
+
+		movem.l	d1/a1/a6,-(a7)
+		move.l	(a4,d7.w),-(a7)
+		move.l	a7,a6
+		bsr	D_PPNormalS
+		addq.w	#4,a7
+		tst.l	d0
+		bne.s	.DecrOk
+		add.w	#12,a7
+		move.w	#XFDERR_CORRUPTEDDATA,xfdsi_Error(a5)
+		moveq	#0,d1
+		bra.s	.FreeSeg
+
+.DecrOk		movem.l	(a7)+,d0/a0/a6
+		lea	xfdsi_SegList(a5),a1
+		move.w	xfdsi_RelMode(a5),d1
+		bsr	PP_Relocate40
+		moveq	#0,d1
+		move.w	d0,xfdsi_Error(a5)
+		bne.s	.FreeSeg
+		moveq	#1,d1
+
+.FreeSeg	move.l	d1,-(a7)
+		move.l	a4,d1
+		lsr.l	#2,d1
+		move.l	xfdm_DosBase(a6),a6
+		jsr	-156(a6)
+		move.l	(a7)+,d0
+
+		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+**************************************************
+
+S_PP40LibComm	dc.l	S_PP40OvlComm
+		dc.w	2
+		dc.w	39
+		dc.l	N_PP40LibComm
+		dc.w	XFDPFF_RELOC!XFDPFF_RELMODE
+		dc.w	0
+		dc.l	RB_PP40LibComm
+		dc.l	DB_PP40LibComm
+		dc.l	RS_PP40LibComm
+		dc.l	DS_PP40LibComm
+		dc.w	XFDID_PowerPacker40Lib
+		dc.w	0
+		dc.l	$ac+4+4
+
+N_PP40LibComm	dc.b	'PowerPacker 4.0 Library',0
+		even
+
+;-------------------------------------------------
+
+RB_PP40LibComm	;cmp.w	#$8280,$9e(a0)	;id
+		;bne.s	.Exit
+		cmp.l	#$3ea,$a4(a0)	;hunk
+		bne.s	.Exit
+
+		cmp.l	#$487a0058,$24(a0)
+		bne.s	.Exit
+		cmp.l	#$4eaeffb2,$50(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_PP40LibComm	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a4
+
+		move.l	$94(a4),d7
+		move.l	$44(a4),d6
+		lea	$ac(a4),a2
+		move.l	$98(a4),d5
+		bra	DB_PP40LibComm1
+
+;-------------------------------------------------
+
+RS_PP40LibComm	add.l	a0,a0
+		add.l	a0,a0
+		cmp.l	#($1f*4)+8,-4(a0)	;segment len
+		bne.s	.Exit
+		;cmp.w	#$8280,$7e(a0)	;id
+		;bne.s	.Exit
+
+		cmp.l	#$487a0058,$4(a0)
+		bne.s	.Exit
+		cmp.l	#$4eaeffb2,$30(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DS_PP40LibComm	moveq	#$74,d0
+		moveq	#$24,d1
+		bra	DS_PP40LibComm1
+
+**************************************************
+
+S_PP40OvlComm	dc.l	S_PP40LibOvlComm
+		dc.w	2
+		dc.w	39
+		dc.l	N_PP40OvlComm
+		dc.w	XFDPFF_RELOC!XFDPFF_RELMODE
+		dc.w	0
+		dc.l	RB_PP40OvlComm
+		dc.l	DB_PP40OvlComm
+		dc.l	RS_PP40OvlComm
+		dc.l	DS_PP40OvlComm
+		dc.w	XFDID_PowerPacker40Ovl
+		dc.w	0
+		dc.l	$2c0+4+4+12
+
+N_PP40OvlComm	dc.b	'PowerPacker 4.0 Overlayed',0
+		even
+
+;-------------------------------------------------
+
+RB_PP40OvlComm	;cmp.w	#$8280,$2b2(a0)	;id
+		;bne.s	.Exit
+		cmp.l	#$3ea,$2b8(a0)	;hunk
+		bne.s	.Exit
+
+		cmp.w	#$abcd,$2a(a0)
+		bne.s	.Exit
+		cmp.l	#$487a01c8,$3c(a0)
+		bne.s	.Exit
+		cmp.l	#$610001a6,$60(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_PP40OvlComm	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a4
+
+		move.w	#$2ac,d7
+		lea	$2c0(a4),a2
+
+DB_PP40LibOvlComm1
+		move.l	a2,a0
+		add.l	$5c(a4),a0	;ende 2.hunk norm+lib
+		move.l	-(a0),d1
+		lsr.l	#8,d1		;laenge decrunched
+		move.l	d1,xfdbi_TargetBufSaveLen(a5)		
+
+		addq.w	#8,a0
+		move.l	a0,a3
+		sub.l	a4,a0
+		move.l	xfdbi_SourceBufLen(a5),d0
+		sub.l	a0,d0
+		add.l	(a4,d7.w),d0
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq	.Exit
+
+		move.l	d0,a1
+		move.l	a2,a0
+		move.l	$5c(a4),d0
+		move.l	-4(a4,d7.w),-(a7)
+		move.l	a7,a6
+		movem.l	d7/a3,-(a7)
+		bsr	D_PPNormalS
+		movem.l	(a7)+,d7/a3
+		addq.w	#4,a7
+		tst.l	d0
+		beq.s	.Error
+
+		move.l	xfdbi_TargetBuffer(a5),a0
+		move.l	xfdbi_TargetBufSaveLen(a5),d0
+		bsr	PP_Correct40
+		tst.l	d0
+		bne.s	.Ok
+
+.Error		move.l	xfdbi_TargetBuffer(a5),a1
+		move.l	xfdbi_TargetBufLen(a5),d0
+		move.l	4.w,a6
+		jsr	-210(a6)
+		move.w	#XFDERR_CORRUPTEDDATA,xfdbi_Error(a5)
+		moveq	#0,d0
+		bra.s	.Exit
+		
+.Ok		move.l	a3,a0
+		move.l	xfdbi_TargetBuffer(a5),a1
+		move.l	a1,a2
+		add.l	xfdbi_TargetBufLen(a5),a2
+		add.l	(a4,d7.w),a1
+
+		move.l	(a4,d7.w),d0
+		move.l	a0,d1
+		sub.l	xfdbi_SourceBuffer(a5),d1
+		sub.l	d1,d0
+
+		move.l	(a0)+,(a1)+
+		move.l	(a0)+,(a1)+
+		move.l	(a0)+,d1
+		move.l	d1,(a1)+
+.CorrectOffsets	move.l	(a0)+,(a1)
+		add.l	d0,(a1)+
+		move.l	(a0)+,(a1)+
+		subq.l	#1,d1
+		bne.s	.CorrectOffsets
+
+.Copy		move.l	(a0)+,(a1)+
+		cmp.l	a1,a2
+		bne.s	.Copy
+
+		move.l	xfdbi_TargetBufLen(a5),xfdbi_TargetBufSaveLen(a5)
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;-------------------------------------------------
+
+RS_PP40OvlComm	add.l	a0,a0
+		add.l	a0,a0
+		cmp.l	#($a4*4)+8,-4(a0)	;segment len
+		bne.s	.Exit
+		;cmp.w	#$8280,$292(a0)	;id
+		;bne.s	.Exit
+
+		cmp.w	#$abcd,$a(a0)
+		bne.s	.Exit
+		cmp.l	#$487a01c8,$1c(a0)
+		bne.s	.Exit
+		cmp.l	#$610001a6,$40(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DS_PP40OvlComm	move.w	#$288,d0
+
+DS_PP40LibOvlComm1
+		movem.l	d2-d7/a2-a6,-(a7)
+		move.w	d0,d7
+		move.l	a0,a5
+		move.l	xfdsi_SegList(a5),a4
+		clr.l	xfdsi_SegList(a5)
+		add.l	a4,a4
+		add.l	a4,a4
+
+		move.l	(a4),a0
+		add.l	a0,a0
+		add.l	a0,a0
+		addq.w	#4,a0		;source
+		move.l	a0,a1
+		addq.w	#8,a1		;target
+		move.l	$3c(a4),d0	;sourcelen
+		move.l	-4(a0,d0.l),d1
+		lsr.l	#8,d1
+
+		movem.l	d1/a1/a6,-(a7)
+		move.l	(a4,d7.w),-(a7)
+		move.l	a7,a6
+		bsr	D_PPNormalS
+		addq.w	#4,a7
+		tst.l	d0
+		bne.s	.DecrOk
+		add.w	#12,a7
+		move.w	#XFDERR_CORRUPTEDDATA,xfdsi_Error(a5)
+		moveq	#0,d1
+		bra.s	.FreeSeg
+
+.DecrOk		movem.l	(a7)+,d0/a0/a6
+		lea	xfdsi_SegList(a5),a1
+		move.w	xfdsi_RelMode(a5),d1
+		bsr	PP_Relocate40
+		moveq	#0,d1
+		move.w	d0,xfdsi_Error(a5)
+		bne.s	.FreeSeg
+
+		lea	$8(a4),a0
+		move.l	xfdsi_SegList(a5),a1
+		add.l	a1,a1
+		add.l	a1,a1
+		add.w	#$c,a1
+		not.l	(a0)+
+		move.l	(a0)+,(a1)+
+		move.l	(a0)+,(a1)+
+		move.l	(a0)+,(a1)+
+		move.l	(a0)+,(a1)
+
+		move.l	-(a1),a1
+		add.l	a1,a1
+		add.l	a1,a1
+		move.l	-4(a1),d0
+		subq.w	#8,d0
+		move.l	xfdsi_SegList(a5),a0
+.EnterHunk	move.l	a0,(a1)+
+		subq.w	#4,d0
+		beq.s	.Exit
+		add.l	a0,a0
+		add.l	a0,a0
+		tst.l	(a0)
+		beq.s	.ClearHunks
+		move.l	(a0),a0
+		bra.s	.EnterHunk
+.ClearHunks	clr.l	(a1)+
+		subq.w	#4,d0
+		bgt.s	.ClearHunks
+
+.Exit		moveq	#1,d1
+
+.FreeSeg	move.l	d1,-(a7)
+		move.l	a4,d1
+		lsr.l	#2,d1
+		move.l	xfdm_DosBase(a6),a6
+		jsr	-156(a6)
+		move.l	(a7)+,d0
+
+		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+**************************************************
+
+S_PP40LibOvlComm
+		dc.l	S_PP40EncComm
+		dc.w	2
+		dc.w	39
+		dc.l	N_PP40LibOvlComm
+		dc.w	XFDPFF_RELOC!XFDPFF_RELMODE
+		dc.w	0
+		dc.l	RB_PP40LibOvlComm
+		dc.l	DB_PP40LibOvlComm
+		dc.l	RS_PP40LibOvlComm
+		dc.l	DS_PP40LibOvlComm
+		dc.w	XFDID_PowerPacker40LibOvl
+		dc.w	0
+		dc.l	$c4+4+4+12
+
+N_PP40LibOvlComm
+		dc.b	'PP 4.0 Library Overlayed',0
+		even
+
+;-------------------------------------------------
+
+RB_PP40LibOvlComm
+		;cmp.w	#$8280,$b6(a0)	;id
+		;bne.s	.Exit
+		cmp.l	#$3ea,$bc(a0)	;hunk
+		bne.s	.Exit
+
+		cmp.w	#$abcd,$2a(a0)
+		bne.s	.Exit
+		cmp.l	#$487a0058,$3c(a0)
+		bne.s	.Exit
+		cmp.l	#$4eaeffa6,$68(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_PP40LibOvlComm
+		movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a4
+
+		move.w	#$b0,d7
+		lea	$c4(a4),a2
+		bra	DB_PP40LibOvlComm1
+
+;-------------------------------------------------
+
+RS_PP40LibOvlComm
+		add.l	a0,a0
+		add.l	a0,a0
+		cmp.l	#($25*4)+8,-4(a0)	;segment len
+		bne.s	.Exit
+		;cmp.w	#$8280,$96(a0)	;id
+		;bne.s	.Exit
+
+		cmp.w	#$abcd,$a(a0)
+		bne.s	.Exit
+		cmp.l	#$487a0058,$1c(a0)
+		bne.s	.Exit
+		cmp.l	#$4eaeffa6,$48(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DS_PP40LibOvlComm
+		move.w	#$8c,d0
+		bra	DS_PP40LibOvlComm1
+
+**************************************************
+
+S_PP40EncComm	dc.l	S_PP40LibEncComm
+		dc.w	2
+		dc.w	39
+		dc.l	N_PP40EncComm
+		dc.w	XFDPFF_RELOC!XFDPFF_PASSWORD!XFDPFF_RELMODE
+		dc.w	16
+		dc.l	RB_PP40EncComm
+		dc.l	DB_PP40EncComm
+		dc.l	RS_PP40EncComm
+		dc.l	DS_PP40EncComm
+		dc.w	XFDID_PowerPacker40Enc
+		dc.w	0
+		dc.l	$364+4+4
+
+N_PP40EncComm	dc.b	'PowerPacker 4.0 Encrypted',0
+		even
+
+;-------------------------------------------------
+
+RB_PP40EncComm	;cmp.w	#$8280,$356(a0)	;id
+		;bne.s	.Exit
+		cmp.l	#$3ea,$35c(a0)	;hunk
+		bne.s	.Exit
+
+		cmp.l	#$487a0246,$24(a0)
+		bne.s	.Exit
+		cmp.l	#$610001a6,$c6(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_PP40EncComm	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a4
+
+		move.w	#XFDERR_WRONGPASSWORD,xfdbi_Error(a5)
+		move.l	xfdbi_Special(a5),d0
+		beq	.Exit
+		move.l	d0,a0
+		bsr	PP_GetCode
+		cmp.w	$8e(a4),d0				
+		bne	.Error
+		move.l	d1,d6
+
+		lea	$364(a4),a0
+		add.l	$c2(a4),a0		;ende 2. hunk
+		move.l	-(a0),d0
+		lsr.l	#8,d0		;laenge decrunched
+		move.l	d0,xfdbi_TargetBufSaveLen(a5)		
+		move.l	$352(a4),d0
+		addq.l	#8,d0
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq	.Exit
+
+		move.l	d0,a1
+		move.l	d0,a2
+		add.l	$c2(a4),a2
+		lea	$364(a4),a0
+		move.w	$b2(a4),d0
+.Crypt		move.l	(a0)+,d1
+		eor.l	d6,d1
+		move.l	d1,(a1)+
+		dbf	d0,.Crypt
+.Copy		move.l	(a0)+,(a1)+
+		cmp.l	a1,a2
+		bne.s	.Copy
+
+		move.l	xfdbi_TargetBuffer(a5),a0
+		lea	8(a0),a1
+		move.l	$c2(a4),d0
+		move.l	$34e(a4),-(a7)
+		move.l	a7,a6
+		bsr	D_PPNormalS
+		addq.w	#4,a7
+		tst.l	d0
+		beq.s	.DecError
+
+		move.l	xfdbi_TargetBuffer(a5),a1
+		lea	8(a1),a0
+		move.l	xfdbi_TargetBufSaveLen(a5),d0
+		lsr.l	#2,d0
+.Copy2		move.l	(a0)+,(a1)+
+		subq.l	#1,d0
+		bne.s	.Copy2
+
+		move.l	xfdbi_TargetBuffer(a5),a0
+		move.l	xfdbi_TargetBufSaveLen(a5),d0
+		bsr	PP_Correct40
+		tst.l	d0
+		bne.s	.Ok
+
+.DecError	move.l	xfdbi_TargetBuffer(a5),a1
+		move.l	xfdbi_TargetBufLen(a5),d0
+		move.l	4.w,a6
+		jsr	-210(a6)
+		move.w	#XFDERR_CORRUPTEDDATA,xfdbi_Error(a5)
+		bra.s	.Error
+		
+.Ok		move.l	xfdbi_TargetBufLen(a5),xfdbi_TargetBufSaveLen(a5)
+		subq.l	#8,xfdbi_TargetBufSaveLen(a5)
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+.Error		moveq	#0,d0
+		bra.s	.Exit
+
+;-------------------------------------------------
+
+RS_PP40EncComm	add.l	a0,a0
+		add.l	a0,a0
+		cmp.l	#($cd*4)+8,-4(a0)	;segment len
+		bne.s	.Exit
+		;cmp.w	#$8280,$336(a0)	;id
+		;bne.s	.Exit
+
+		cmp.l	#$487a0246,$4(a0)
+		bne.s	.Exit
+		cmp.l	#$610001a6,$a6(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DS_PP40EncComm	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdsi_SegList(a5),a4
+		add.l	a4,a4
+		add.l	a4,a4
+
+		move.w	#XFDERR_WRONGPASSWORD,xfdsi_Error(a5)
+		move.l	xfdsi_Special(a5),d0
+		beq	.Exit
+		move.l	d0,a0
+		bsr	PP_GetCode
+		cmp.w	$6e(a4),d0				
+		beq.s	.PWOk
+		moveq	#0,d0
+		bra.s	.Exit
+
+.PWOk		clr.l	xfdsi_SegList(a5)
+
+		move.l	(a4),a0
+		add.l	a0,a0
+		add.l	a0,a0
+		addq.w	#4,a0		;source
+		move.l	a0,-(a7)
+		move.w	$92(a4),d0
+.Crypt		eor.l	d1,(a0)+
+		dbf	d0,.Crypt
+		move.l	(a7)+,a0
+		move.l	a0,a1
+		addq.w	#8,a1		;target
+		move.l	$a2(a4),d0	;sourcelen
+		move.l	-4(a0,d0.l),d1
+		lsr.l	#8,d1
+
+		movem.l	d1/a1/a6,-(a7)
+		move.l	$32e(a4),-(a7)
+		move.l	a7,a6
+		bsr	D_PPNormalS
+		addq.w	#4,a7
+		tst.l	d0
+		bne.s	.DecrOk
+		add.w	#12,a7
+		move.w	#XFDERR_CORRUPTEDDATA,xfdsi_Error(a5)
+		moveq	#0,d1
+		bra.s	.FreeSeg
+
+.DecrOk		movem.l	(a7)+,d0/a0/a6
+		lea	xfdsi_SegList(a5),a1
+		move.w	xfdsi_RelMode(a5),d1
+		bsr	PP_Relocate40
+		moveq	#0,d1
+		move.w	d0,xfdsi_Error(a5)
+		bne.s	.FreeSeg
+		moveq	#1,d1
+
+.FreeSeg	move.l	d1,-(a7)
+		move.l	a4,d1
+		lsr.l	#2,d1
+		move.l	xfdm_DosBase(a6),a6
+		jsr	-156(a6)
+		move.l	(a7)+,d0
+
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+**************************************************
+
+S_PP40LibEncComm
+		dc.l	S_PPLoadSeg
+		dc.w	2
+		dc.w	39
+		dc.l	N_PP40LibEncComm
+		dc.w	XFDPFF_RELOC!XFDPFF_PASSWORD!XFDPFF_RELMODE
+		dc.w	16
+		dc.l	RB_PP40LibEncComm
+		dc.l	DB_PP40LibEncComm
+		dc.l	RS_PP40LibEncComm
+		dc.l	DS_PP40LibEncComm
+		dc.w	XFDID_PowerPacker40LibEnc
+		dc.w	0
+		dc.l	$b0+4+4
+
+N_PP40LibEncComm
+		dc.b	'PP 4.0 Library Encrypted',0
+		even
+
+;-------------------------------------------------
+
+RB_PP40LibEncComm
+		;cmp.w	#$8280,$a2(a0)	;id
+		;bne.s	.Exit
+		cmp.l	#$3ea,$a8(a0)	;hunk
+		bne.s	.Exit
+
+		cmp.l	#$487a005c,$24(a0)
+		bne.s	.Exit
+		cmp.l	#$4eaeffac,$54(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_PP40LibEncComm
+		movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a4
+
+		move.w	#XFDERR_WRONGPASSWORD,xfdbi_Error(a5)
+		move.l	xfdbi_Special(a5),d0
+		beq	.Exit
+		move.l	d0,a0
+		bsr	PP_GetCode
+		cmp.w	$4a(a4),d0				
+		bne	.Error
+		move.l	d1,d6
+
+		lea	$b0(a4),a0
+		add.l	$44(a4),a0		;ende 2. hunk
+		move.l	-(a0),d0
+		lsr.l	#8,d0		;laenge decrunched
+		move.l	d0,xfdbi_TargetBufSaveLen(a5)		
+		move.l	$9c(a4),d0
+		addq.l	#8,d0
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.b	.Exit
+
+		move.l	d0,a1
+		lea	$b0(a4),a0
+		move.l	$44(a4),d0
+		subq.l	#4,d0
+.Crypt		move.l	(a0)+,d1
+		eor.l	d6,d1
+		move.l	d1,(a1)+
+		subq.l	#4,d0
+		bne.s	.Crypt
+		move.l	(a0),(a1)
+
+		move.l	xfdbi_TargetBuffer(a5),a0
+		lea	8(a0),a1
+		move.l	$44(a4),d0
+		move.l	$98(a4),-(a7)
+		move.l	a7,a6
+		bsr	D_PPNormalS
+		addq.w	#4,a7
+		tst.l	d0
+		beq.s	.DecError
+
+		move.l	xfdbi_TargetBuffer(a5),a1
+		lea	8(a1),a0
+		move.l	xfdbi_TargetBufSaveLen(a5),d0
+		lsr.l	#2,d0
+.Copy2		move.l	(a0)+,(a1)+
+		subq.l	#1,d0
+		bne.s	.Copy2
+
+		move.l	xfdbi_TargetBuffer(a5),a0
+		move.l	xfdbi_TargetBufSaveLen(a5),d0
+		bsr	PP_Correct40
+		tst.l	d0
+		bne.s	.Ok
+
+.DecError	move.l	xfdbi_TargetBuffer(a5),a1
+		move.l	xfdbi_TargetBufLen(a5),d0
+		move.l	4.w,a6
+		jsr	-210(a6)
+		move.w	#XFDERR_CORRUPTEDDATA,xfdbi_Error(a5)
+		bra.s	.Error
+		
+.Ok		move.l	xfdbi_TargetBufLen(a5),xfdbi_TargetBufSaveLen(a5)
+		subq.l	#8,xfdbi_TargetBufSaveLen(a5)
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+.Error		moveq	#0,d0
+		bra.s	.Exit
+
+;-------------------------------------------------
+
+RS_PP40LibEncComm
+		add.l	a0,a0
+		add.l	a0,a0
+		cmp.l	#($20*4)+8,-4(a0)	;segment len
+		bne.s	.Exit
+		;cmp.w	#$8280,$82(a0)	;id
+		;bne.s	.Exit
+
+		cmp.l	#$487a005c,$4(a0)
+		bne.s	.Exit
+		cmp.l	#$4eaeffac,$34(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DS_PP40LibEncComm
+		movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdsi_SegList(a5),a4
+		add.l	a4,a4
+		add.l	a4,a4
+
+		move.w	#XFDERR_WRONGPASSWORD,xfdsi_Error(a5)
+		move.l	xfdsi_Special(a5),d0
+		beq	.Exit
+		move.l	d0,a0
+		bsr	PP_GetCode
+		cmp.w	$2a(a4),d0				
+		beq.s	.PWOk
+		moveq	#0,d0
+		bra.s	.Exit
+
+.PWOk		clr.l	xfdsi_SegList(a5)
+
+		move.l	(a4),a0
+		add.l	a0,a0
+		add.l	a0,a0
+		addq.w	#4,a0		;source
+		move.l	a0,-(a7)
+		move.l	$24(a4),d0
+		subq.l	#4,d0
+.Crypt		eor.l	d1,(a0)+
+		subq.l	#4,d0
+		bne.s	.Crypt
+		move.l	(a7)+,a0
+		move.l	a0,a1
+		addq.w	#8,a1		;target
+		move.l	$24(a4),d0	;sourcelen
+		move.l	-4(a0,d0.l),d1
+		lsr.l	#8,d1
+
+		movem.l	d1/a1/a6,-(a7)
+		move.l	$78(a4),-(a7)
+		move.l	a7,a6
+		bsr	D_PPNormalS
+		addq.w	#4,a7
+		tst.l	d0
+		bne.s	.DecrOk
+		add.w	#12,a7
+		move.w	#XFDERR_CORRUPTEDDATA,xfdsi_Error(a5)
+		moveq	#0,d1
+		bra.s	.FreeSeg
+
+.DecrOk		movem.l	(a7)+,d0/a0/a6
+		lea	xfdsi_SegList(a5),a1
+		move.w	xfdsi_RelMode(a5),d1
+		bsr	PP_Relocate40
+		moveq	#0,d1
+		move.w	d0,xfdsi_Error(a5)
+		bne.s	.FreeSeg
+		moveq	#1,d1
+
+.FreeSeg	move.l	d1,-(a7)
+		move.l	a4,d1
+		lsr.l	#2,d1
+		move.l	xfdm_DosBase(a6),a6
+		jsr	-156(a6)
+		move.l	(a7)+,d0
+
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+**************************************************
+
+S_PPLoadSeg	dc.l	S_PPData
+		dc.w	2
+		dc.w	39
+		dc.l	N_PPLoadSeg
+		dc.w	XFDPFF_DATA
+		dc.w	0
+		dc.l	RB_PPLoadSeg
+		dc.l	DB_PPLoadSeg
+		dc.l	SD_PPLoadSeg
+		dc.l	VD_PPLoadSeg
+		dc.w	XFDID_PowerPackerLoadSeg
+		dc.w	0
+		dc.l	12+4
+
+N_PPLoadSeg	dc.b	'PowerPacker LoadSeg',0
+		even
+
+;-------------------------------------------------
+
+RB_PPLoadSeg	cmp.l	#'PPLS',(a0)
+		bne.s	.Exit
+		tst.b	4(a0)
+		bne.s	.Exit
+		move.l	8(a0),d0
+		and.l	#$f0f0f0f0,d0
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+SD_PPLoadSeg	moveq	#0,d0
+		cmp.l	#'PPLS',(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+.Exit		rts
+
+;-------------------------------------------------
+
+DB_PPLoadSeg	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+
+		move.l	xfdbi_SourceBuffer(a5),a0
+		move.l	4(a0),d0
+		MOVEQ	#0,D7		* D7 is overlay pos
+		move.l	xfdbi_SourceBufLen(a5),d2
+		LEA	(A0,D2.L),A1
+		CMP.L	#HUNK_BREAK,-(A1)
+		BNE.B	.noovl
+		MOVE.L	A0,A2
+.getovl		CMP.L	#HUNK_OVERLAY,(A2)+
+		BEQ.B	.foundovl
+		CMP.L	A1,A2
+		BLO.B	.getovl
+		BRA.W	.corrupt
+.foundovl	SUBQ.L	#4,A2
+		SUBA.L	A0,A2
+		MOVE.L	A2,D7	* start pos of overlay
+		MOVE.L	D7,D2
+.noovl		and.w	#$fffc,d2
+		add.l	d2,a0
+		move.l	-(a0),d1
+		lsr.l	#8,d1
+
+
+		move.l	d1,xfdbi_TargetBufSaveLen(a5)
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		JSR	_LVOAllocMem(A6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit
+
+		move.l	d0,a1
+		move.l	xfdbi_SourceBuffer(a5),a0
+		lea	8(a0),a6
+		add.w	#12,a0
+		moveq	#-12,d0
+		add.l	d2,d0
+		MOVEM.L	D7/A6,-(A7)	* store them
+		bsr	D_PPNormalS
+		MOVEM.L	(A7)+,D7/A6	* restore them
+		tst.l	d0
+		beq.s	.Error
+
+		move.l	xfdbi_TargetBuffer(a5),a0
+		move.l	xfdbi_TargetBufSaveLen(a5),d0
+		bsr	PP_Correct40
+		tst.l	d0
+		BEQ.B	.Error
+		move.l	xfdbi_TargetBufLen(a5),xfdbi_TargetBufSaveLen(a5)
+		TST.L	D7	* overlay ?
+		BEQ.B	.noovl2
+		MOVE.L	xfdbi_SourceBuffer(A5),A0
+		LEA	(A0,D7.L),A0			* ovl source
+		SUB.L	xfdbi_SourceBufLen(A5),D7	* neg ovl size
+		MOVE.L	xfdbi_TargetBuffer(A5),A2
+		ADD.L	xfdbi_TargetBufSaveLen(A5),A2	* dest end
+		LEA	(A2,D7.L),A1			* ovl dest start
+.CopyOvl	MOVE.L	(A0)+,(A1)+
+		CMP.L	A2,A1
+		BLO.B	.CopyOvl
+.noovl2		MOVEQ	#1,D0
+		BRA.B	.Exit
+.Error		move.l	xfdbi_TargetBuffer(a5),a1
+		move.l	xfdbi_TargetBufLen(a5),d0
+		JSR	_LVOFreeMem(A6)
+.corrupt	move.w	#XFDERR_CORRUPTEDDATA,xfdbi_Error(a5)
+		moveq	#0,d0		
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;-------------------------------------------------
+
+VD_PPLoadSeg	movem.l	d2-d7/a2/a3/a6,-(a7)
+		move.l	a0,a3
+		move.l	d0,d3
+		move.l	8(a3),d0
+		and.l	#$f0f0f0f0,d0
+		bne.s	.NotFound
+
+		lea	12(a0),a2	;id+eff+data
+		moveq	#12,d2
+
+.Next		addq.l	#4,d2
+		cmp.l	d3,d2
+		bgt.s	.NotFound
+
+		move.l	(a2)+,d0
+		tst.b	d0
+		bmi.s	.Next
+		cmp.b	#31,d0
+		bgt.s	.Next
+		lsr.l	#8,d0
+		cmp.l	d2,d0		; cr > uncr
+		bcs.s	.Next
+		lsr.l	#3,d0
+		cmp.l	d2,d0		; eff > 1/8
+		bcc.s	.Next
+
+		lea	8(a3),a6
+		move.l	a2,a0
+		lea	12(a3),a1
+		movem.l	d2/d3,-(a7)
+		bsr	Verify_PPNormal
+		movem.l	(a7)+,d2/d3
+		tst.w	d0
+		beq.s	.Next
+
+		move.l	d2,d0
+		bra.s	.Exit
+
+.NotFound	moveq	#0,d0
+.Exit		movem.l	(a7)+,d2-d7/a2/a3/a6
+		rts
+
+**************************************************
+
+S_PPData	dc.l	S_PPEncData
+		dc.w	2
+		dc.w	39
+		dc.l	N_PPData
+		dc.w	XFDPFF_DATA!XFDPFF_RECOGLEN!XFDPFF_USERTARGET
+		dc.w	0
+		dc.l	RB_PPData
+		dc.l	DB_PPData
+		dc.l	SD_PPData
+		dc.l	VD_PPData
+		dc.w	XFDID_PowerPackerData
+		dc.w	0
+		dc.l	8+4+4
+
+N_PPData	dc.b	'PowerPacker Data',0
+		even
+
+;-------------------------------------------------
+
+RB_PPData	MOVE.L	D0,D1
+		BSR.B	SD_PPData
+		TST.L	D0
+		BEQ.B	.Exit
+		MOVE.L	4(A0),D0
+		CMP.B	#9,D0		* at least 9 bits!
+		BLO.B	.Exit
+		AND.L	#$f0f0f0f0,D0
+		bne.s	.Exit
+		AND.W	#$fffc,D1
+		ADD.L	D1,A0
+		move.l	-(a0),d1
+		moveq	#-1,d0
+		tst.b	d1
+		bmi.s	.BadLen
+		cmp.b	#31,d1
+		bgt.s	.BadLen
+		lsr.l	#8,d1
+		beq.s	.BadLen
+		move.l	d1,d0
+.BadLen		move.l	d0,xfdrr_MinTargetLen(a1)
+		move.l	d0,xfdrr_FinalTargetLen(a1)
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+SD_PPData	moveq	#0,d0
+		cmp.l	#'PP20',(a0)
+		beq.s	.Ok
+		cmp.l	#'PP2O',(a0)
+		beq.s	.Ok
+		cmp.l	#'PACK',(a0)
+		beq.s	.Ok
+		CMP.L	#'MLDC',(A0)
+		BEQ.B	.Ok
+		CMP.L	#'DEN!',(A0)
+		BEQ.B	.Ok
+		CMP.L	#'MD12',(A0)
+		BEQ.B	.Ok
+		CMP.L	#'GAZ!',(A0)
+		BEQ.B	.Ok
+		CMP.L	#$29075337,(A0)
+		BEQ.B	.Ok
+		cmp.l	#'XX50',(a0)
+		beq.b	.Ok
+		cmp.l	#'LR88',(a0)
+		bne.s	.Exit
+.Ok		moveq	#1,d0
+.Exit		rts
+
+;-------------------------------------------------
+
+DB_PPData	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+
+		move.l	xfdbi_SourceBuffer(a5),a0
+		move.l	xfdbi_SourceBufLen(a5),d2
+		and.w	#$fffc,d2
+		add.l	d2,a0
+		move.l	-(a0),d0
+		lsr.l	#8,d0
+		beq.b	.SkipFree
+		move.l	d0,xfdbi_TargetBufSaveLen(a5)		
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.w	xfdbi_Flags(a5),d1
+		and.w	#XFDFF_USERTARGET,d1
+		beq.s	.Alloc
+		move.l	xfdbi_UserTargetBuf(a5),d0
+		bra.s	.UserTarget
+
+.Alloc		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	_LVOAllocMem(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+.UserTarget	move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit
+
+		move.l	d0,a1
+		move.l	xfdbi_SourceBuffer(a5),a0
+		lea	4(a0),a6
+		addq.w	#8,a0
+		move.l	d2,d0
+		subq.l	#8,d0
+		move.l	d2,-(a7)
+		bsr	D_PPNormalS
+		move.l	(a7)+,d2
+		tst.l	d0
+		bne.s	.Exit
+
+		move.l	xfdbi_TargetBuffer(a5),a1
+		move.l	xfdbi_SourceBuffer(a5),a0
+		addq.w	#8,a0
+		move.l	d2,d0
+		subq.l	#8,d0
+		bsr	D_PPMasterS
+		tst.l	d0
+		bne.s	.Exit
+
+		move.w	xfdbi_Flags(a5),d1
+		and.w	#XFDFF_USERTARGET,d1
+		bne.s	.SkipFree
+		move.l	xfdbi_TargetBuffer(a5),a1
+		move.l	xfdbi_TargetBufLen(a5),d0
+		move.l	4.w,a6
+		jsr	_LVOFreeMem(a6)
+.SkipFree	move.w	#XFDERR_CORRUPTEDDATA,xfdbi_Error(a5)
+		moveq	#0,d0
+
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;-------------------------------------------------
+
+VD_PPData	movem.l	d2-d7/a2/a3/a6,-(a7)
+		move.l	a0,a3
+		move.l	d0,d3
+		move.l	4(a3),d0
+		and.l	#$f0f0f0f0,d0
+		bne.s	.NotFound
+
+		lea	12(a0),a2	;id+eff+data
+		moveq	#12,d2
+
+.Next		addq.l	#4,d2
+		cmp.l	d3,d2
+		bgt.s	.NotFound
+
+		move.l	(a2)+,d0
+		tst.b	d0
+		bmi.s	.Next
+		cmp.b	#31,d0
+		bgt.s	.Next
+		lsr.l	#8,d0
+		cmp.l	d2,d0		; cr > uncr
+		bcs.s	.Next
+		lsr.l	#3,d0
+		cmp.l	d2,d0		; eff > 1/8
+		bcc.s	.Next
+
+		lea	4(a3),a6
+		move.l	a2,a0
+		lea	8(a3),a1
+		movem.l	d2/d3,-(a7)
+		bsr.b	Verify_PPNormal
+		movem.l	(a7)+,d2/d3
+		tst.w	d0
+		beq.s	.Next
+
+		move.l	d2,d0
+		bra.s	.Exit
+
+.NotFound	moveq	#0,d0
+.Exit		movem.l	(a7)+,d2-d7/a2/a3/a6
+		rts
+
+;=================================================
+
+* a0: sourceend
+* a1: sourcestart
+* d0.l = 0 = error
+
+PP_GetBit	MACRO
+		lsr.l	d4,d5
+		bne.s	.Skip\@
+		move.l	-(a0),d5
+		cmp.l	a1,a0
+		bcs.s	.Exit\1
+		roxr.l	d4,d5
+.Skip\@
+		ENDM
+
+PP_GetBits	MACRO
+		moveq	#0,d1
+.Next\@		lsr.l	d4,d5
+		bne.s	.Skip\@
+		move.l	-(a0),d5
+		cmp.l	a1,a0
+		bcs.s	.Exit\1
+		roxr.l	d4,d5
+.Skip\@		roxl.l	d4,d1
+		dbf	d0,.Next\@
+		ENDM
+
+PP_GetBitsFake	MACRO
+.Next\@		lsr.l	d4,d5
+		bne.s	.Skip\@
+		move.l	-(a0),d5
+		cmp.l	a1,a0
+		bcs.s	.Exit\1
+		roxr.l	d4,d5
+.Skip\@		dbf	d0,.Next\@
+		ENDM
+
+Verify_PPNormal	moveq	#3,d6
+		moveq	#1,d4
+		moveq	#7,d7
+		moveq	#1,d5
+		move.l	-(a0),d3
+		tst.b	d3
+		beq.s	.Decr1
+		PP_GetBit 1
+		subq.l	#1,d3
+		lsr.l	d3,d5
+.Decr1		lsr.l	#8,d3		;targetlen
+
+.Decr2		moveq	#0,d2
+		PP_GetBit 1
+		bcs.s	.Decr12
+.Decr3		moveq	#2-1,d0
+		PP_GetBits 1
+		add.w	d1,d2
+		cmp.w	d6,d1
+		beq.s	.Decr3
+.Decr4		moveq	#8-1,d0
+		PP_GetBitsFake 1
+		subq.l	#1,d3
+		dbf	d2,.Decr4
+		tst.l	d3
+		bgt.s	.Decr12
+.Exit1		bra.s	.Exit0
+
+.Decr12		moveq	#2-1,d0
+		PP_GetBits 0
+		moveq	#0,d0
+		move.b	(a6,d1.w),d0
+		move.w	d1,d2
+		cmp.w	d6,d2
+		bne.s	.Decr15
+		PP_GetBit 0
+		bcs.s	.Decr13
+		moveq	#7,d0
+.Decr13		subq.w	#1,d0
+		PP_GetBitsFake 0
+.Decr14		moveq	#3-1,d0
+		PP_GetBits 0
+		add.w	d1,d2
+		cmp.w	d7,d1
+		beq.s	.Decr14
+		bra.s	.Decr16
+.Decr15		subq.w	#1,d0
+		PP_GetBitsFake 0
+.Decr16		addq.w	#1,d2
+		sub.l	d2,d3
+		subq.l	#1,d3
+		bgt	.Decr2
+
+.Exit0		moveq	#0,d0
+		tst.l	d3
+		bne.s	.Error
+		move.l	a0,d1
+		sub.l	a1,d1
+		beq.s	.Ok
+		subq.l	#4,d1
+		bne.s	.Error
+.Ok		moveq	#1,d0
+.Error		rts
+
+**************************************************
+
+S_PPEncData	dc.l	S_PPP10
+		dc.w	2
+		dc.w	39
+		dc.l	N_PPEncData
+		dc.w	XFDPFF_DATA!XFDPFF_PASSWORD
+		dc.w	16
+		dc.l	RB_PPEncData
+		dc.l	DB_PPEncData
+		dc.l	SD_PPEncData
+		dc.l	VD_PPEncData
+		dc.w	XFDID_PowerPackerDataEnc
+		dc.w	0
+		dc.l	10+4+4
+
+N_PPEncData	dc.b	'PowerPacker Encrypted Data',0
+		even
+
+;-------------------------------------------------
+
+RB_PPEncData	cmp.l	#'PX20',(a0)
+		bne.s	.Exit
+		move.l	6(a0),d0
+		and.l	#$f0f0f0f0,d0
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+SD_PPEncData	moveq	#0,d0
+		cmp.l	#'PX20',(a0)
+		bne.s	.Exit
+		move.l	6(a0),d1
+		and.l	#$f0f0f0f0,d1
+		bne.s	.Exit
+		moveq	#1,d0
+.Exit		rts
+
+;-------------------------------------------------
+
+VD_PPEncData	movem.l	d2/d3/a2/a3,-(a7)
+		move.l	a0,a3
+		move.l	d0,d3
+		lea	14(a0),a2	;id+pw+eff+data
+		moveq	#14,d2
+
+.Next		addq.l	#4,d2
+		cmp.l	d3,d2
+		bgt.s	.NotFound
+
+		move.l	(a2)+,d0
+		tst.b	d0
+		bmi.s	.Next
+		cmp.b	#31,d0
+		bgt.s	.Next
+
+		lsr.l	#8,d0
+		cmp.l	d2,d0		; cr > uncr
+		bcs.s	.Next
+
+		lsr.l	#3,d0
+		cmp.l	d2,d0		; eff > 1/8
+		bcc.s	.Next
+
+		move.l	d2,d0
+		bra.s	.Exit
+
+.NotFound	moveq	#0,d0
+.Exit		movem.l	(a7)+,d2/d3/a2/a3
+		rts
+
+;-------------------------------------------------
+
+DB_PPEncData	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a4
+
+		move.w	#XFDERR_WRONGPASSWORD,xfdbi_Error(a5)
+		move.l	xfdbi_Special(a5),d0
+		beq	.Exit
+		move.l	d0,a0
+		bsr	PP_GetCode
+		cmp.w	4(a4),d0				
+		bne	.Error
+		move.l	d1,d6
+
+		move.l	a4,a1
+		move.l	xfdbi_SourceBufLen(a5),d2
+		and.w	#$fffe,d2
+		add.l	d2,a1
+		move.l	-(a1),d0
+		lsr.l	#8,d0
+		move.l	d0,xfdbi_TargetBufSaveLen(a5)		
+		addq.l	#8,d0
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq	.Exit
+
+		move.l	d0,a1
+		lea	10(a4),a0
+		moveq	#-14,d0
+		add.l	d2,d0
+.CryptN		move.l	(a0)+,d1
+		eor.l	d6,d1
+		move.l	d1,(a1)+
+		subq.l	#4,d0
+		bne.s	.CryptN
+		move.l	(a0),(a1)
+
+		move.l	xfdbi_TargetBuffer(a5),a0
+		lea	8(a0),a1
+		moveq	#-10,d0
+		add.l	d2,d0
+		lea	6(a4),a6
+		movem.l	d2/d6,-(a7)
+		bsr	D_PPNormalS
+		movem.l	(a7)+,d2/d6
+		tst.l	d0
+		bne.s	.Ok
+
+		move.l	xfdbi_TargetBuffer(a5),a1
+		lea	10(a4),a0
+		moveq	#-14,d0
+		add.l	d2,d0
+.CryptM		move.l	(a0)+,d1
+		eor.l	d6,d1
+		move.l	d1,(a1)+
+		subq.l	#4,d0
+		bne.s	.CryptM
+		move.l	(a0),(a1)
+
+		move.l	xfdbi_TargetBuffer(a5),a0
+		lea	8(a0),a1
+		moveq	#-10,d0
+		add.l	d2,d0
+		bsr	D_PPMasterS
+		tst.l	d0
+		bne.s	.Ok
+
+		move.l	xfdbi_TargetBuffer(a5),a1
+		move.l	xfdbi_TargetBufLen(a5),d0
+		move.l	4.w,a6
+		jsr	-210(a6)
+		move.w	#XFDERR_CORRUPTEDDATA,xfdbi_Error(a5)
+.Error		moveq	#0,d0
+		bra.s	.Exit
+
+.Ok		move.l	xfdbi_TargetBuffer(a5),a1
+		lea	8(a1),a0
+		move.l	xfdbi_TargetBufSaveLen(a5),d0
+		addq.l	#3,d0
+		lsr.l	#2,d0
+.Copy		move.l	(a0)+,(a1)+
+		subq.l	#1,d0
+		bne.s	.Copy
+
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+**************************************************
+
+S_PPP10		dc.l	S_QPP10
+		dc.w	2
+		dc.w	39
+		dc.l	N_PPP10
+		dc.w	XFDPFF_RELOC!XFDPFF_RELMODE
+		dc.w	0
+		dc.l	RB_PPP10
+		dc.l	DB_PPP10
+		dc.l	RS_PPP10
+		dc.l	DS_PPP10
+		dc.w	XFDID_PowerPackerPatch10
+		dc.w	0
+		dc.l	$2f4+4+4
+
+N_PPP10		dc.b	'PowerPacker Patch 1.0',0
+		even
+
+;-------------------------------------------------
+
+RB_PPP10	cmp.w	#$487a,$24(a0)
+		bne.s	.TestBra
+
+		cmp.w	#$6100,$48(a0)
+		bne.s	.Exit
+		move.w	$26(a0),d0
+		move.w	$4a(a0),d1
+
+		cmp.w	#$01dc,d0	;ppp0,ppp1
+		bne.s	.No01
+		moveq	#1,d0
+		cmp.w	#$01c0,d1	;ppp0
+		beq.s	.TestData
+		moveq	#2,d0
+		cmp.w	#$01ba,d1	;ppp1
+		beq.s	.TestData
+		bra.s	.Exit
+
+.No01		cmp.w	#$01e2,d0	;ppp2
+		bne.s	.No2
+		moveq	#3,d0
+		cmp.w	#$01c0,d1	;ppp2
+		beq.s	.TestData
+.Exit		moveq	#0,d0
+		rts
+
+.No2		cmp.w	#$01b6,d0	;ppp8,ppp9
+		bne.s	.Exit
+		moveq	#4,d0
+		cmp.w	#$01c0,d1	;ppp8,ppp9
+		bne.s	.Exit
+
+.TestData	move.w	d0,d1
+		add.w	d1,d1
+		move.w	.Tab-2(pc,d1.w),d1
+		move.l	(a0,d1.w),d1
+		cmp.l	#$3ea,d1
+		bne.s	.Exit
+		rts
+
+.TestBra	cmp.w	#$6066,$24(a0)
+		bne.s	.Exit
+		cmp.l	#$487a0156,$8c(a0)	;ppp3,ppp4,ppp5
+		bne.s	.Exit
+
+		moveq	#5,d0
+		cmp.w	#$00ac,$22(a0)	;ppp5
+		bne.s	.TestData
+		moveq	#6,d0
+		bra.s	.TestData
+
+.Tab		dc.w	$2b4	;ppp0
+		dc.w	$2b0	;ppp1
+		dc.w	$2ac	;ppp2
+		dc.w	$2ec	;ppp8,ppp9
+		dc.w	$2b4	;ppp3,ppp4
+		dc.w	$2d8	;ppp5
+
+;-------------------------------------------------
+
+DB_PPP10	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a4
+
+		move.l	a4,a0
+		bsr	RB_PPP10
+		lsl.w	#3,d0
+		lea	.Tab-8(pc,d0.w),a0
+
+		move.w	(a0)+,d0
+		move.l	(a4,d0.w),d7
+		move.w	(a0)+,d0
+		move.l	(a4,d0.w),d6
+		move.w	(a0)+,d0
+		lea	(a4,d0.w),a2
+		move.l	-4(a2),d0
+		lsl.l	#2,d0
+		cmp.l	d6,d0
+		bne.s	.Error
+		move.w	(a0)+,d0
+		move.l	(a4,d0.w),d5
+		bra	DB_PP40LibComm1
+
+.Error		move.w	#XFDERR_CORRUPTEDDATA,xfdbi_Error(a5)
+		moveq	#0,d0
+		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+* eff,datalen,data,buflen
+
+.Tab		dc.w	$2a2,$44,$2bc,$2a6	;ppp0
+		dc.w	$296,$44,$2b8,$29a	;ppp1
+		dc.w	$292,$44,$2b4,$296	;ppp2
+		dc.w	$292,$44,$2f4,$296	;ppp8,ppp9
+		dc.w	$29a,$ac,$2bc,$29e	;ppp3,ppp4
+		dc.w	$2b8,$ac,$2e0,$2bc	;ppp5
+
+;-------------------------------------------------
+
+RS_PPP10	add.l	a0,a0
+		add.l	a0,a0
+		cmp.l	#($a1*4)+8,-4(a0)	;ppp2
+		blt.s	.Exit
+		cmp.l	#($b1*4)+8,-4(a0)	;ppp9
+		bgt.s	.Exit
+
+		cmp.w	#$487a,$4(a0)
+		bne.s	.TestBra
+
+		cmp.w	#$6100,$28(a0)
+		bne.s	.Exit
+		move.w	$6(a0),d0
+		move.w	$2a(a0),d1
+
+		cmp.w	#$01dc,d0	;ppp0,ppp1
+		bne.s	.No01
+		moveq	#1,d0
+		cmp.w	#$01c0,d1	;ppp0
+		beq.s	.Ok
+		moveq	#2,d0
+		cmp.w	#$01ba,d1	;ppp1
+		bne.s	.Exit
+		rts
+
+.No01		cmp.w	#$01e2,d0	;ppp2
+		bne.s	.No2
+		moveq	#3,d0
+		cmp.w	#$01c0,d1	;ppp2
+		beq.s	.Ok
+.Exit		moveq	#0,d0
+.Ok		rts
+
+.No2		cmp.w	#$01b6,d0	;ppp8,ppp9
+		bne.s	.Exit
+		moveq	#4,d0
+		cmp.w	#$01c0,d1	;ppp8,ppp9
+		bne.s	.Exit
+		rts
+
+.TestBra	cmp.w	#$6066,$4(a0)
+		bne.s	.Exit
+		cmp.l	#$487a0156,$6c(a0)	;ppp3,ppp4,ppp5
+		bne.s	.Exit
+
+		moveq	#5,d0
+		cmp.l	#($ac*4)+8,-4(a0)	;ppp5
+		bne.s	.Ok
+		moveq	#6,d0
+		rts
+
+;-------------------------------------------------
+
+DS_PPP10	move.l	a0,-(a7)
+		move.l	xfdsi_SegList(a0),a0
+		bsr	RS_PPP10
+		move.l	(a7)+,a0
+
+		add.w	d0,d0
+		add.w	d0,d0
+		move.w	.Tab-4+2(pc,d0.w),d1
+
+		move.l	xfdsi_SegList(a0),a1
+		add.l	a1,a1
+		add.l	a1,a1
+		move.l	(a1,d1.w),d1
+		addq.l	#8,d1
+		move.l	(a1),a1
+		add.l	a1,a1
+		add.l	a1,a1
+		cmp.l	-(a1),d1
+		bne.s	.Error
+
+		move.w	.Tab-4+2(pc,d0.w),d1
+		move.w	.Tab-4(pc,d0.w),d0
+		bra	DS_PP40LibComm1
+
+.Error		move.w	#XFDERR_CORRUPTEDDATA,xfdsi_Error(a0)
+		moveq	#0,d0
+		rts
+
+.Tab		dc.w	$282,$24	;ppp0
+		dc.w	$276,$24	;ppp1
+		dc.w	$272,$24	;ppp2
+		dc.w	$272,$24	;ppp8,ppp9
+		dc.w	$27a,$8c	;ppp3,ppp4
+		dc.w	$298,$8c	;ppp5
+
+**************************************************
+
+S_QPP10
+		dc.l	S_PPbk
+		dc.w	2
+		dc.w	39
+		dc.l	N_QPP10
+		dc.w	XFDPFF_RELOC!XFDPFF_RELMODE
+		dc.w	0
+		dc.l	RB_QPP10
+		dc.l	DB_QPP10
+		dc.l	RS_QPP10
+		dc.l	DS_QPP10
+		dc.w	XFDID_QuickPowerPacker10
+		dc.w	0
+		dc.l	$374+4+4
+
+N_QPP10		dc.b	'Quick PowerPacker 1.0',0
+		even
+
+;-------------------------------------------------
+
+RB_QPP10	cmp.l	#$487a01c4,$24(a0)	;word
+		bne.s	.Long
+		cmp.l	#$610001a8,$42(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		cmp.w	#$3ea,$362(a0)	;nocolor
+		beq.s	.Ok
+		cmp.w	#$3ea,$36e(a0)	;color
+		bne.s	.Exit
+		moveq	#2,d0
+.Ok		rts
+
+.Long		cmp.l	#$487a01c6,$24(a0)	;long
+		bne.s	.Exit
+		cmp.l	#$610001a8,$44(a0)
+		bne.s	.Exit
+		moveq	#3,d0
+		cmp.w	#$3ea,$366(a0)	;nocolor
+		beq.s	.Ok
+		cmp.w	#$3ea,$36e(a0)	;color
+		bne.s	.Exit
+		moveq	#4,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_QPP10	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a4
+
+		move.l	a4,a0
+		bsr.s	RB_QPP10
+		move.l	$40(a4),d6
+		cmp.w	#2,d0
+		bgt.s	.Long
+		lsr.l	#8,d6
+		lsr.l	#8,d6
+.Long		lsl.w	#2,d0
+		move.w	.QPP_Offsets-4(pc,d0.w),d1
+		lea	(a4,d1.w),a2
+		move.w	.QPP_Offsets-4+2(pc,d0.w),d0
+		move.l	(a2,d0.w),d7
+
+		move.l	a2,a0
+		add.l	d6,a0		;ende 2. hunk
+		move.l	-(a0),d1
+		lsr.l	#8,d1		;laenge decrunched
+		move.l	d1,xfdbi_TargetBufSaveLen(a5)		
+		move.l	d1,d0
+		lsr.l	#4,d1		;circa
+		add.l	d1,d0
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit
+
+		move.l	d0,a1
+		move.l	a2,a0
+		move.l	d6,d0
+		move.l	d7,-(a7)
+		move.l	a7,a6
+		bsr	D_PPNormalS
+		addq.w	#4,a7
+		tst.l	d0
+		beq.s	.Error
+
+		move.l	xfdbi_TargetBuffer(a5),a0
+		move.l	xfdbi_TargetBufSaveLen(a5),d0
+		bsr	PP_Correct40
+		tst.l	d0
+		bne.s	.Ok
+
+.Error		move.l	xfdbi_TargetBuffer(a5),a1
+		move.l	xfdbi_TargetBufLen(a5),d0
+		move.l	4.w,a6
+		jsr	-210(a6)
+		move.w	#XFDERR_CORRUPTEDDATA,xfdbi_Error(a5)
+		moveq	#0,d0
+		bra.s	.Exit
+		
+.QPP_Offsets	dc.w	$368,-$32	;w
+		dc.w	$374,-$34	;wc
+		dc.w	$36c,-$34	;l
+		dc.w	$374,-$32	;lc
+
+.Ok		sub.l	xfdbi_TargetBuffer(a5),a0
+		move.l	a0,xfdbi_TargetBufSaveLen(a5)
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;-------------------------------------------------
+
+RS_QPP10	add.l	a0,a0
+		add.l	a0,a0
+		cmp.l	#($ce*4)+8,-4(a0)	;segment len
+		blt.s	.Exit
+
+		cmp.l	#$487a01c4,$4(a0)	;word
+		bne.s	.Long
+		cmp.l	#$610001a8,$22(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		cmp.w	#$4bf9,$1cc(a0)	;nocolor
+		bne.s	.Ok
+		moveq	#2,d0
+.Ok		rts
+
+.Long		cmp.l	#$487a01c6,$4(a0)	;long
+		bne.s	.Exit
+		cmp.l	#$610001a8,$24(a0)
+		bne.s	.Exit
+		moveq	#3,d0
+		cmp.w	#$4bf9,$1ce(a0)	;nocolor
+		bne.s	.Ok
+		moveq	#4,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DS_QPP10	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdsi_SegList(a5),a4
+		clr.l	xfdsi_SegList(a5)
+
+		move.l	a4,a0
+		bsr.s	RS_QPP10
+		add.l	a4,a4
+		add.l	a4,a4
+
+		move.l	$20(a4),d6
+		cmp.w	#2,d0
+		bgt.s	.Long
+		lsr.l	#8,d6
+		lsr.l	#8,d6
+.Long		add.w	d0,d0
+		move.w	.QPP_Offsets-2(pc,d0.w),d0
+		move.l	(a4,d0.w),d7
+
+		move.l	(a4),a0
+		add.l	a0,a0
+		add.l	a0,a0
+		addq.w	#4,a0		;source
+		move.l	a0,a1
+		addq.w	#8,a1		;target
+		move.l	d6,d0		;sourcelen
+		move.l	-4(a0,d0.l),d1
+		lsr.l	#8,d1
+
+		movem.l	d1/a1/a6,-(a7)
+		move.l	d7,-(a7)
+		move.l	a7,a6
+		bsr.b	D_PPNormalS
+		addq.w	#4,a7
+		tst.l	d0
+		bne.s	.DecrOk
+		add.w	#12,a7
+		move.w	#XFDERR_CORRUPTEDDATA,xfdsi_Error(a5)
+		moveq	#0,d1
+		bra.s	.FreeSeg
+
+.QPP_Offsets	dc.w	$316	;w
+		dc.w	$320	;wc
+		dc.w	$318	;l
+		dc.w	$322	;lc
+
+.DecrOk		movem.l	(a7)+,d0/a0/a6
+		lea	xfdsi_SegList(a5),a1
+		move.w	xfdsi_RelMode(a5),d1
+		bsr	PP_Relocate40
+		moveq	#0,d1
+		move.w	d0,xfdsi_Error(a5)
+		bne.s	.FreeSeg
+		moveq	#1,d1
+
+.FreeSeg	move.l	d1,-(a7)
+		move.l	a4,d1
+		lsr.l	#2,d1
+		move.l	xfdm_DosBase(a6),a6
+		jsr	-156(a6)
+		move.l	(a7)+,d0
+
+		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;=================================================
+
+* a0: source
+* d0: sourcelen
+* a1: target
+* a6: bit table
+* d0.l = 0 = error
+* d0-d7/a0-a3 scratched
+
+D_PPNormalS	move.l	a4,-(a7)
+		move.l	a0,a4
+		add.l	d0,a0
+		moveq	#-1,d3
+		moveq	#3,d6
+		moveq	#1,d4
+		moveq	#7,d7
+		moveq	#1,d5
+		move.l	a1,a2
+		move.l	-(a0),d1
+		tst.b	d1
+		beq.s	.Decr1
+		bsr.s	.Decr5
+		subq.l	#1,d1
+		lsr.l	d1,d5
+.Decr1		lsr.l	#8,d1
+		add.l	d1,a1
+
+.Decr2		bsr.s	.Decr5
+		bcs.s	.Decr12
+		moveq	#0,d2
+.Decr3		moveq	#1,d0
+		bsr.s	.Decr8
+		add.w	d1,d2
+		cmp.w	d6,d1
+		beq.s	.Decr3
+.Decr4		moveq	#7,d0
+		bsr.s	.Decr8
+		move.b	d1,-(a1)
+		cmp.l	a1,a2
+		dbeq	d2,.Decr4
+		cmp.w	d3,d2
+		bne.s	.Exit
+
+.Decr12		moveq	#1,d0
+		bsr.s	.Decr8
+		moveq	#0,d0
+		move.b	(a6,d1.w),d0
+		move.w	d1,d2
+		cmp.w	d6,d2
+		bne.s	.Decr15
+		bsr.s	.Decr5
+		bcs.s	.Decr13
+		moveq	#7,d0
+.Decr13		bsr.s	.Decr7
+		move.l	d1,a3
+.Decr14		moveq	#2,d0
+		bsr.s	.Decr8
+		add.w	d1,d2
+		cmp.w	d7,d1
+		beq.s	.Decr14
+		move.l	a3,d1
+		bra.s	.Decr16
+.Decr15		bsr.s	.Decr7
+.Decr16		addq.w	#1,d2
+.Decr17		move.b	(a1,d1.w),-(a1)
+		cmp.l	a1,a2
+		dbeq	d2,.Decr17
+		cmp.w	d3,d2
+		beq.s	.Decr2
+
+.Exit		moveq	#0,d0
+		cmp.l	a4,a0
+		bne.s	.Error
+		tst.w	d2
+		bne.s	.Error
+		moveq	#1,d0
+.Error		move.l	(a7)+,a4
+		rts
+
+.Exit2		addq.l	#4,A7	* return of bsr
+		moveq	#0,d0
+		bra.b	.Error
+
+.Decr5		lsr.l	d4,d5
+		bne.s	.Decr6
+		cmp.l	a4,a0
+		ble.b	.Exit2
+		move.l	-(a0),d5
+		roxr.l	d4,d5
+.Decr6		rts
+
+.Decr7		subq.w	#1,d0
+.Decr8		moveq	#0,d1
+.Decr9		lsr.l	d4,d5
+		bne.s	.Decr10
+		cmp.l	a4,a0
+		ble.b	.Exit2
+		move.l	-(a0),d5
+		roxr.l	d4,d5
+.Decr10		roxl.l	d4,d1
+		dbra	d0,.Decr9
+		rts
+
+;=================================================
+
+* a0: source
+* d0: sourcelen
+* a1: target
+* a6: bit table
+* d0.l = 0 = error
+* d0-d7/a0-a3 scratched
+
+D_PPMasterS	move.l	a4,-(a7)
+		move.l	a0,a4
+		add.l	d0,a0
+		moveq	#-1,d3
+		moveq	#3,d6
+		moveq	#1,d4
+		moveq	#7,d7
+		moveq	#1,d5
+		move.l	a1,a2
+		move.l	-(a0),d1
+		tst.b	d1
+		beq.s	.Decr1
+		bsr.s	.Decr5
+		subq.l	#1,d1
+		lsr.l	d1,d5
+.Decr1		lsr.l	#8,d1
+		add.l	d1,a1
+
+.Decr2		bsr.s	.Decr5
+		bcc.s	.Decr12
+		moveq	#0,d2
+.Decr3		moveq	#1,d0
+		bsr.s	.Decr8
+		add.w	d1,d2
+		cmp.w	d6,d1
+		beq.s	.Decr3
+.Decr4		moveq	#7,d0
+		bsr.s	.Decr8
+		move.b	d1,-(a1)
+		cmp.l	a1,a2
+		dbeq	d2,.Decr4
+		cmp.w	d3,d2
+		bne.s	.Exit
+
+.Decr12		moveq	#1,d0
+		bsr.s	.Decr8
+		moveq	#0,d0
+		move.b	(a6,d1.w),d0
+		move.w	d1,d2
+		cmp.w	d6,d2
+		bne.s	.Decr15
+		bsr.s	.Decr5
+		bcs.s	.Decr13
+		moveq	#7,d0
+.Decr13		bsr.s	.Decr7
+		move.l	d1,a3
+.Decr14		moveq	#2,d0
+		bsr.s	.Decr8
+		add.w	d1,d2
+		cmp.w	d7,d1
+		beq.s	.Decr14
+		move.l	a3,d1
+		bra.s	.Decr16
+.Decr15		bsr.s	.Decr7
+.Decr16		addq.w	#1,d2
+.Decr17		move.b	(a1,d1.w),-(a1)
+		cmp.l	a1,a2
+		dbeq	d2,.Decr17
+		cmp.w	d3,d2
+		beq.s	.Decr2
+
+.Exit		moveq	#0,d0
+		cmp.l	a4,a0
+		bne.s	.Error
+		tst.w	d2
+		bne.s	.Error
+		moveq	#1,d0
+.Error		move.l	(a7)+,a4
+		rts
+
+.Exit2		addq.l	#4,A7	* return of bsr
+		moveq	#0,d0
+		bra.b	.Error
+
+.Decr5		lsr.l	d4,d5
+		bne.s	.Decr6
+		cmp.l	a4,a0
+		ble.b	.Exit2
+		move.l	-(a0),d5
+		roxr.l	d4,d5
+.Decr6		rts
+
+.Decr7		subq.w	#1,d0
+.Decr8		moveq	#0,d1
+.Decr9		lsr.l	d4,d5
+		bne.s	.Decr10
+		cmp.l	a4,a0
+		ble.b	.Exit2
+		move.l	-(a0),d5
+		roxr.l	d4,d5
+.Decr10		roxl.l	d4,d1
+		dbra	d0,.Decr9
+		rts
+
+;=================================================
+
+* <- a0: password
+* -> d0: code
+* -> d1: key
+
+PP_GetCode 	move.l	d2,-(a7)
+		moveq	#0,d0
+		moveq	#0,d1
+		moveq	#0,d2
+.Next		ror.w	d2,d0
+		add.w	d2,d0
+		rol.l	#1,d1
+		add.l	d2,d1
+		swap	d1
+		move.b	(a0)+,d2
+		bne.s	.Next
+		move.l	(a7)+,d2
+		rts
+
+;=================================================
+
+* a0: buffer    -> a0: end of buffer
+* d0: length
+
+PP_Correct40	movem.l	d2-d5,-(a7)
+		move.l	d0,d4
+		move.l	16(a0),d3
+		sub.l	12(a0),d3
+		addq.l	#1,d3		;# hunks
+		move.l	d3,d0
+		lsl.l	#2,d0
+		lea	20(a0,d0.l),a0	;first hunk
+		sub.l	#20,d4
+		sub.l	d0,d4
+		move.l	#$3fffffff,d5
+
+.Hunks		CMP.L	#4,D4
+		BLO.B	.Exit
+		MOVE.W	(A0)+,D0	* test upper word
+		AND.W	#$1FFF,D0
+		BNE.B	.unknown
+		MOVE.W	(A0)+,D0
+		SUBQ.L	#4,D4
+		CMP.W	#HUNK_DATA,D0
+		BEQ.B	.Code
+		CMP.W	#HUNK_CODE,D0
+		BEQ.B	.Code
+		CMP.W	#HUNK_BSS,D0
+		BEQ.B	.BSS
+		CMP.W	#HUNK_RELOC32,D0
+		BEQ.B	.Reloc
+		CMP.W	#HUNK_END,D0
+		BEQ.B	.Hunks
+.unknown *	MOVEQ	#0,D0	* there are files with illegal data
+	 *	BRA.B	.Error  * at the end, these possibly will not
+				* run, but are extracted
+.Exit		moveq	#0,d0
+		tst.l	d3
+		bne.s	.Error
+		moveq	#1,d0
+.Error		movem.l	(a7)+,d2-d5
+		rts
+
+.BSS		and.l	d5,(a0)+
+		subq.l	#4,d4
+		subq.l	#1,d3
+		bra.s	.Hunks
+
+.Code		and.l	d5,(a0)
+		move.l	(a0)+,d0
+		subq.l	#4,d4
+		lsl.l	#2,d0
+		add.l	d0,a0
+		sub.l	d0,d4
+		subq.l	#1,d3
+		bra.s	.Hunks
+
+.Reloc		bsr.s	.CountReloc
+		add.l	d4,a0
+		lea	(a0,d1.l),a1
+		move.l	d4,d2
+		BTST	#0,D2		* test for 1 byte more
+		BEQ.B	.testword
+		MOVE.B	-(A0),-(A1)
+		SUBQ.L	#1,D2
+.testword	BTST	#1,D2		* test for 2 more bytes
+		BEQ.B	.CopyReloc
+		MOVE.W	-(A0),-(A1)
+		SUBQ.L	#2,D2
+.CopyReloc	move.l	-(a0),-(a1)
+		subq.l	#4,d2
+		BNE.B	.CopyReloc
+		sub.l	d0,d4		;packed length abziehen
+
+.Reloc3		move.l	a1,d0
+		addq.l	#1,d0
+		bclr	#0,d0
+		move.l	d0,a1	
+
+		moveq	#0,d0
+		move.w	(a1)+,d0
+		move.l	d0,(a0)+	;amount
+		BEQ.W	.Hunks
+
+		moveq	#0,d1
+		move.w	(a1)+,d1
+		move.l	d1,(a0)+	;hunk #		
+		
+		move.l	(a1)+,d2
+		
+.Reloc2		moveq	#0,d1
+		move.b	(a1),d1		;prefetch
+		move.l	d2,(a0)+
+		subq.w	#1,d0
+		beq.s	.Reloc3		
+
+		addq.w	#1,a1
+		tst.b	d1
+		bne.s	.Reloc1
+		move.b	(a1)+,d1
+		lsl.l	#8,d1
+		move.b	(a1)+,d1
+		lsl.l	#8,d1
+		move.b	(a1)+,d1
+.Reloc1		add.l	d1,d1
+		add.l	d1,d2
+		bra.s	.Reloc2
+
+.CountReloc	moveq	#0,d1
+		move.l	a0,a1
+
+.CountReloc1	move.l	a1,d0
+		addq.l	#1,d0
+		bclr	#0,d0
+		move.l	d0,a1	
+
+		addq.l	#4,d1
+		move.w	(a1)+,d0	;amount
+		beq.s	.CountReloc3
+
+		addq.l	#4,d1
+		addq.w	#2+4,a1		;hunk #, first offset
+		
+.CountReloc2	addq.l	#4,d1
+		subq.w	#1,d0
+		beq.s	.CountReloc1
+		tst.b	(a1)+
+		bne.s	.CountReloc2
+		addq.w	#3,a1
+		bra.s	.CountReloc2
+
+.CountReloc3	move.l	a1,d0
+		addq.l	#3,d0
+		and.b	#$fc,d0
+		move.l	d0,a1
+
+		sub.l	a0,a1		;packed length
+		sub.l	a1,d1		;difference packed<>unpacked
+		move.l	a1,d0		;packed length
+		rts
+
+;=================================================
+
+*
+* xfdRelocate() for PP 4.0
+*
+* a0:source d0:length
+* a1:result d1:mode
+*
+
+PP_Relocate40	movem.l	d2-d7/a2-a6,-(a7)
+		clr.l	(a1)
+		movem.l	d1/a0/a1,-(a7)
+		movem.l	(a7)+,d6/a2/a4
+		lea	(a2,d0.l),a5
+
+		moveq	#1,d2
+		add.l	16(a2),d2
+		sub.l	12(a2),d2
+		add.w	#20,a2
+
+		move.l	4.w,a6
+		move.l	a4,a3
+
+.AllocNext	cmp.w	#XFDREL_DEFAULT,d6
+		beq.s	.AllocDefault
+		move.l	#$10003,d1
+		cmp.w	#XFDREL_FORCECHIP,d6
+		beq.s	.AllocChipFast
+		move.l	#$10005,d1
+		cmp.w	#XFDREL_FORCEFAST,d6
+		beq.s	.AllocChipFast
+		move.w	#XFDERR_BADRELMODE,d7
+		bra	.MemError
+.AllocDefault	moveq	#1,d1
+		swap	d1
+		move.w	(a2),d1
+		rol.w	#3,d1
+		and.w	#$0006,d1
+		or.w	#$0001,d1
+.AllocChipFast	move.l	(a2)+,d0
+		addq.l	#2,d0
+		lsl.l	#2,d0
+		move.l	d0,-(a7)
+		jsr	-198(a6)
+		move.l	(a7)+,d1
+		moveq	#XFDERR_NOMEMORY,d7
+		tst.l	d0
+		beq	.MemError
+		move.l	d0,a0
+		move.l	d1,(a0)+
+		move.l	a0,d0
+		lsr.l	#2,d0
+		move.l	d0,(a3)
+		move.l	a0,a3
+		subq.l	#1,d2
+		bne.s	.AllocNext
+
+		moveq	#-1,d2	;hunk num
+
+.ReloNext	cmp.l	a5,a2
+		beq	.Exit
+		move.l	(a2)+,d0
+		cmp.w	#$3ea,d0	;code,data
+		ble.s	.ReloCode
+		cmp.w	#$3eb,d0	;bss
+		beq.s	.ReloBSS
+		cmp.w	#$3ec,d0	;reloc32
+		beq.s	.ReloReloc
+		cmp.w	#$3f2,d0	;end
+		beq.s	.ReloNext
+		move.w	#XFDERR_UNSUPPORTEDHUNK,d7
+		bra.s	.MemError
+
+.GetHunk	move.l	a4,a1
+.GetHunkNext	move.l	(a1),a1
+		add.l	a1,a1
+		add.l	a1,a1
+		subq.l	#1,d1
+		bge.s	.GetHunkNext
+		addq.w	#4,a1
+		rts
+
+.ReloCode	addq.l	#1,d2
+		move.l	d2,d1
+		bsr.s	.GetHunk
+		move.l	(a2)+,d0
+		beq.s	.ReloNext
+.ReloCodeCopy	move.l	(a2)+,(a1)+
+		subq.l	#1,d0
+		bne.s	.ReloCodeCopy
+		bra.s	.ReloNext
+
+.ReloBSS	addq.l	#1,d2
+		addq.w	#4,a2
+		bra.s	.ReloNext
+
+.ReloRelocExit	addq.w	#3,a2
+		move.l	a2,d0
+		and.b	#$fc,d0
+		move.l	d0,a2
+		bra.s	.ReloNext
+
+.ReloReloc	move.l	d2,d1
+		bsr.s	.GetHunk
+		move.l	a1,a3
+.ReloRelocHunk	addq.w	#1,a2
+		move.l	a2,d0
+		bclr	#0,d0
+		move.l	d0,a2
+		move.w	(a2)+,d0
+		beq.s	.ReloRelocExit
+		moveq	#0,d1
+		move.w	(a2)+,d1
+		bsr.s	.GetHunk
+		move.l	a1,d4
+		move.l	(a2)+,d3
+.ReloRelocNext	add.l	d4,(a3,d3.l)
+		subq.w	#1,d0
+		beq.s	.ReloRelocHunk
+		moveq	#0,d1
+		move.b	(a2)+,d1
+		bne.s	.ReloRelocSmall
+		move.b	(a2)+,d1
+		lsl.l	#8,d1
+		move.b	(a2)+,d1
+		lsl.l	#8,d1
+		move.b	(a2)+,d1
+.ReloRelocSmall	add.l	d1,d1
+		add.l	d1,d3
+		bra.s	.ReloRelocNext
+
+.MemError	move.l	(a4),d2
+		clr.l	(a4)
+		move.l	4.w,a6
+.FreeNext	lsl.l	#2,d2
+		beq.s	.Error
+		move.l	d2,a1
+		move.l	(a1),d2
+		move.l	-(a1),d0
+		jsr	-210(a6)
+		bra.s	.FreeNext
+
+.Exit		moveq	#XFDERR_OK,d7
+
+.Error		moveq	#0,d0
+		move.w	d7,d0
+		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+**************************************************
+
+S_PPbk		dc.l	S_SubPacker
+		dc.w	2
+		dc.w	39
+		dc.l	N_PPbk
+		dc.w	XFDPFF_DATA!XFDPFF_RECOGLEN!XFDPFF_USERTARGET
+		dc.w	0
+		dc.l	RB_PPbk
+		dc.l	DB_PPbk
+		dc.l	SD_PPbk
+		dc.l	VD_PPbk
+		dc.w	XFDID_PPbk
+		dc.w	0
+		dc.l	16+8+4+4
+
+N_PPbk		dc.b	'PPbk (PP20-Clone)',0
+		even
+
+RB_PPbk		CMP.L	#'PPbk',(A0)
+		BNE.B	.No
+		LEA	16(A0),A0
+		SUB.L	#16,D0
+		BRA.W	RB_PPData
+.No		MOVEQ	#0,D0
+		RTS
+
+SD_PPbk		MOVEQ	#0,D0
+		CMP.L	#'PPbk',(A0)
+		BNE.B	.No
+		MOVEQ	#1,D0
+.No		RTS
+
+DB_PPbk		SUB.L	#16,xfdbi_SourceBufLen(A0)
+		ADD.L	#16,xfdbi_SourceBuffer(A0)
+		MOVE.L	A0,-(A7)
+		BSR.W	DB_PPData
+		MOVE.L	(A7)+,A0
+		ADD.L	#16,xfdbi_SourceBufLen(A0)
+		SUB.L	#16,xfdbi_SourceBuffer(A0)
+		RTS
+
+VD_PPbk		CMP.L	#32,D0
+		BLO.B	.No
+		LEA	16(A0),A0
+		SUB.L	#16,D0
+		BRA.W	VD_PPData
+.No		MOVEQ	#0,D0
+		RTS
+
+S_SubPacker	
+		IFND	XFD_LASTSLAVE
+		dc.l	S_PP_END
+		ELSE
+		dc.l	0
+		ENDIF
+		dc.w	2
+		dc.w	39
+		dc.l	N_SubPacker
+		dc.w	XFDPFF_DATA!XFDPFF_RECOGLEN!XFDPFF_USERTARGET
+		dc.w	0
+		dc.l	RB_SubPacker
+		dc.l	DB_SubPacker
+		dc.l	0
+		dc.l	0
+		dc.w	XFDID_SubPacker10
+		dc.w	0
+		dc.l	20
+
+N_SubPacker	dc.b	'SubPacker 1.0',0
+		even
+
+RB_SubPacker	MOVEQ	#0,D0
+		CMP.L	#'PPFI',(A0)
+		BNE.B	.No
+		CMP.L	#'BMOD',4(A0)
+		BNE.B	.No
+		CMP.L	#'PP20',16(A0)
+		BNE.B	.No
+		MOVE.L	8(A0),D0
+		MOVE.L	D0,xfdrr_MinTargetLen(A1)
+		MOVE.L	D0,xfdrr_FinalTargetLen(A1)
+.No		RTS
+
+DB_SubPacker	MOVEM.L	D2-D7/A2-A6,-(A7)
+		MOVE.L	A0,A5
+
+		MOVE.L	xfdbi_UserTargetBuf(A5),A1 * destination
+		MOVE.L	xfdbi_SourceBuffer(A5),A2
+		MOVE.L	12(A2),D0	* sourcelen
+		LEA	24(A2),A0	* source
+		LEA	(A0,D0.L),A2		* FIB start
+		LEA	-4(A0),A6
+		MOVEM.L	A1/A2,-(A7)
+		BSR	D_PPNormalS	* scratches D0-D7,A0-A3
+		MOVEM.L	(A7)+,A1/A2
+		MOVE.W	#XFDERR_CORRUPTEDDATA,xfdbi_Error(A5)
+		TST.L	D0
+		BEQ.B	.Exit
+
+		MOVE.L	-4(A2),D0
+		LSR.L	#8,D0
+		MOVE.L	xfdbi_TargetBufLen(A5),D2
+		SUB.L	D0,D2		* data size
+		ADD.L	D0,A1		* buffer start
+
+		BSR.B	DecrFIBO
+		* sets return value !
+
+.Exit		MOVEM.L	(A7)+,D2-D7/A2-A6
+		RTS
+
+DecrFIBO	LEA.L	.FIBO(PC),A0
+
+		LSR.L	#1,D2
+		SUBQ.L	#1,D2
+		MOVEQ.L	#0,D0
+		MOVEQ.L	#0,D3
+.PPFM_LOOP:	MOVE.B	(A2)+,D0
+		MOVE.B	D0,D1
+		LSR.W	#3,D0
+		AND.B	#%11111110,D0
+		ADD.W	(A0,D0.W),D3
+
+		CMP.W	#127,D3
+		BLE.B	.PPFM_OK1
+		MOVE.B	#127,(A1)+
+		BRA.B	.PPFM_OK3
+.PPFM_OK1:	CMP.W	#-128,D3
+		BGE.B	.PPFM_OK2
+		MOVE.B	#-128,(A1)+
+		BRA.B	.PPFM_OK3
+.PPFM_OK2:	MOVE.B	D3,(A1)+
+.PPFM_OK3:
+		AND.B	#%00001111,D1
+		LSL.W	#1,D1
+		ADD.W	(A0,D1.W),D3
+
+		CMP.W	#127,D3
+		BLE.B	.PPFM_OK4
+		MOVE.B	#127,(A1)+
+		BRA.B	.PPFM_OK6
+.PPFM_OK4:	CMP.W	#-128,D3
+		BGE.B	.PPFM_OK5
+		MOVE.B	#-128,(A1)+
+		BRA.B	.PPFM_OK6
+.PPFM_OK5:	MOVE.B	D3,(A1)+
+.PPFM_OK6:	SUBQ.L	#1,D2
+		BGE.B	.PPFM_LOOP
+		MOVEQ.L	#1,D0
+		RTS
+
+.PPFM_ERROR:	MOVEQ.L	#0,D0
+		RTS
+
+.FIBO:		DC.W	-65,-45,-26,-15,-8,-4,-2,-1,1,2,4,8,15,26,45,65
+
+S_PP_END
+

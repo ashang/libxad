@@ -1,0 +1,588 @@
+*****************************************************************************
+*   $Id: Titanics.a,v 1.2 2005/06/23 14:39:16 stoecker Exp $
+*   Titanics decrunching slave
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+
+S_Titanics11	dc.l	S_Titanics12
+		dc.w	2
+		dc.w	39
+		dc.l	N_Titanics11
+		dc.w	XFDPFF_RELOC!XFDPFF_RELMODE
+		dc.w	0
+		dc.l	RB_Titanics11
+		dc.l	DB_Titanics11
+		dc.l	RS_Titanics11
+		dc.l	DS_Titanics11
+		dc.w	XFDID_TitanicsCruncher11
+		dc.w	0
+		dc.l	$2f4+20
+
+N_Titanics11	dc.b	'Titanics Cruncher 1.1',0
+		even
+
+;-------------------------------------------------
+
+RB_Titanics11	cmp.w	#$abcd,$2a(a0)
+		bne.s	.Exit
+		cmp.w	#$03f6,$2f2(a0)
+		bne.s	.Exit
+
+		cmp.l	#$45f10800,$232(a0)
+		bne.s	.Exit
+		cmp.l	#$12f12000,$26a(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_Titanics11	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a2
+
+		lea	$2f4(a2),a2
+		moveq	#0,d7		;protection		
+		bra	DB_Titanics
+
+;-------------------------------------------------
+
+RS_Titanics11	add.l	a0,a0
+		add.l	a0,a0
+		cmp.l	#($b0*4)+8,-4(a0)
+		bne.s	.Exit
+
+		cmp.l	#$6000006c,4(a0)
+		bne.s	.Exit
+		cmp.l	#$0000abcd,8(a0)
+		bne.s	.Exit
+
+		cmp.l	#$45f10800,$212(a0)
+		bne.s	.Exit
+		cmp.l	#$12f12000,$24a(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DS_Titanics11	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	xfdsi_SegList(a0),a4
+		add.l	a4,a4
+		add.l	a4,a4
+
+		moveq	#0,d7		;protection		
+		bra	DS_Titanics
+
+**************************************************
+
+S_Titanics12	
+		IFND	XFD_LASTSLAVE
+		dc.l	S_Titanics_END
+		ELSE
+		dc.l	0
+		ENDIF
+		dc.w	2
+		dc.w	39
+		dc.l	N_Titanics12
+		dc.w	XFDPFF_RELOC!XFDPFF_RELMODE
+		dc.w	0
+		dc.l	RB_Titanics12
+		dc.l	DB_Titanics12
+		dc.l	RS_Titanics12
+		dc.l	DS_Titanics12
+		dc.w	XFDID_TitanicsCruncher12
+		dc.w	0
+		dc.l	$340+20
+
+N_Titanics12	dc.b	'Titanics Cruncher 1.2',0
+		even
+
+;-------------------------------------------------
+
+RB_Titanics12	cmp.w	#$abcd,$2a(a0)
+		bne.s	.Exit
+		cmp.w	#$03f6,$33e(a0)
+		bne.s	.Exit
+
+		cmp.l	#$45f10800,$27e(a0)
+		bne.s	.Exit
+		cmp.l	#$12f12000,$2b8(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_Titanics12	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a2
+
+		moveq	#0,d7		;protection
+		cmp.w	#$4602,$2a2(a2)
+		bne.s	.NoProt
+		moveq	#1,d7
+.NoProt		lea	$340(a2),a2
+
+DB_Titanics	move.l	a2,a3		;cr begin
+
+		moveq	#20,d5		;3f3,0,x,0,x-1
+		move.l	(a2)+,d0
+		move.l	d0,d1
+		addq.l	#1,d0
+		lsl.l	#4,d0		;x hunks: header,3ex,len,3f2
+		add.l	d0,d5
+
+		moveq	#0,d4
+.GetBiggest	move.l	(a2)+,d2
+		and.l	#$ffffff,d2
+		add.l	d2,d5		;x hunklens
+		cmp.l	d4,d2
+		ble.s	.NotBigger
+		move.l	d2,d4
+.NotBigger	dbf	d1,.GetBiggest		
+
+		move.l	d4,d0
+		move.l	#$10001,d1
+		MOVE.L	xfdm_ExecBase(A6),A6
+		JSR	_LVOAllocMem(A6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		tst.l	d0
+		beq	.Exit
+		move.l	d0,a4
+
+		move.l	a2,a0
+		move.l	a3,a2		;cr begin
+		move.l	(a2)+,d1		;# hunks
+
+.CountReloc	tst.l	(a0)+		;ffffffff
+		bne.s	.NoBSS
+		move.l	(a2)+,d0
+		and.l	#$ffffff,d0
+		sub.l	d0,d5
+		bra.s	.CountNext
+
+.NoBSS		move.l	(a2)+,d0
+		and.l	#$ffffff,d0
+		beq.s	.CountEmpty
+		move.l	a4,a1
+		move.l	a3,-(a7)
+		lea	Tit_BufferCode(pc),a3
+		bsr	D_Titanics
+		move.l	(a7)+,a3
+
+.CountEmpty	move.l	(a0)+,d0
+		beq.s	.CountNext
+		addq.l	#8,d5		;3ec+end00
+.CountNextReloc	lsl.l	#2,d0
+		addq.l	#8,d0
+		add.l	d0,d5		;relocs
+		add.l	d0,a0
+		subq.w	#4,a0
+		MOVE.L	xfdbi_SourceBuffer(A5),A1
+		ADD.L	xfdbi_SourceBufLen(A5),A1
+		CMP.L	A1,A0
+		BHI.W	.Corrupt
+		move.l	(a0)+,d0
+		bne.s	.CountNextReloc	
+.CountNext	dbf	d1,.CountReloc
+
+		move.l	d4,d0
+		move.l	a4,a1
+		JSR	_LVOFreeMem(A6)
+
+		move.l	d5,xfdbi_TargetBufSaveLen(a5)
+		move.l	d5,xfdbi_TargetBufLen(a5)
+
+		move.l	d5,d0
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		JSR	_LVOAllocMem(A6)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq	.Exit
+
+		move.l	a3,a0		;cr begin
+		move.l	d0,a1
+
+		move.l	#$3f3,(a1)+	;header 3f3
+		clr.l	(a1)+
+		move.l	(a0),(a1)
+		addq.l	#1,(a1)+
+		clr.l	(a1)+
+		move.l	(a0)+,d2
+		move.l	d2,(a1)+
+		move.l	d2,d3
+		move.l	a1,a3
+
+.MakeHeader	move.l	(a0)+,d0
+		move.l	d0,d1
+		and.l	#$00ffffff,d0
+		lsr.l	#2,d0
+		rol.l	#5,d1
+		and.l	#$c0000000,d1
+		or.l	d1,d0
+		move.l	d0,(a1)+
+		dbf	d2,.MakeHeader
+
+.MakeHunks	tst.l	(a0)+
+		bne.s	.Code
+		move.l	#$3eb,(a1)+
+		move.l	(a3)+,d0
+		and.l	#$3fffffff,d0
+		move.l	d0,(a1)+
+		bra.s	.NextHunk
+
+.Code		move.l	#$3e9,(a1)+
+		move.l	(a3)+,d0
+		and.l	#$3fffffff,d0
+		move.l	d0,(a1)+
+		beq.s	.Empty
+		lsl.l	#2,d0
+		move.l	a3,-(a7)
+		lea	Tit_BufferCode(pc),a3
+		bsr	D_Titanics
+		move.l	(a7)+,a3
+		
+.Empty		move.l	(a0)+,d0
+		beq.s	.NextHunk
+		move.l	#$3ec,(a1)+
+.NextReloc	move.l	d0,(a1)+
+.CopyReloc	move.l	(a0)+,(a1)+
+		dbf	d0,.CopyReloc
+		move.l	(a0)+,d0
+		bne.s	.NextReloc
+		clr.l	(a1)+
+
+.NextHunk	move.l	#$3f2,(a1)+
+		dbf	d3,.MakeHunks
+
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+.Corrupt	MOVE.L	D4,D0
+		MOVE.L	A4,A1
+		JSR	_LVOFreeMem(A6)
+		MOVEQ	#0,D0
+		MOVE.W	#XFDERR_CORRUPTEDDATA,xfdbi_Error(A5)
+		BRA.B	.Exit
+
+;-------------------------------------------------
+
+RS_Titanics12	add.l	a0,a0
+		add.l	a0,a0
+		cmp.l	#($c3*4)+8,-4(a0)
+		bne.s	.Exit
+
+		cmp.l	#$60000068,4(a0)
+		bne.s	.Exit
+		cmp.l	#$0000abcd,8(a0)
+		bne.s	.Exit
+
+		cmp.l	#$45f10800,$25e(a0)
+		bne.s	.Exit
+		cmp.l	#$12f12000,$298(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+Tit_DosBase	SET	xfdSegmentInfo_SIZE
+Tit_ExecBase	SET	xfdSegmentInfo_SIZE+4
+Tit_Buffer	SET	xfdSegmentInfo_SIZE+8
+Tit_Handle	SET	xfdSegmentInfo_SIZE+12
+Tit_SegList	SET	xfdSegmentInfo_SIZE+16
+Tit_BufEnd	SET	xfdSegmentInfo_SIZE+20
+Tit_SIZE	SET	xfdSegmentInfo_SIZE+24
+
+Tit_TestRead	MACRO
+		cmp.l	Tit_BufEnd(a5),a0
+		bne.s	.NoRead\@
+		bsr	Tit_ReadData
+.NoRead\@
+		ENDM
+
+DS_Titanics12	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	xfdsi_SegList(a0),a4
+		add.l	a4,a4
+		add.l	a4,a4
+
+		moveq	#0,d7		;protection
+		cmp.w	#$4602,$282(a4)
+		bne.s	.NoProt
+		moveq	#1,d7
+.NoProt
+
+DS_Titanics	sub.w	#Tit_SIZE,a7
+		move.l	a7,a5
+		move.l	a0,-(a7)	;bufferinfo
+		move.l	a5,a1
+		moveq	#xfdSegmentInfo_SIZE-1,d1
+.CopySI1	move.b	(a0)+,(a1)+
+		dbf	d1,.CopySI1
+		move.l	xfdm_DosBase(a6),Tit_DosBase(a5)
+		MOVE.L	xfdm_ExecBase(A6),Tit_ExecBase(A5)
+
+		move.l	$c(a4),d1
+		move.l	d1,Tit_Handle(a5)
+		moveq	#0,d2
+		move.w	$36(a4),d2
+		moveq	#-1,d3
+		move.l	Tit_DosBase(a5),a6
+		JSR	_LVOSeek(A6)
+
+		move.l	#$1400,d0
+		moveq	#0,d1
+		MOVE.L	Tit_ExecBase(A5),A6
+		JSR	_LVOAllocMem(A6)
+		move.w	#XFDERR_NOMEMORY,xfdsi_Error(a5)
+		move.l	d0,Tit_Buffer(a5)
+		beq	.Exit
+
+		add.l	#$1400,d0
+		move.l	d0,Tit_BufEnd(a5)
+		bsr	Tit_ReadData
+		move.l	(a0)+,d6	;amount of hunks
+
+		lea	Tit_SegList(a5),a2
+		clr.l	(a2)
+		move.l	d6,d3
+		move.w	xfdsi_RelMode(a5),d4
+.AllocNext	move.l	(a0)+,d0
+		Tit_TestRead
+		move.l	d0,d1
+		and.l	#$ffffff,d0
+		addq.l	#8,d0
+		move.l	d0,d2
+		cmp.w	#XFDREL_DEFAULT,d4
+		beq.s	.AllocDefault
+		move.l	#$10003,d1
+		cmp.w	#XFDREL_FORCECHIP,d4
+		beq.s	.AllocChipFast
+		move.l	#$10005,d1
+		cmp.w	#XFDREL_FORCEFAST,d4
+		beq.s	.AllocChipFast
+		move.w	#XFDERR_BADRELMODE,xfdsi_Error(a5)
+		bra	.ErrorFree
+.AllocDefault	rol.l	#8,d1
+		and.l	#7,d1
+		add.l	#$10000,d1
+.AllocChipFast	move.l	a0,-(a7)
+		JSR	_LVOAllocMem(A6)
+		move.l	(a7)+,a0
+		tst.l	d0
+		beq	.ErrorFree
+		addq.l	#4,d0
+		move.l	d0,d1
+		lsr.l	#2,d0
+		move.l	d0,(a2)
+		move.l	d1,a2
+		move.l	d2,-4(a2)
+		dbf	d3,.AllocNext
+		clr.l	(a2)
+
+		lea	Tit_SegmentCode(pc),a3
+		lea	Tit_SegList(a5),a4
+.DecrNext	move.l	(a4),a4
+		add.l	a4,a4
+		add.l	a4,a4
+		move.l	(a0)+,d0
+		Tit_TestRead
+		tst.l	d0		;bss
+		beq.s	.DoNext
+		lea	4(a4),a1
+		move.l	-8(a1),d0
+		subq.l	#8,d0
+		tst.l	d0		;len = 0
+		beq.s	.DoNext
+		bsr	D_Titanics
+
+.NextReloc	move.l	(a0)+,d0
+		Tit_TestRead
+		tst.l	d0		;no more reloc
+		beq.s	.DoNext
+		move.l	(a0)+,d1
+		Tit_TestRead
+		lea	Tit_SegList(a5),a1
+.GetHunk	move.l	(a1),a1
+		add.l	a1,a1
+		add.l	a1,a1
+		dbf	d1,.GetHunk
+		move.l	a1,d2
+		addq.l	#4,d2
+.DoRelocs	move.l	(a0)+,d1
+		Tit_TestRead
+		add.l	d2,4(a4,d1.l)
+		subq.l	#1,d0
+		bne.s	.DoRelocs
+		bra.s	.NextReloc
+
+.DoNext		dbf	d6,.DecrNext
+
+		move.l	xfdsi_SegList(a5),d1
+		move.l	Tit_DosBase(a5),a6
+		JSR	_LVOUnLoadSeg(A6)
+		move.l	Tit_SegList(a5),xfdsi_SegList(a5)
+		moveq	#1,d0
+		bra.s	.ExitFree
+
+.ErrorFree	lea	Tit_SegList(a5),a2
+.FreeSeg	move.l	(a2),d0
+		beq.s	.ExitFree
+		lsl.l	#2,d0
+		move.l	d0,a2
+		move.l	a2,a1
+		move.l	-(a1),d0
+		JSR	_LVOFreeMem(A6)
+		bra.s	.FreeSeg
+
+.ExitFree	move.l	d0,-(a7)
+		move.l	Tit_Buffer(a5),a1
+		move.l	#$1400,d0
+		MOVE.L	Tit_ExecBase(A5),A6
+		JSR	_LVOFreeMem(A6)
+		move.l	(a7)+,d0
+
+.Exit		move.l	(a7)+,a1	;segmentinfo
+		moveq	#xfdSegmentInfo_SIZE-1,d1
+.CopySI2	move.b	(a5)+,(a1)+
+		dbf	d1,.CopySI2
+		add.w	#Tit_SIZE,a7
+		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+Tit_ReadData	movem.l	d0-d3/a1/a6,-(a7)
+		move.l	Tit_Handle(a5),d1
+		move.l	Tit_Buffer(a5),d2
+		move.l	#$1400,d3
+		move.l	Tit_DosBase(a5),a6
+		JSR	_LVORead(A6)
+		move.l	d2,a0
+		movem.l	(a7)+,d0-d3/a1/a6
+		rts
+
+;=================================================
+
+* a3: getlong code
+
+D_Titanics	movem.l	d0-d4/a2,-(a7)
+		moveq	#-1,d4
+		lea	(a1,d0.l),a2
+		moveq	#0,d0
+
+.Decr1		lsl.l	#1,d0
+		bne.s	.Decr2
+		jsr	(a3)
+.Decr2		bcs.s	.Decr6
+
+		lsl.l	#1,d0
+		bne.s	.Decr3
+		jsr	(a3)
+.Decr3		bcs.s	.Decr5
+
+		moveq	#3-1,d1
+		bsr.s	.Decr10
+		move.w	d2,d3
+.Decr4		moveq	#8-1,d1
+		bsr.s	.Decr10
+		tst.w	d7		;protection
+		beq.s	.NoProt
+		not.b	d2
+.NoProt		move.b	d2,(a1)+
+		cmp.l	a2,a1
+		dbeq	d3,.Decr4
+.Exit		cmp.w	d4,d3
+		beq.s	.Decr1
+		movem.l	(a7)+,d0-d4/a2
+		rts
+
+.Decr9		moveq	#8-1,d1
+		bsr.s	.Decr10
+		move.w	d2,d3
+		addq.w	#8,d3
+		bra.s	.Decr4
+
+.Decr5		moveq	#8-1,d1
+		bsr.s	.Decr10
+		addq.w	#2,d2
+		neg.w	d2
+		moveq	#1,d3
+		bra.s	.Decr7
+
+.Decr6		moveq	#2-1,d1
+		bsr.s	.Decr10
+		cmp.w	#2,d2
+		bgt.s	.Decr9
+		beq.s	.Decr8
+		moveq	#8,d1
+		add.w	d2,d1
+		moveq	#2,d3
+		add.w	d2,d3
+		bsr.s	.Decr10
+		add.w	d3,d2
+		addq.w	#1,d2
+		neg.w	d2
+.Decr7		move.b	(a1,d2.w),(a1)+
+		cmp.l	a2,a1
+		dbeq	d3,.Decr7
+		bra.s	.Exit
+
+.Decr8		moveq	#8-1,d1
+		bsr.s	.Decr10
+		move.w	d2,d3
+		addq.w	#2,d3
+		moveq	#12-1,d1
+		bsr.s	.Decr10
+		addq.w	#3,d2
+		neg.w	d2
+		bra.s	.Decr7
+
+.Decr10		moveq	#0,d2
+.Decr11		lsl.l	#1,d0
+		bne.s	.Decr12
+		jsr	(a3)
+.Decr12		roxl.w	#1,d2
+		dbra	d1,.Decr11
+		rts
+
+Tit_BufferCode	move.l	(a0)+,d0
+		move.b	#$10,ccr
+		roxl.l	#1,d0
+		rts
+
+Tit_SegmentCode	move.l	(a0)+,d0
+		Tit_TestRead
+		move.b	#$10,ccr
+		roxl.l	#1,d0
+		rts
+
+S_Titanics_END

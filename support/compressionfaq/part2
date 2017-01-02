@@ -1,0 +1,2107 @@
+Path: senator-bedfellow.mit.edu!sipb-server-1.mit.edu!gatech!newsfeed.mathworks.com!oleane!teaser.fr!not-for-mail
+From: jloup@gzip.OmitThis.org (Jean-loup Gailly)
+Newsgroups: comp.compression,comp.compression.research,news.answers,comp.answers
+Subject: comp.compression Frequently Asked Questions (part 2/3)
+Supersedes: <compr2_09jan99@gzip_org>
+Followup-To: comp.compression
+Date: 5 Sep 1999 22:36:25 +0200
+Organization: none
+Lines: 2084
+Approved: news-answers-request@mit.edu
+Distribution: world
+Expires: 31 Oct 1999 16:17:20 GMT
+Message-ID: <compr2_05sep99@gzip_org>
+References: <compr1_05sep99@gzip_org>
+Reply-To: jloup@gzip.OmitThis.org
+NNTP-Posting-Host: dip208.teaser.fr
+X-Trace: feed.teaser.fr 936563540 7922 194.51.100.208 (5 Sep 1999 20:32:20 GMT)
+X-Complaints-To: usenet@feed.teaser.fr
+NNTP-Posting-Date: 5 Sep 1999 20:32:20 GMT
+Summary: *** READ THIS BEFORE POSTING ***
+Keywords: data compression, FAQ
+Xref: senator-bedfellow.mit.edu comp.compression:47322 comp.compression.research:3103 news.answers:165987 comp.answers:37555
+
+Archive-name: compression-faq/part2
+Last-modified: Sep 5th, 1999
+
+This file is part 2 of a set of Frequently Asked Questions for the
+groups comp.compression and comp.compression.research.
+
+If you did not get part 1 or 3, you can get them at
+http://www.faqs.org/faqs/compression-faq/part1/preamble.html or
+or ftp://rtfm.mit.edu/pub/usenet/news.answers/compression-faq/
+
+If you don't want to see this FAQ regularly, please add the subject line to
+your kill file. If you have corrections or suggestions for this FAQ, send them
+to Jean-loup Gailly <jloup at gzip.org>.  Thank you.
+
+Contents
+========
+
+Part 2: (Long) introductions to data compression techniques
+
+[70] Introduction to data compression (long)
+       Huffman and Related Compression Techniques
+       Arithmetic Coding
+       Substitutional Compressors
+          The LZ78 family of compressors
+          The LZ77 family of compressors
+
+[71] Introduction to MPEG (long)
+       What is MPEG?
+       Does it have anything to do with JPEG?
+       Then what's JBIG and MHEG?
+       What has MPEG accomplished?
+       So how does MPEG I work?
+       What about the audio compression?
+       So how much does it compress?
+       What's phase II?
+       When will all this be finished?
+       How do I join MPEG?
+       How do I get the documents, like the MPEG I draft?
+
+[72] What is wavelet theory?
+[73] What is the theoretical compression limit?
+[74] Introduction to JBIG
+[75] Introduction to JPEG
+[76] What is Vector Quantization?
+[77] Introduction to Fractal compression
+[78] The Burrows-Wheeler block sorting algorithm (long)
+
+Part 3: (Long) list of image compression hardware
+
+[85] Image compression hardware
+[99] Acknowledgments
+
+
+Search for "Subject: [#]" to get to question number # quickly. Some news
+readers can also take advantage of the message digest format used here.
+
+------------------------------------------------------------------------------
+
+Subject: [70] Introduction to data compression (long)
+
+
+Written by Peter Gutmann <pgut1@cs.aukuni.ac.nz>.
+
+ Huffman and Related Compression Techniques
+ ------------------------------------------
+
+  *Huffman compression* is a statistical data compression technique which 
+gives a reduction in the average code length used to represent the symbols of 
+a alphabet.  The Huffman code is an example of a code which is optimal in the 
+case where all symbols probabilities are integral powers of 1/2.  A Huffman 
+code can be built in the following manner:
+
+  (1) Rank all symbols in order of probability of occurrence.
+    
+  (2) Successively combine the two symbols of the lowest probability to form
+      a new composite symbol; eventually we will build a binary tree where
+      each node is the probability of all nodes beneath it.
+
+  (3) Trace a path to each leaf, noticing the direction at each node.
+
+  For a given frequency distribution, there are many possible Huffman codes,
+but the total compressed length will be the same. It is possible to
+define a 'canonical' Huffman tree, that is, pick one of these alternative
+trees. Such a canonical tree can then be represented very compactly, by
+transmitting only the bit length of each code. This technique is used
+in most archivers (pkzip, lha, zoo, arj, ...).
+
+
+  A technique related to Huffman coding is *Shannon-Fano coding*, which
+works as follows:
+
+  (1) Divide the set of symbols into two equal or almost equal subsets
+      based on the probability of occurrence of characters in each
+      subset.  The first subset is assigned a binary zero, the second
+      a binary one.
+
+  (2) Repeat step (1) until all subsets have a single element.
+
+The algorithm used to create the Huffman codes is bottom-up, and the
+one for the Shannon-Fano codes is top-down. Huffman encoding always
+generates optimal codes, Shannon-Fano sometimes uses a few more bits.
+
+[See also "Practical Huffman coding" http://www.compressconsult.com/huffman/ ]
+
+
+ Arithmetic Coding
+ -----------------
+
+  It would appear that Huffman or Shannon-Fano coding is the perfect
+means of compressing data.  However, this is *not* the case.  As
+mentioned above, these coding methods are optimal when and only when
+the symbol probabilities are integral powers of 1/2, which is usually
+not the case.
+
+  The technique of *arithmetic coding* does not have this restriction:
+It achieves the same effect as treating the message as one single unit
+(a technique which would, for Huffman coding, require enumeration of
+every single possible message), and thus attains the theoretical
+entropy bound to compression efficiency for any source.
+
+  Arithmetic coding works by representing a number by an interval of real 
+numbers between 0 and 1.  As the message becomes longer, the interval needed 
+to represent it becomes smaller and smaller, and the number of bits needed to 
+specify that interval increases.  Successive symbols in the message reduce 
+this interval in accordance with the probability of that symbol. The more
+likely symbols reduce the range by less, and thus add fewer bits to the   
+message.
+
+     1                                             Codewords
+    +-----------+-----------+-----------+           /-----\
+    |           |8/9 YY     |  Detail   |<- 31/32    .11111
+    |           +-----------+-----------+<- 15/16    .1111
+    |    Y      |           | too small |<- 14/16    .1110
+    |2/3        |    YX     | for text  |<- 6/8      .110
+    +-----------+-----------+-----------+
+    |           |           |16/27 XYY  |<- 10/16    .1010
+    |           |           +-----------+
+    |           |    XY     |           |
+    |           |           |   XYX     |<- 4/8      .100
+    |           |4/9        |           |
+    |           +-----------+-----------+
+    |           |           |           |
+    |    X      |           |   XXY     |<- 3/8      .011
+    |           |           |8/27       |
+    |           |           +-----------+
+    |           |    XX     |           |
+    |           |           |           |<- 1/4      .01
+    |           |           |   XXX     |
+    |           |           |           |
+    |0          |           |           |
+    +-----------+-----------+-----------+
+
+  As an example of arithmetic coding, lets consider the example of two
+symbols X and Y, of probabilities 0.66 and 0.33. To encode this message, we
+examine the first symbol: If it is a X, we choose the lower partition; if
+it is a Y, we choose the upper partition.  Continuing in this manner for
+three symbols, we get the codewords shown to the right of the diagram above
+- they can be found by simply taking an appropriate location in the
+interval for that particular set of symbols and turning it into a binary
+fraction. In practice, it is also necessary to add a special end-of-data
+symbol, which is not represented in this simpe example.
+        
+  In this case the arithmetic code is not completely efficient, which is due 
+to the shortness of the message - with longer messages the coding efficiency 
+does indeed approach 100%.
+
+  Now that we have an efficient encoding technique, what can we do with it? 
+What we need is a technique for building a model of the data which we can 
+then use with the encoder.  The simplest model is a fixed one, for example a 
+table of standard letter frequencies for English text which we can then use 
+to get letter probabilities.  An improvement on this technique is to use an 
+*adaptive model*, in other words a model which adjusts itself to the data 
+which is being compressed as the data is compressed.  We can convert the 
+fixed model into an adaptive one by adjusting the symbol frequencies after 
+each new symbol is encoded, allowing the model to track the data being 
+transmitted.  However, we can do much better than that.
+
+Using the symbol probabilities by themselves is not a particularly good
+estimate of the true entropy of the data: We can take into account
+intersymbol probabilities as well.  The best compressors available today
+take this approach: DMC (Dynamic Markov Coding) starts with a zero-order
+Markov model and gradually extends this initial model as compression
+progresses; PPM (Prediction by Partial Matching) looks for a match of the
+text to be compressed in an order-n context.  If no match is found, it
+drops to an order n-1 context, until it reaches order 0.  Both these
+techniques thus obtain a much better model of the data to be compressed,
+which, combined with the use of arithmetic coding, results in superior
+compression performance.
+
+  So if arithmetic coding-based compressors are so powerful, why are they not 
+used universally?  Apart from the fact that they are relatively new and 
+haven't come into general use too much yet, there is also one major concern:  
+The fact that they consume rather large amounts of computing resources, both 
+in terms of CPU power and memory.  The building of sophisticated models for 
+the compression can chew through a fair amount of memory (especially in the 
+case of DMC, where the model can grow without bounds); and the arithmetic 
+coding itself involves a fair amount of number crunching.
+There is however an alternative approach, a class of compressors generally 
+referred to as *substitutional* or *dictionary-based compressors*.
+
+ Substitutional Compressors
+ --------------------------
+
+  The basic idea behind a substitutional compressor is to replace an 
+occurrence of a particular phrase or group of bytes in a piece of data with a 
+reference to a previous occurrence of that phrase.  There are two main 
+classes of schemes, named after Jakob Ziv and Abraham Lempel, who first 
+proposed them in 1977 and 1978.
+
+<The LZ78 family of compressors>
+
+  LZ78-based schemes work by entering phrases into a *dictionary* and then, 
+when a repeat occurrence of that particular phrase is found, outputting the 
+dictionary index instead of the phrase.  There exist several compression 
+algorithms based on this principle, differing mainly in the manner in which 
+they manage the dictionary.  The most well-known scheme (in fact the most 
+well-known of all the Lempel-Ziv compressors, the one which is generally (and 
+mistakenly) referred to as "Lempel-Ziv Compression"), is Terry Welch's LZW 
+scheme, which he designed in 1984 for implementation in hardware for high- 
+performance disk controllers.
+
+Input string: /WED/WE/WEE/WEB
+
+Character input:    Code output:    New code value and associated string:
+    /W                  /                   256 = /W
+    E                   W                   257 = WE
+    D                   E                   258 = ED
+    /                   D                   259 = D/
+    WE                  256                 260 = /WE
+    /                   E                   261 = E/
+    WEE                 260                 262 = /WEE
+    /W                  261                 263 = E/W
+    EB                  257                 264 = WEB
+    <END>               B
+    
+  LZW starts with a 4K dictionary, of which entries 0-255 refer to individual 
+bytes, and entries 256-4095 refer to substrings.  Each time a new code is 
+generated it means a new string has been parsed.  New strings are generated 
+by appending the current character K to the end of an existing string w.  The 
+algorithm for LZW compression is as follows:
+
+  set w = NIL
+  loop
+      read a character K
+      if wK exists in the dictionary
+          w = wK
+      else
+          output the code for w
+          add wK to the string table
+          w = K
+  endloop
+
+  A sample run of LZW over a (highly redundant) input string can be seen in 
+the diagram above.  The strings are built up character-by-character starting 
+with a code value of 256.  LZW decompression takes the stream of codes and 
+uses it to exactly recreate the original input data.  Just like the 
+compression algorithm, the decompressor adds a new string to the dictionary 
+each time it reads in a new code.  All it needs to do in addition is to 
+translate each incoming code into a string and send it to the output.  A 
+sample run of the LZW decompressor is shown in below.
+
+Input code: /WED<256>E<260><261><257>B
+
+Input code:        Output string:     New code value and associated string:
+    /                  /            
+    W                  W                      256 = /W
+    E                  E                      257 = WE
+    D                  D                      258 = ED
+    256                /W                     259 = D/
+    E                  E                      260 = /WE
+    260                /WE                    261 = E/
+    261                E/                     262 = /WEE
+    257                WE                     263 = E/W
+    B                  B                      264 = WEB
+           
+  The most remarkable feature of this type of compression is that the entire 
+dictionary has been transmitted to the decoder without actually explicitly 
+transmitting the dictionary.  At the end of the run, the decoder will have a 
+dictionary identical to the one the encoder has, built up entirely as part of 
+the decoding process.
+    LZW is more commonly encountered today in a variant known as LZC, after 
+its use in the UNIX "compress" program.  In this variant, pointers do not 
+have a fixed length.  Rather, they start with a length of 9 bits, and then 
+slowly grow to their maximum possible length once all the pointers of a 
+particular size have been used up.  Furthermore, the dictionary is not frozen 
+once it is full as for LZW - the program continually monitors compression 
+performance, and once this starts decreasing the entire dictionary is 
+discarded and rebuilt from scratch.  More recent schemes use some sort of 
+least-recently-used algorithm to discard little-used phrases once the 
+dictionary becomes full rather than throwing away the entire dictionary.  
+
+Finally, not all schemes build up the dictionary by adding a single new 
+character to the end of the current phrase. An alternative technique is to 
+concatenate the previous two phrases (LZMW), which results in a faster 
+buildup of longer phrases than the character-by-character buildup of the 
+other methods.  The disadvantage of this method is that a more sophisticated 
+data structure is needed to handle the dictionary.
+
+[A good introduction to LZW, MW, AP and Y coding is given in the yabba
+package. For ftp information, see question 2 in part one, file type .Y]
+
+
+<The LZ77 family of compressors>
+
+  LZ77-based schemes keep track of the last n bytes of data seen, and when a 
+phrase is encountered that has already been seen, they output a pair of 
+values corresponding to the position of the phrase in the previously-seen 
+buffer of data, and the length of the phrase.  In effect the compressor moves 
+a fixed-size *window* over the data (generally referred to as a *sliding 
+window*), with the position part of the (position, length) pair referring to 
+the position of the phrase within the window.  The most commonly used 
+algorithms are derived from the LZSS scheme described by James Storer and 
+Thomas Szymanski in 1982.  In this the compressor maintains a window of size 
+N bytes and a *lookahead buffer* the contents of which it tries to find a 
+match for in the window:
+
+  while( lookAheadBuffer not empty )
+      {
+      get a pointer ( position, match ) to the longest match in the window
+          for the lookahead buffer;
+
+      if( length > MINIMUM_MATCH_LENGTH )
+          {
+          output a ( position, length ) pair;
+          shift the window length characters along;
+          }
+      else
+          {
+          output the first character in the lookahead buffer;
+          shift the window 1 character along;
+          }
+      }
+        
+  Decompression is simple and fast:  Whenever a ( position, length ) pair is 
+encountered, go to that ( position ) in the window and copy ( length ) bytes 
+to the output.
+
+  Sliding-window-based schemes can be simplified by numbering the input text
+characters mod N, in effect creating a circular buffer.  The sliding window
+approach automatically creates the LRU effect which must be done explicitly in
+LZ78 schemes.  Variants of this method apply additional compression to the
+output of the LZSS compressor, which include a simple variable-length code
+(LZB), dynamic Huffman coding (LZH), and Shannon-Fano coding (ZIP 1.x)), all
+of which result in a certain degree of improvement over the basic scheme,
+especially when the data are rather random and the LZSS compressor has little
+effect.
+  Recently an algorithm was developed which combines the ideas behind LZ77 and
+LZ78 to produce a hybrid called LZFG.  LZFG uses the standard sliding window,
+but stores the data in a modified trie data structure and produces as output
+the position of the text in the trie.  Since LZFG only inserts complete
+*phrases* into the dictionary, it should run faster than other LZ77-based
+compressors.
+
+All popular archivers (arj, lha, zip, zoo) are variations on the LZ77 theme.
+
+
+[A tutorial on some compression algorithms is available at
+http://www.cs.sfu.ca/cs/CC/365/li/squeeze/ ]
+
+------------------------------------------------------------------------------
+
+Subject: [71] Introduction to MPEG (long)
+
+
+For MPEG players, see item 15 in part 1 of the FAQ.  Frank Gadegast
+<phade@cs.tu-berlin.de> also posts a FAQ specialized in MPEG, available in
+ftp://ftp.cs.tu-berlin.de/pub/msdos/dos/graphics/ mpegfa*.zip and
+http://www.powerweb.de/mpeg/mpegfaq/
+
+The site ftp://ftp.crs4.it/mpeg/ dedicated to the MPEG compression standard.
+Another MPEG FAQ is available in http://www.vol.it/MPEG/
+
+See also http://www.mpeg.org and http://www-plateau.cs.berkeley.edu/mpeg
+
+A description of MPEG can be found in: "MPEG: A Video Compression
+Standard for Multimedia Applications" Didier Le Gall, Communications
+of the ACM, April 1991, Vol 34. No.4, pp.46-58.
+
+Several books on MPEG have been published, see the list in
+http://www.mpeg.org/MPEG/starting-points.html#books
+
+MPEG-2 bitstreams are available on wuarchive.wustl.edu in directory
+/graphics/x3l3/pub/bitstreams. MPEG-2 Demultiplexer source code is
+in /graphics/x3l3/pub/bitstreams/systems/munsi_v13.tar.gz
+
+Public C source encoder for all 3 layers for mpeg2 including mpeg1 is in
+ftp://ftp.tnt.uni-hannover.de/pub/MPEG/audio/mpeg2/public_software/
+technical_report/dist08.tar.gz
+
+
+Introduction to MPEG originally written by Mark Adler 
+<madler@cco.caltech.edu> around January 1992; modified and updated by 
+Harald Popp <layer3@iis.fhg.de> in March 94:
+
+Q: What is MPEG, exactly?
+
+A: MPEG is the "Moving Picture Experts Group", working under the 
+   joint direction of the International Standards Organization (ISO) 
+   and the International Electro-Technical Commission (IEC). This 
+   group works on standards for the coding of moving pictures and 
+   associated audio.
+
+Q: What is the status of MPEG's work, then? What's about MPEG-1, -2, 
+   and so on?
+
+A: MPEG approaches the growing need for multimedia standards step-by-
+   step. Today, three "phases" are defined:
+   
+   MPEG-1: "Coding of Moving Pictures and Associated Audio for 
+           Digital Storage Media at up to about 1.5 MBit/s"  
+ 
+   Status: International Standard IS-11172, completed in 10.92
+   
+   MPEG-2: "Generic Coding of Moving Pictures and Associated Audio"
+   
+   Status: Comittee Draft CD 13818 as found in documents MPEG93 / 
+           N601, N602, N603 (11.93)   
+
+   MPEG-3: no longer exists (has been merged into MPEG-2)
+   
+   MPEG-4: "Very Low Bitrate Audio-Visual Coding"
+   
+   Status: Call for Proposals 11.94, Working Draft in 11.96 
+
+Q: MPEG-1 is ready-for-use. How does the standard look like?
+
+A: MPEG-1 consists of 4 parts:
+
+   IS 11172-1: System
+   describes synchronization and multiplexing of video and audio
+
+   IS 11172-2: Video
+   describes compression of non-interlaced video signals
+   
+   IS 11172-3: Audio
+   describes compression of audio signals 
+   
+   CD 11172-4: Compliance Testing
+   describes procedures for determining the characteristics of coded 
+   bitstreams and the decoding porcess and for testing compliance 
+   with the requirements stated in the other parts
+
+Q. Does MPEG have anything to do with JPEG? 
+
+A. Well, it sounds the same, and they are part of the same 
+   subcommittee of ISO along with JBIG and MHEG, and they usually meet 
+   at the same place at the same time.  However, they are different 
+   sets of people with few or no common individual members, and they 
+   have different charters and requirements.  JPEG is for still image 
+   compression.
+
+Q. Then what's JBIG and MHEG?
+
+A. Sorry I mentioned them. Ok, I'll simply say that JBIG is for binary
+   image compression (like faxes), and MHEG is for multi-media data
+   standards (like integrating stills, video, audio, text, etc.).
+   For an introduction to JBIG, see question 74 below.
+
+Q. So how does MPEG-1 work? Tell me about video coding!
+
+A. First off, it starts with a relatively low resolution video
+   sequence (possibly decimated from the original) of about 352 by
+   240 frames by 30 frames/s (US--different numbers for Europe),
+   but original high (CD) quality audio.  The images are in color,
+   but converted to YUV space, and the two chrominance channels
+   (U and V) are decimated further to 176 by 120 pixels.  It turns
+   out that you can get away with a lot less resolution in those
+   channels and not notice it, at least in "natural" (not computer
+   generated) images.
+
+   The basic scheme is to predict motion from frame to frame in the
+   temporal direction, and then to use DCT's (discrete cosine
+   transforms) to organize the redundancy in the spatial directions.
+   The DCT's are done on 8x8 blocks, and the motion prediction is
+   done in the luminance (Y) channel on 16x16 blocks.  In other words,
+   given the 16x16 block in the current frame that you are trying to
+   code, you look for a close match to that block in a previous or
+   future frame (there are backward prediction modes where later
+   frames are sent first to allow interpolating between frames).
+   The DCT coefficients (of either the actual data, or the difference
+   between this block and the close match) are "quantized", which
+   means that you divide them by some value to drop bits off the
+   bottom end.  Hopefully, many of the coefficients will then end up
+   being zero.  The quantization can change for every "macroblock"
+   (a macroblock is 16x16 of Y and the corresponding 8x8's in both
+   U and V).  The results of all of this, which include the DCT
+   coefficients, the motion vectors, and the quantization parameters
+   (and other stuff) is Huffman coded using fixed tables.  The DCT
+   coefficients have a special Huffman table that is "two-dimensional"
+   in that one code specifies a run-length of zeros and the non-zero
+   value that ended the run.  Also, the motion vectors and the DC
+   DCT components are DPCM (subtracted from the last one) coded.
+
+Q. So is each frame predicted from the last frame?
+
+A. No.  The scheme is a little more complicated than that.  There are
+   three types of coded frames.  There are "I" or intra frames.  They
+   are simply a frame coded as a still image, not using any past
+   history.  You have to start somewhere.  Then there are "P" or
+   predicted frames.  They are predicted from the most recently
+   reconstructed I or P frame.  (I'm describing this from the point
+   of view of the decompressor.)  Each macroblock in a P frame can
+   either come with a vector and difference DCT coefficients for a
+   close match in the last I or P, or it can just be "intra" coded
+   (like in the I frames) if there was no good match.
+
+   Lastly, there are "B" or bidirectional frames.  They are predicted
+   from the closest two I or P frames, one in the past and one in the
+   future.  You search for matching blocks in those frames, and try
+   three different things to see which works best.  (Now I have the
+   point of view of the compressor, just to confuse you.)  You try 
+   using the forward vector, the backward vector, and you try 
+   averaging the two blocks from the future and past frames, and 
+   subtracting that from the block being coded.  If none of those work 
+   well, you can intracode the block.
+
+   The sequence of decoded frames usually goes like:
+
+   IBBPBBPBBPBBIBBPBBPB...
+
+   Where there are 12 frames from I to I (for US and Japan anyway.)
+   This is based on a random access requirement that you need a
+   starting point at least once every 0.4 seconds or so.  The ratio
+   of P's to B's is based on experience.
+
+   Of course, for the decoder to work, you have to send that first
+   P *before* the first two B's, so the compressed data stream ends
+   up looking like:
+
+   0xx312645...
+
+   where those are frame numbers.  xx might be nothing (if this is
+   the true starting point), or it might be the B's of frames -2 and
+   -1 if we're in the middle of the stream somewhere.
+
+   You have to decode the I, then decode the P, keep both of those
+   in memory, and then decode the two B's.  You probably display the
+   I while you're decoding the P, and display the B's as you're
+   decoding them, and then display the P as you're decoding the next
+   P, and so on.
+
+Q. You've got to be kidding.
+
+A. No, really!
+
+Q. Hmm.  Where did they get 352x240?
+
+A. That derives from the CCIR-601 digital television standard which
+   is used by professional digital video equipment.  It is (in the US)
+   720 by 243 by 60 fields (not frames) per second, where the fields
+   are interlaced when displayed.  (It is important to note though
+   that fields are actually acquired and displayed a 60th of a second
+   apart.)  The chrominance channels are 360 by 243 by 60 fields a
+   second, again interlaced.  This degree of chrominance decimation
+   (2:1 in the horizontal direction) is called 4:2:2.  The source
+   input format for MPEG I, called SIF, is CCIR-601 decimated by 2:1
+   in the horizontal direction, 2:1 in the time direction, and an
+   additional 2:1 in the chrominance vertical direction.  And some
+   lines are cut off to make sure things divide by 8 or 16 where
+   needed.
+
+Q. What if I'm in Europe?
+
+A. For 50 Hz display standards (PAL, SECAM) change the number of lines
+   in a field from 243 or 240 to 288, and change the display rate to
+   50 fields/s or 25 frames/s.  Similarly, change the 120 lines in
+   the decimated chrominance channels to 144 lines.  Since 288*50 is
+   exactly equal to 240*60, the two formats have the same source data
+   rate.
+
+Q. What will MPEG-2 do for video coding?
+
+A. As I said, there is a considerable loss of quality in going from
+   CCIR-601 to SIF resolution.  For entertainment video, it's simply
+   not acceptable.  You want to use more bits and code all or almost
+   all the CCIR-601 data.  From subjective testing at the Japan
+   meeting in November 1991, it seems that 4 MBits/s can give very
+   good quality compared to the original CCIR-601 material.  The
+   objective of MPEG-2 is to define a bit stream optimized for 
+   these resolutions and bit rates.
+
+Q. Why not just scale up what you're doing with MPEG-1?
+
+A. The main difficulty is the interlacing.  The simplest way to extend
+   MPEG-1 to interlaced material is to put the fields together into
+   frames (720x486x30/s).  This results in bad motion artifacts that
+   stem from the fact that moving objects are in different places
+   in the two fields, and so don't line up in the frames.  Compressing
+   and decompressing without taking that into account somehow tends to
+   muddle the objects in the two different fields.
+
+   The other thing you might try is to code the even and odd field
+   streams separately.  This avoids the motion artifacts, but as you
+   might imagine, doesn't get very good compression since you are not
+   using the redundancy between the even and odd fields where there
+   is not much motion (which is typically most of image).
+
+   Or you can code it as a single stream of fields.  Or you can
+   interpolate lines.  Or, etc. etc.  There are many things you can
+   try, and the point of MPEG-2 is to figure out what works well.
+   MPEG-2 is not limited to consider only derivations of MPEG-1.
+   There were several non-MPEG-1-like schemes in the competition in
+   November, and some aspects of those algorithms may or may not
+   make it into the final standard for entertainment video 
+   compression.
+
+Q. So what works?
+
+A. Basically, derivations of MPEG-1 worked quite well, with one that
+   used wavelet subband coding instead of DCT's that also worked very
+   well.  Also among the worked-very-well's was a scheme that did not
+   use B frames at all, just I and P's.  All of them, except maybe 
+   one, did some sort of adaptive frame/field coding, where a decision 
+   is made on a macroblock basis as to whether to code that one as 
+   one frame macroblock or as two field macroblocks.  Some other 
+   aspects are how to code I-frames--some suggest predicting the even 
+   field from the odd field.  Or you can predict evens from evens and 
+   odds or odds from evens and odds or any field from any other field, 
+   etc.
+
+Q. So what works?
+
+A. Ok, we're not really sure what works best yet.  The next step is
+   to define a "test model" to start from, that incorporates most of
+   the salient features of the worked-very-well proposals in a
+   simple way.  Then experiments will be done on that test model,
+   making a mod at a time, and seeing what makes it better and what
+   makes it worse.  Example experiments are, B's or no B's, DCT vs.
+   wavelets, various field prediction modes, etc.  The requirements,
+   such as implementation cost, quality, random access, etc. will all
+   feed into this process as well.
+
+Q. When will all this be finished?
+
+A. I don't know.  I'd have to hope in about a year or less.
+
+Q: Talking about MPEG audio coding, I heard a lot about "Layer 1, 2 
+   and 3". What does it mean, exactly?   
+
+A: MPEG-1, IS 11172-3, describes the compression of audio signals 
+   using high performance perceptual coding schemes. It specifies a 
+   family of three audio coding schemes, simply called Layer-1,-2,-3, 
+   with increasing encoder complexity and performance (sound quality 
+   per bitrate). The three codecs are compatible in a hierarchical 
+   way, i.e. a Layer-N decoder is able to decode bitstream data 
+   encoded in Layer-N and all Layers below N (e.g., a Layer-3 
+   decoder may accept Layer-1,-2 and -3, whereas a Layer-2 decoder 
+   may accept only Layer-1 and -2.)
+
+Q: So we have a family of three audio coding schemes. What does the 
+   MPEG standard define, exactly?
+   
+A: For each Layer, the standard specifies the bitstream format and 
+   the decoder. To allow for future improvements, it does *not* 
+   specify the encoder , but an informative chapter gives an example 
+   for an encoder for each Layer.    
+
+Q: What have the three audio Layers in common?
+
+A: All Layers use the same basic structure. The coding scheme can be  
+   described as "perceptual noise shaping" or "perceptual subband / 
+   transform coding". 
+
+   The encoder analyzes the spectral components of the audio signal 
+   by calculating a filterbank or transform and applies a 
+   psychoacoustic model to estimate the just noticeable noise-
+   level. In its quantization and coding stage, the encoder tries 
+   to allocate the available number of data bits in a way to meet 
+   both the bitrate and masking requirements.
+
+   The decoder is much less complex. Its only task is to synthesize 
+   an audio signal out of the coded spectral components.
+   
+   All Layers use the same analysis filterbank (polyphase with 32 
+   subbands). Layer-3 adds a MDCT transform to increase the frequency 
+   resolution.
+   
+   All Layers use the same "header information" in their bitstream, 
+   to support the hierarchical structure of the standard.
+   
+   All Layers use a bitstream structure that contains parts that are 
+   more sensitive to biterrors ("header", "bit allocation", 
+   "scalefactors", "side information") and parts that are less 
+   sensitive ("data of spectral components").  
+
+   All Layers may use 32, 44.1 or 48 kHz sampling frequency.
+   
+   All Layers are allowed to work with similar bitrates:
+   Layer-1: from 32 kbps to 448 kbps
+   Layer-2: from 32 kbps to 384 kbps
+   Layer-3: from 32 kbps to 320 kbps
+
+Q: What are the main differences between the three Layers, from a 
+   global view?
+
+A: From Layer-1 to Layer-3,
+   complexity increases (mainly true for the encoder),
+   overall codec delay increases, and
+   performance increases (sound quality per bitrate).
+
+Q: Which Layer should I use for my application?
+
+A: Good Question. Of course, it depends on all your requirements. But 
+   as a first approach, you should consider the available bitrate of 
+   your application as the Layers have been designed to support 
+   certain areas of bitrates most efficiently, i.e. with a minimum 
+   drop of sound quality.
+
+   Let us look a little closer at the strong domains of each Layer.
+    
+   Layer-1: Its ISO target bitrate is 192 kbps per audio channel.
+
+   Layer-1 is a simplified version of Layer-2. It is most useful for 
+   bitrates around the "high" bitrates around or above 192 kbps. A 
+   version of Layer-1 is used as "PASC" with the DCC recorder.
+
+   Layer-2: Its ISO target bitrate is 128 kbps per audio channel.
+   
+   Layer-2 is identical with MUSICAM. It has been designed as trade-
+   off between sound quality per bitrate and encoder complexity. It 
+   is most useful for bitrates around the "medium" bitrates of 128 or 
+   even 96 kbps per audio channel. The DAB (EU 147) proponents have 
+   decided to use Layer-2 in the future Digital Audio Broadcasting 
+   network.      
+
+   Layer-3: Its ISO target bitrate is 64 kbps per audio channel.
+   
+   Layer-3 merges the best ideas of MUSICAM and ASPEC. It has been 
+   designed for best performance at "low" bitrates around 64 kbps or 
+   even below. The Layer-3 format specifies a set of advanced 
+   features that all address one goal: to preserve as much sound 
+   quality as possible even at rather low bitrates. Today, Layer-3 is 
+   already in use in various telecommunication networks (ISDN, 
+   satellite links, and so on) and speech announcement systems. 
+
+Q: Tell me more about sound quality. How do you assess that?
+
+A: Today, there is no alternative to expensive listening tests. 
+   During the ISO-MPEG-1 process, 3 international listening tests 
+   have been performed, with a lot of trained listeners, supervised 
+   by Swedish Radio. They took place in 7.90, 3.91 and 11.91. Another 
+   international listening test was performed by CCIR, now ITU-R, in 
+   92.      
+   
+   All these tests used the "triple stimulus, hidden reference" 
+   method and the CCIR impairment scale to assess the audio quality.
+   The listening sequence is "ABC", with A = original, BC = pair of 
+   original / coded signal with random sequence, and the listener has 
+   to evaluate both B and C with a number between 1.0 and 5.0. The 
+   meaning of these values is:
+   
+   5.0 = transparent (this should be the original signal)
+   4.0 = perceptible, but not annoying (first differences noticable)  
+   3.0 = slightly annoying   
+   2.0 = annoying
+   1.0 = very annoying
+
+   With perceptual codecs (like MPEG audio), all traditional 
+   parameters (like SNR, THD+N, bandwidth) are especially useless. 
+   Fraunhofer-IIS works on objective quality assessment tools, like 
+   the NMR meter (Noise-to-Mask-Ratio), too. BTW: If you need more 
+   informations about NMR, please contact nmr@iis.fhg.de.
+
+Q: Now that I know how to assess quality, come on, tell me the 
+   results of these tests.
+   
+A: Well, for low bitrates, the main result is that at 60 or 64 kbps 
+   per channel), Layer-2 scored always between 2.1 and 2.6, whereas 
+   Layer-3 scored between 3.6 and 3.8. This is a significant increase 
+   in sound quality, indeed! Furthermore, the selection process for 
+   critical sound material showed that it was rather difficult to 
+   find worst-case material for Layer-3 whereas it was not so hard to 
+   find such items for Layer-2.
+  
+Q: OK, a Layer-2 codec at low bitrates may sound poor today, but 
+   couldn't that be improved in the future? I guess you just told me 
+   before that the encoder is not fixed in the standard.
+   
+A: Good thinking! As the sound quality mainly depends on the encoder 
+   implementation, it is true that there is no such thing as a "Layer-
+   N"- quality. So we definitely only know the performance of the 
+   reference codecs during the international tests. Who knows what 
+   will happen in the future? What we do know now, is:
+   
+   Today, Layer-3 already provides a sound quality that comes very 
+   near to CD quality at 64 kbps per channel. Layer-2 is far away 
+   from that.
+   
+   Tomorrow, both Layers may improve. Layer-2 has been designed as a 
+   trade-off between quality and complexity, so the bitstream format 
+   allows only limited innovations. In contrast, even the current
+   reference Layer-3-codec exploits only a small part of the powerful 
+   mechanisms inside the Layer-3 bitstream format.  
+
+Q: All in all, you sound as if anybody should use Layer-3 for low 
+   bitrates. Why on earth do some vendors still offer only Layer-2 
+   equipment for these applications?
+   
+A: Well, maybe because they started to design and develop their 
+   system rather early, e.g. in 1990. As Layer-2 is identical with 
+   MUSICAM, it has been available since summer of 90, at latest. In 
+   that year, Layer-3 development started and could be successfully 
+   finished in spring 92. So, for a certain time, vendors could only 
+   exploit the existing part of the new MPEG standard.   
+   
+   Now the situation has changed. All Layers are available, the 
+   standard is completed, and new systems need not limit themselves, 
+   but may capitalize on the full features of MPEG audio.
+
+Q: How do I get the MPEG documents?
+
+A: You may order it from your national standards body.
+
+   E.g., in Germany, please contact:
+   DIN-Beuth Verlag, Auslandsnormen
+   Mrs. Niehoff, Burggrafenstr. 6, D-10772 Berlin, Germany
+   Phone: 030-2601-2757, Fax: 030-2601-1231
+
+   E.g., in USA, you may order it from ANSI [phone (212) 642-4900] or 
+   buy it from companies like OMNICOM phone +44 438 742424
+                                      FAX   +44 438 740154
+
+Q. How do I join MPEG?
+
+A. You don't join MPEG.  You have to participate in ISO as part of a
+   national delegation.  How you get to be part of the national
+   delegation is up to each nation.  I only know the U.S., where you
+   have to attend the corresponding ANSI meetings to be able to
+   attend the ISO meetings.  Your company or institution has to be
+   willing to sink some bucks into travel since, naturally, these
+   meetings are held all over the world.  (For example, Paris,
+   Santa Clara, Kurihama Japan, Singapore, Haifa Israel, Rio de
+   Janeiro, London, etc.)
+
+------------------------------------------------------------------------------
+
+Subject: [72] What is wavelet theory?
+
+
+Preprints and software are available by anonymous ftp from the
+Yale Mathematics Department computer ftp://ceres.math.yale.edu/pub/wavelets/
+and /pub/software/ .
+
+For source code of several wavelet coders, see item 15 in part one of
+this FAQ.
+
+A list of pointers, covering theory, papers, books, implementations,
+resources and more can be found at
+http://www.amara.com/current/wavelet.html#Wavelinks
+
+Bill Press of Harvard/CfA has made some things available on
+ftp://cfata4.harvard.edu/pub/ There is a short TeX article on wavelet
+theory (wavelet.tex, to be included in a future edition of Numerical
+Recipes), some sample wavelet code (wavelet.f, in FORTRAN - sigh), and
+a beta version of an astronomical image compression program which he
+is currently developing (FITS format data files only, in
+fitspress08.tar.Z).
+
+The Rice Wavelet Toolbox Release 2.0 is available in
+ftp://cml.rice.edu/pub/dsp/software/ and /pub/dsp/papers/ .  This is a
+collection of MATLAB of "mfiles" and "mex" files for twoband and
+M-band filter bank/wavelet analysis from the DSP group and
+Computational Mathematics Laboratory (CML) at Rice University,
+Houston, TX.  This release includes application code for Synthetic
+Aperture Radar despeckling and for deblocking of JPEG decompressed
+Images.  Contact: Ramesh Gopinath <ramesh@rice.edu>.
+
+A wavelet transform coder construction kit is available at
+http://www.cs.dartmouth.edu/~gdavis/wavelet/wavelet.html
+Contact: Geoff Davis <gdavis@cs.dartmouth.edu>
+
+A matlab toolbox for constructing multi-scale image representations, 
+including Laplacian pyramids, QMFs, wavelets, and steerable pyramids, 
+is available at ftp://ftp.cis.upenn.edu/pub/eero/matlabPyrTools.tar.gz
+Contact: Eero Simoncelli <eero.simoncelli@nyu.edu>.
+
+A mailing list dedicated to research on wavelets has been set up at the
+University of South Carolina. To subscribe to this mailing list, send a
+message with "subscribe" as the subject to wavelet@math.sc.edu.
+For back issues and other information, check the Wavelet Digest home page
+at http://www.wavelet.org/
+
+A tutorial by M. Hilton, B. Jawerth, and A. Sengupta, entitled
+"Compressing Still and Moving Images with Wavelets" is available in
+ftp://ftp.math.sc.edu/pub/wavelet/papers/varia/tutorial/ . The
+files are "tutorial.ps.Z" and "fig8.ps.Z".  fig8 is a comparison of
+JPEG and wavelet compressed images and could take several hours to
+print. The tutorial is also available at
+http://www.mathsoft.com/wavelets.html
+
+A page on wavelet-based HARC-C compression technology is available at
+http://www.harc.edu/HARCC.html
+
+Commercial wavelet image compression software:
+  http://www.aware.com
+  http://www.summus.com
+  http://www.infinop.com
+
+Details of the wavelet transform can be found in
+ftp://ftp.isds.duke.edu/pub/brani/papers/wav4kidsA.ps.Z
+ftp://ftp.isds.duke.edu/pub/brani/papers/wav4kidsB.ps.Z
+
+
+A 5 minute course in wavelet transforms, by Richard Kirk <rak@crosfield.co.uk>:
+
+Do you know what a Haar transform is? Its a transform to another orthonormal
+space (like the DFT), but the basis functions are a set of square wave bursts
+like this...
+
+   +--+                         +------+
+   +  |  +------------------    +      |      +--------------
+      +--+                             +------+
+
+         +--+                                 +------+
+   ------+  |  +------------    --------------+      |      +
+            +--+                                     +------+
+
+               +--+             +-------------+
+   ------------+  |  +------    +             |             +
+                  +--+                        +-------------+
+
+                     +--+       +---------------------------+
+   ------------------+  |  +    +                           +
+                        +--+
+
+This is the set of functions for an 8-element 1-D Haar transform. You
+can probably see how to extend this to higher orders and higher dimensions
+yourself. This is dead easy to calculate, but it is not what is usually
+understood by a wavelet transform.
+
+If you look at the eight Haar functions you see we have four functions
+that code the highest resolution detail, two functions that code the
+coarser detail, one function that codes the coarser detail still, and the 
+top function that codes the average value for the whole `image'.
+
+Haar function can be used to code images instead of the DFT. With bilevel
+images (such as text) the result can look better, and it is quicker to code.
+Flattish regions, textures, and soft edges in scanned images get a nasty
+`blocking' feel to them. This is obvious on hardcopy, but can be disguised on
+color CRTs by the effects of the shadow mask. The DCT gives more consistent
+results.
+
+This connects up with another bit of maths sometimes called Multispectral
+Image Analysis, sometimes called Image Pyramids.
+
+Suppose you want to produce a discretely sampled image from a continuous 
+function. You would do this by effectively `scanning' the function using a
+sinc function [ sin(x)/x ] `aperture'. This was proved by Shannon in the 
+`forties. You can do the same thing starting with a high resolution
+discretely sampled image. You can then get a whole set of images showing 
+the edges at different resolutions by differencing the image at one
+resolution with another version at another resolution. If you have made this
+set of images properly they ought to all add together to give the original 
+image.
+
+This is an expansion of data. Suppose you started off with a 1K*1K image.
+You now may have a 64*64 low resolution image plus difference images at 128*128
+256*256, 512*512 and 1K*1K. 
+
+Where has this extra data come from? If you look at the difference images you 
+will see there is obviously some redundancy as most of the values are near 
+zero. From the way we constructed the levels we know that locally the average
+must approach zero in all levels but the top. We could then construct a set of
+functions out of the sync functions at any level so that their total value 
+at all higher levels is zero. This gives us an orthonormal set of basis 
+functions for a transform. The transform resembles the Haar transform a bit,
+but has symmetric wave pulses that decay away continuously in either direction
+rather than square waves that cut off sharply. This transform is the
+wavelet transform ( got to the point at last!! ).
+
+These wavelet functions have been likened to the edge detecting functions
+believed to be present in the human retina.
+
+
+Loren I. Petrich <lip@s1.gov> adds that order 2 or 3 Daubechies
+discrete wavelet transforms have a speed comparable to DCT's, and
+usually achieve compression a factor of 2 better for the same image
+quality than the JPEG 8*8 DCT. (See item 25 in part 1 of this FAQ for
+references on fast DCT algorithms.)
+
+------------------------------------------------------------------------------
+
+Subject: [73] What is the theoretical compression limit?
+
+
+This question can be understood in two different ways:
+
+(a) For a given compressor/decompressor, what is the best possible lossless
+    compression for an arbitrary string (byte sequence) given as input?
+
+(b) For a given string, what is the best possible lossless
+    compressor/decompressor?
+
+For case (a), the question is generally meaningless, because a specific
+compressor may compress one very large input file down to a single bit, and
+enlarge all other files by only one bit.  There is no lossless compressor that
+is guaranteed to compress all possible input files. If it compresses some
+files, then it must enlarge some others.  This can be proven by a simple
+counting argument (see item 9).  In case (a), the size of the decompressor is
+not taken into account for the determination of the compression ratio since the
+decompressor is fixed and it may decompress an arbitrary number of files of
+arbitrary length.
+
+For case (b), it is of course necessary to take into account the size of the
+decompressor. The problem may be restated as "What is the shortest program P
+which, when executed, produces the string S?".  The size of this program
+is known as the Kolmogorov complexity of the string S.  Some (actually most)
+strings are not compressible at all, by any program: the smallest
+representation of the string is the string itself.  On the other hand, the
+output of a pseudo-random number generator can be extremely compressible, since
+it is sufficient to know the parameters and seed of the generator to reproduce
+an arbitrary long sequence.
+
+References: "An Introduction to Kolmogorov Complexity and its Applications",
+   Ming Li and Paul Vitanyi, 2nd edition, Springer-Verlag, ISBN 0-387-94868-6
+   http://www.cwi.nl/~paulv/kolmogorov.html
+
+If you don't want to read a whole book, I recommend the excellent lecture
+"Randomness & Complexity in Pure Mathematics" by G. J. Chaitin:
+  http://www.cs.auckland.ac.nz/CDMTCS/chaitin/ijbc.html
+The decimal and binary expansions of Chaitin's number Omega are examples of
+uncompressible strings. There are more papers on
+http://www.cs.auckland.ac.nz/CDMTCS/chaitin/
+
+------------------------------------------------------------------------------
+
+Subject: [74] Introduction to JBIG
+
+
+JBIG software and the JBIG specification are available in
+ftp://nic.funet.fi/pub/graphics/misc/test-images/jbig.tar.gz
+
+The ISO JBIG committee's home page is http://www.jpeg.org/public/welcome.htm
+
+
+A short introduction to JBIG, written by Mark Adler <madler@cco.caltech.edu>:
+
+  JBIG losslessly compresses binary (one-bit/pixel) images.  (The B stands
+  for bi-level.)  Basically it models the redundancy in the image as the
+  correlations of the pixel currently being coded with a set of nearby
+  pixels called the template.  An example template might be the two
+  pixels preceding this one on the same line, and the five pixels centered
+  above this pixel on the previous line.  Note that this choice only
+  involves pixels that have already been seen from a scanner.
+
+  The current pixel is then arithmetically coded based on the eight-bit
+  (including the pixel being coded) state so formed.  So there are (in this
+  case) 256 contexts to be coded.  The arithmetic coder and probability
+  estimator for the contexts are actually IBM's (patented) Q-coder.  The
+  Q-coder uses low precision, rapidly adaptable (those two are related)
+  probability estimation combined with a multiply-less arithmetic coder.
+  The probability estimation is intimately tied to the interval calculations
+  necessary for the arithmetic coding.
+
+  JBIG actually goes beyond this and has adaptive templates, and probably
+  some other bells and whistles I don't know about.  You can find a
+  description of the Q-coder as well as the ancestor of JBIG in the Nov 88
+  issue of the IBM Journal of Research and Development.  This is a very
+  complete and well written set of five articles that describe the Q-coder
+  and a bi-level image coder that uses the Q-coder.
+
+  You can use JBIG on grey-scale or even color images by simply applying
+  the algorithm one bit-plane at a time.  You would want to recode the
+  grey or color levels first though, so that adjacent levels differ in
+  only one bit (called Gray-coding).  I hear that this works well up to
+  about six bits per pixel, beyond which JPEG's lossless mode works better.
+  You need to use the Q-coder with JPEG also to get this performance.
+
+  Actually no lossless mode works well beyond six bits per pixel, since
+  those low bits tend to be noise, which doesn't compress at all.
+
+  Anyway, the intent of JBIG is to replace the current, less effective
+  group 3 and 4 fax algorithms.
+
+
+Another introduction to JBIG, written by Hank van Bekkem <jbek@oce.nl>:
+
+  The following description of the JBIG algorithm is derived from
+  experiences with a software implementation I wrote following the
+  specifications in the revision 4.1 draft of September 16, 1991. The
+  source will not be made available in the public domain, as parts of
+  JBIG are patented.
+
+  JBIG (Joint Bi-level Image Experts Group) is an experts group of ISO,
+  IEC and CCITT (JTC1/SC2/WG9 and SGVIII). Its job is to define a
+  compression standard for lossless image coding ([1]). The main
+  characteristics of the proposed algorithm are:
+  - Compatible progressive/sequential coding. This means that a
+    progressively coded image can be decoded sequentially, and the
+    other way around.
+  - JBIG will be a lossless image compression standard: all bits in
+    your images before and after compression and decompression will be
+    exactly the same.
+
+  In the rest of this text I will first describe the JBIG algorithm in
+  a short abstract of the draft. I will conclude by saying something
+  about the value of JBIG.
+
+
+  JBIG algorithm.
+  --------------
+
+  JBIG parameter P specifies the number of bits per pixel in the image.
+  Its allowable range is 1 through 255, but starting at P=8 or so,
+  compression will be more efficient using other algorithms. On the
+  other hand, medical images such as chest X-rays are often stored with
+  12 bits per pixel, while no distorsion is allowed, so JBIG can
+  certainly be of use in this area. To limit the number of bit changes
+  between adjacent decimal values (e.g. 127 and 128), it is wise to use
+  Gray coding before compressing multi-level images with JBIG. JBIG
+  then compresses the image on a bitplane basis, so the rest of this
+  text assumes bi-level pixels.
+
+  Progressive coding is a way to send an image gradually to a receiver
+  instead of all at once. During sending, more detail is sent, and the
+  receiver can build the image from low to high detail. JBIG uses
+  discrete steps of detail by successively doubling the resolution. The
+  sender computes a number of resolution layers D, and transmits these
+  starting at the lowest resolution Dl. Resolution reduction uses
+  pixels in the high resolution layer and some already computed low
+  resolution pixels as an index into a lookup table. The contents of
+  this table can be specified by the user.
+
+  Compatibility between progressive and sequential coding is achieved
+  by dividing an image into stripes. Each stripe is a horizontal bar
+  with a user definable height. Each stripe is separately coded and
+  transmitted, and the user can define in which order stripes,
+  resolutions and bitplanes (if P>1) are intermixed in the coded data.
+  A progressive coded image can be decoded sequentially by decoding
+  each stripe, beginning by the one at the top of the image, to its
+  full resolution, and then proceeding to the next stripe. Progressive
+  decoding can be done by decoding only a specific resolution layer
+  from all stripes.
+
+  After dividing an image into bitplanes, resolution layers and
+  stripes, eventually a number of small bi-level bitmaps are left to
+  compress. Compression is done using a Q-coder. Reference [2]
+  contains a full description, I will only outline the basic principles
+  here.
+
+  The Q-coder codes bi-level pixels as symbols using the probability of
+  occurrence of these symbols in a certain context. JBIG defines two
+  kinds of context, one for the lowest resolution layer (the base
+  layer), and one for all other layers (differential layers).
+  Differential layer contexts contain pixels in the layer to be coded,
+  and in the corresponding lower resolution layer.
+
+  For each combination of pixel values in a context, the probability
+  distribution of black and white pixels can be different. In an all
+  white context, the probability of coding a white pixel will be much
+  greater than that of coding a black pixel. The Q-coder assigns, just
+  like a Huffman coder, more bits to less probable symbols, and so
+  achieves compression. The Q-coder can, unlike a Huffmann coder,
+  assign one output codebit to more than one input symbol, and thus is
+  able to compress bi-level pixels without explicit clustering, as
+  would be necessary using a Huffman coder.
+
+  Maximum compression will be achieved when all probabilities (one set
+  for each combination of pixel values in the context) follow the
+  probabilities of the pixels. The Q-coder therefore continuously
+  adapts these probabilities to the symbols it sees.
+
+
+  JBIG value.
+  ----------
+
+  In my opinion, JBIG can be regarded as two combined devices:
+  - Providing the user the service of sending or storing multiple
+    representations of images at different resolutions without any
+    extra cost in storage. Differential layer contexts contain pixels
+    in two resolution layers, and so enable the Q-coder to effectively
+    code the difference in information between the two layers, instead
+    of the information contained in every layer. This means that,
+    within a margin of approximately 5%, the number of resolution
+    layers doesn't effect the compression ratio.
+  - Providing the user a very efficient compression algorithm, mainly
+    for use with bi-level images. Compared to CCITT Group 4, JBIG is
+    approximately 10% to 50% better on text and line art, and even
+    better on halftones. JBIG is however, just like Group 4, somewhat
+    sensitive to noise in images. This means that the compression ratio
+    decreases when the amount of noise in your images increases.
+
+  An example of an application would be browsing through an image
+  database, e.g. an EDMS (engineering document management system).
+  Large A0 size drawings at 300 dpi or so would be stored using five
+  resolution layers. The lowest resolution layer would fit on a
+  computer screen. Base layer compressed data would be stored at the
+  beginning of the compressed file, thus making browsing through large
+  numbers of compressed drawings possible by reading and decompressing
+  just the first small part of all files. When the user stops browsing,
+  the system could automatically start decompressing all remaining
+  detail for printing at high resolution.
+
+  [1] "Progressive Bi-level Image Compression, Revision 4.1", ISO/IEC
+      JTC1/SC2/WG9, CD 11544, September 16, 1991
+  [2] "An overview of the basic principles of the Q-coder adaptive
+      binary arithmetic coder", W.B. Pennebaker, J.L. Mitchell, G.G.
+      Langdon, R.B. Arps, IBM Journal of research and development,
+      Vol.32, No.6, November 1988, pp. 771-726 (See also the other
+      articles about the Q-coder in this issue)
+
+------------------------------------------------------------------------------
+
+Subject: [75] Introduction to JPEG
+
+Here is a brief overview of the inner workings of JPEG, plus some references
+for more detailed information, written by Tom Lane <tgl@sss.pgh.pa.us>.
+Please read item 19 in part 1 first.
+
+JPEG works on either full-color or gray-scale images; it does not handle
+bilevel (black and white) images, at least not well.  It doesn't handle
+colormapped images either; you have to pre-expand those into an unmapped
+full-color representation.  JPEG works best on "continuous tone" images.
+Images with many sudden jumps in color values will not compress well.
+
+There are a lot of parameters to the JPEG compression process.  By adjusting
+the parameters, you can trade off compressed image size against reconstructed
+image quality over a *very* wide range.  You can get image quality ranging
+from op-art (at 100x smaller than the original 24-bit image) to quite
+indistinguishable from the source (at about 3x smaller).  Usually the
+threshold of visible difference from the source image is somewhere around 10x
+to 20x smaller than the original, ie, 1 to 2 bits per pixel for color images.
+Grayscale images do not compress as much.  In fact, for comparable visual
+quality, a grayscale image needs perhaps 25% less space than a color image;
+certainly not the 66% less that you might naively expect.
+
+JPEG defines a "baseline" lossy algorithm, plus optional extensions for
+progressive and hierarchical coding.  There is also a separate lossless
+compression mode; this typically gives about 2:1 compression, ie, about 12
+bits per color pixel.  Most currently available JPEG hardware and software
+handles only the baseline mode.
+
+
+Here's the outline of the baseline compression algorithm:
+
+1. Transform the image into a suitable color space.  This is a no-op for
+grayscale, but for color images you generally want to transform RGB into a
+luminance/chrominance color space (YCbCr, YUV, etc).  The luminance component
+is grayscale and the other two axes are color information.  The reason for
+doing this is that you can afford to lose a lot more information in the
+chrominance components than you can in the luminance component: the human eye
+is not as sensitive to high-frequency chroma info as it is to high-frequency
+luminance.  (See any TV system for precedents.)  You don't have to change the
+color space if you don't want to, since the remainder of the algorithm works
+on each color component independently, and doesn't care just what the data
+is.  However, compression will be less since you will have to code all the
+components at luminance quality.  Note that colorspace transformation is
+slightly lossy due to roundoff error, but the amount of error is much smaller
+than what we typically introduce later on.
+
+2. (Optional) Downsample each component by averaging together groups of
+pixels.  The luminance component is left at full resolution, while the chroma
+components are often reduced 2:1 horizontally and either 2:1 or 1:1 (no
+change) vertically.  In JPEG-speak these alternatives are usually called 2h2v
+and 2h1v sampling, but you may also see the terms "411" and "422" sampling.
+This step immediately reduces the data volume by one-half or one-third.
+In numerical terms it is highly lossy, but for most images it has almost no
+impact on perceived quality, because of the eye's poorer resolution for chroma
+info.  Note that downsampling is not applicable to grayscale data; this is one
+reason color images are more compressible than grayscale.
+
+3. Group the pixel values for each component into 8x8 blocks.  Transform each
+8x8 block through a discrete cosine transform (DCT).  The DCT is a relative of
+the Fourier transform and likewise gives a frequency map, with 8x8 components.
+Thus you now have numbers representing the average value in each block and
+successively higher-frequency changes within the block.  The motivation for
+doing this is that you can now throw away high-frequency information without
+affecting low-frequency information.  (The DCT transform itself is reversible
+except for roundoff error.)  See question 25 for fast DCT algorithms.
+
+4. In each block, divide each of the 64 frequency components by a separate
+"quantization coefficient", and round the results to integers.  This is the
+fundamental information-losing step.  The larger the quantization
+coefficients, the more data is discarded.  Note that even the minimum possible
+quantization coefficient, 1, loses some info, because the exact DCT outputs
+are typically not integers.  Higher frequencies are always quantized less
+accurately (given larger coefficients) than lower, since they are less visible
+to the eye.  Also, the luminance data is typically quantized more accurately
+than the chroma data, by using separate 64-element quantization tables.
+Tuning the quantization tables for best results is something of a black art,
+and is an active research area.  Most existing encoders use simple linear
+scaling of the example tables given in the JPEG standard, using a single
+user-specified "quality" setting to determine the scaling multiplier.  This
+works fairly well for midrange qualities (not too far from the sample tables
+themselves) but is quite nonoptimal at very high or low quality settings.
+
+5. Encode the reduced coefficients using either Huffman or arithmetic coding.
+(Strictly speaking, baseline JPEG only allows Huffman coding; arithmetic
+coding is an optional extension.)   Notice that this step is lossless, so it
+doesn't affect image quality.  The arithmetic coding option uses Q-coding;
+it is identical to the coder used in JBIG (see question 74).  Be aware that
+Q-coding is patented.  Most existing implementations support only the Huffman
+mode, so as to avoid license fees.  The arithmetic mode offers maybe 5 or 10%
+better compression, which isn't enough to justify paying fees.
+
+6. Tack on appropriate headers, etc, and output the result.  In a normal
+"interchange" JPEG file, all of the compression parameters are included
+in the headers so that the decompressor can reverse the process.  These
+parameters include the quantization tables and the Huffman coding tables.
+For specialized applications, the spec permits those tables to be omitted
+from the file; this saves several hundred bytes of overhead, but it means
+that the decompressor must know a-priori what tables the compressor used.
+Omitting the tables is safe only in closed systems.
+
+
+The decompression algorithm reverses this process.  The decompressor
+multiplies the reduced coefficients by the quantization table entries to
+produce approximate DCT coefficients.  Since these are only approximate,
+the reconstructed pixel values are also approximate, but if the design
+has done what it's supposed to do, the errors won't be highly visible.
+A high-quality decompressor will typically add some smoothing steps to
+reduce pixel-to-pixel discontinuities.
+
+The JPEG standard does not specify the exact behavior of compressors and
+decompressors, so there's some room for creative implementation.  In
+particular, implementations can trade off speed against image quality by
+choosing more accurate or faster-but-less-accurate approximations to the
+DCT.  Similar tradeoffs exist for the downsampling/upsampling and colorspace
+conversion steps.  (The spec does include some minimum accuracy requirements
+for the DCT step, but these are widely ignored, and are not too meaningful
+anyway in the absence of accuracy requirements for the other lossy steps.)
+
+
+Extensions:
+
+The progressive mode is intended to support real-time transmission of images.
+It allows the DCT coefficients to be sent piecemeal in multiple "scans" of
+the image.  With each scan, the decoder can produce a higher-quality
+rendition of the image.  Thus a low-quality preview can be sent very quickly,
+then refined as time allows.  The total space needed is roughly the same as
+for a baseline JPEG image of the same final quality.  (In fact, it can be
+somewhat *less* if a custom Huffman table is used for each scan, because the
+Huffman codes can be optimized over a smaller, more uniform population of
+data than appears in a baseline image's single scan.)  The decoder must do
+essentially a full JPEG decode cycle for each scan: inverse DCT, upsample,
+and color conversion must all be done again, not to mention any color
+quantization for 8-bit displays.  So this scheme is useful only with fast
+decoders or slow transmission lines.  Up until 1995, progressive JPEG was a
+rare bird, but its use is now spreading as software decoders have become fast
+enough to make it useful with modem-speed data transmission.
+
+The hierarchical mode represents an image at multiple resolutions.  For
+example, one could provide 512x512, 1024x1024, and 2048x2048 versions of the
+image.  The higher-resolution images are coded as differences from the next
+smaller image, and thus require many fewer bits than they would if stored
+independently.  (However, the total number of bits will be greater than that
+needed to store just the highest-resolution frame in baseline form.)
+The individual frames in a hierarchical sequence can be coded progressively
+if desired.  Hierarchical mode is not widely supported at present.
+
+Part 3 of the JPEG standard, approved at the end of 1995, introduces several
+new extensions.  The one most likely to become popular is variable
+quantization, which allows the quantization table to be scaled to different
+levels in different parts of the image.  In this way the "more critical"
+parts of the image can be coded at higher quality than the "less critical"
+parts.  A signaling code can be inserted at any DCT block boundary to set a
+new scaling factor.
+
+Another Part 3 extension is selective refinement.  This feature permits a
+scan in a progressive sequence, or a refinement frame of a hierarchical
+sequence, to cover only part of the total image area.  This is an
+alternative way of solving the variable-quality problem.  My (tgl's) guess
+is that this will not get widely implemented, with variable quantization
+proving a more popular approach, but I've been wrong before.
+
+The third major extension added by Part 3 is a "tiling" concept that allows
+an image to be built up as a composite of JPEG frames, which may have
+different sizes, resolutions, quality settings, even colorspaces.  (For
+example, a color image that occupies a small part of a mostly-grayscale page
+could be represented as a separate frame, without having to store the whole
+page in color.)  Again, there's some overlap in functionality with variable
+quantization and selective refinement.  The general case of arbitrary tiles
+is rather complex and is unlikely to be widely implemented.  In the simplest
+case all the tiles are the same size and use similar quality settings.
+This case may become popular even if the general tiling mechanism doesn't,
+because it surmounts the 64K-pixel-on-a-side image size limitation that was
+(not very foresightedly) built into the basic JPEG standard.  The individual
+frames are still restricted to 64K for compatibility reasons, but the total
+size of a tiled JPEG image can be up to 2^32 pixels on a side.
+
+Lossless JPEG:
+
+The separate lossless mode does not use DCT, since roundoff errors prevent a
+DCT calculation from being lossless.  For the same reason, one would not
+normally use colorspace conversion or downsampling, although these are
+permitted by the standard.  The lossless mode simply codes the difference
+between each pixel and the "predicted" value for the pixel.  The predicted
+value is a simple function of the already-transmitted pixels just above and
+to the left of the current one (for example, their average; 8 different
+predictor functions are permitted).  The sequence of differences is encoded
+using the same back end (Huffman or arithmetic) used in the lossy mode.
+
+Lossless JPEG with the Huffman back end is certainly not a state-of-the-art
+lossless compression method, and wasn't even when it was introduced.  The
+arithmetic-coding back end may make it competitive, but you're probably best
+off looking at other methods if you need only lossless compression.
+
+The main reason for providing a lossless option is that it makes a good
+adjunct to the hierarchical mode: the final scan in a hierarchical sequence
+can be a lossless coding of the remaining differences, to achieve overall
+losslessness.  This isn't quite as useful as it may at first appear, because
+exact losslessness is not guaranteed unless the encoder and decoder have
+identical IDCT implementations (ie, identical roundoff errors).  And you
+can't use downsampling or colorspace conversion either if you want true
+losslessness.  But in some applications the combination is useful.
+
+
+References:
+
+For a good technical introduction to JPEG, see:
+	Wallace, Gregory K.  "The JPEG Still Picture Compression Standard",
+	Communications of the ACM, April 1991 (vol. 34 no. 4), pp. 30-44.
+(Adjacent articles in that issue discuss MPEG motion picture compression,
+applications of JPEG, and related topics.)  If you don't have the CACM issue
+handy, a PostScript file containing a revised version of this article is
+available at ftp://ftp.uu.net/graphics/jpeg/wallace.ps.gz.  This file
+(actually a preprint for a later article in IEEE Trans. Consum. Elect.)
+omits the sample images that appeared in CACM, but it includes corrections
+and some added material.  Note: the Wallace article is copyright ACM and
+IEEE, and it may not be used for commercial purposes.
+
+An alternative, more leisurely explanation of JPEG can be found in "The Data
+Compression Book" by Mark Nelson ([Nel 1991], see question 7).  This book
+provides excellent introductions to many data compression methods including
+JPEG, plus sample source code in C.  The JPEG-related source code is far from
+industrial-strength, but it's a pretty good learning tool.
+
+An excellent textbook about JPEG is "JPEG Still Image Data Compression
+Standard" by William B. Pennebaker and Joan L. Mitchell.  Published by Van
+Nostrand Reinhold, 1993, ISBN 0-442-01272-1.  650 pages, price US$59.95.
+(VNR will accept credit card orders at 800/842-3636, or get your local
+bookstore to order it.)  This book includes the complete text of the ISO
+JPEG standards, DIS 10918-1 and draft DIS 10918-2.  Review by Tom Lane:
+"This is by far the most complete exposition of JPEG in existence.  It's
+written by two people who know what they are talking about: both served on
+the ISO JPEG standards committee.  If you want to know how JPEG works or
+why it works that way, this is the book to have."
+
+There are a number of errors in the first printing of the Pennebaker and
+Mitchell book.  An errata list is available at
+ftp://ftp.uu.net/graphics/jpeg/pm.errata.gz.  At last report, all known
+errors were fixed in the second printing.
+
+The official specification of JPEG is not currently available on-line, and
+is not likely ever to be available for free because of ISO and ITU copyright
+restrictions.  You can order it from your national standards agency as ISO
+standards IS 10918-1, 10918-2, 10918-3, or as ITU-T standards T.81, T.83,
+T.84.  See ftp://ftp.uu.net/graphics/jpeg/jpeg.documents.gz for more info.
+NOTE: buying the Pennebaker and Mitchell textbook is a much better deal
+than purchasing the standard directly: it's cheaper and includes a lot of
+useful explanatory material along with the full draft text of the spec.
+The book unfortunately doesn't include Part 3 of the spec, but if you need
+Part 3, buy the book and just that part and you'll still be ahead.
+
+
+------------------------------------------------------------------------------
+
+Subject: [76] What is Vector Quantization?
+
+Some vector quantization software for data analysis that is available
+in the ftp://cochlea.hut.fi/pub/ directory.  One package is lvq_pak and
+one is som_pak (som_pak generates Kohonen maps of data using lvq to
+cluster it).
+
+A VQ-based codec that is based on the Predictive Residual Vector
+Quantization is in ftp://mozart.eng.buffalo.edu/pub/prvq_codec/PRVQ.tar.gz
+
+VQ software is also available in ftp://isdl.ee.washington.edu/pub/VQ/
+
+
+For a book on Vector Quantization, see the reference (Gersho and Gray)
+given in item 7 of this FAQ. For a review article: N. M. Nasrabadi and
+R. A. King, "Image Coding Using Vector Quantization: A review",
+IEEE Trans. on Communications, vol. COM-36, pp. 957-971, Aug. 1988.
+
+
+A short introduction to Vector Quantization, written by Alex Zatsman
+<alex.zatsman@analog.com>:
+
+In Scalar  Quantization one represents  the values by  fixed subset of
+representative values. For  examples, if you  have  16 bit  values and
+send  only 8 most  signifcant bits, you  get an  approximation  of the
+original data  at  the expense of  precision.  In this case  the fixed
+subset is all the 16-bit numbers divisable by 256, i.e 0, 256, 512,...
+
+In  Vector Quantization  you   represent   not individual values   but
+(usually small) arrays of them. A typical  example  is a color  map: a
+color picture can  be  represented by  a  2D array  of  triplets  (RGB
+values). In most pictures  those triplets do  not cover the  whole RGB
+space but  tend to   concetrate  in certain   areas. For  example, the
+picture of a forest will typically have a lot of green. One can select
+a relatively  small  subset (typically 256 elements) of representative
+colors, i.e RGB  triplets,  and then approximate  each  triplet by the
+representative of  that small set. In case  of 256 one  can use 1 byte
+instead of 3 for each pixel.
+
+One  can do   the  same   for  any large  data  sets,  especialy  when
+consecutive points are correlated in some way. CELP speech compression
+algorithms  use  those subsets  "codebooks" and   use them to quantize
+exciation vectors  for linear prediction  -- hence the name CELP which
+stands for Codebook Excited Linear Prediction.  (See item 26 in part 1
+of this FAQ for more information about CELP.)
+
+Note that Vector Quantization, just like Scalar Quantization, is a lossy
+compression.
+
+------------------------------------------------------------------------------
+
+Subject: [77] Introduction to Fractal compression (long)
+
+
+Written by John Kominek <kominek@links.uwaterloo.ca>
+
+Seven things you should know about Fractal Image Compression (assuming that 
+you want to know about it).
+
+   1. It is a promising new technology, arguably superior to JPEG -- 
+      but only with an argument.
+   2. It is a lossy compression method.
+   3. The fractals in Fractal Image Compression are Iterated Function
+      Systems.
+   4. It is a form of Vector Quantization, one that employs a virtual
+      codebook.
+   5. Resolution enhancement is a powerful feature but is not some
+      magical way of achieving 1000:1 compression.
+   6. Compression is slow, decompression is fast.
+   7. The technology is patented.
+
+That's the scoop in condensed form. Now to elaborate, beginning with a little 
+background.
+
+
+ A Brief History of Fractal Image Compression
+ --------------------------------------------
+
+The birth of fractal geometry (or rebirth, rather) is usually traced to IBM 
+mathematician Benoit B. Mandelbrot and the 1977 publication of his seminal 
+book The Fractal Geometry of Nature. The book put forth a powerful thesis: 
+traditional geometry with its straight lines and smooth surfaces does not 
+resemble the geometry of trees and clouds and mountains. Fractal geometry, 
+with its convoluted coastlines and detail ad infinitum, does.
+
+This insight opened vast possibilities. Computer scientists, for one, found a 
+mathematics capable of generating artificial and yet realistic looking land-
+scapes, and the trees that sprout from the soil. And mathematicians had at 
+their disposal a new world of geometric entities.
+
+It was not long before mathematicians asked if there was a unity among this 
+diversity. There is, as John Hutchinson demonstrated in 1981, it is the branch 
+of mathematics now known as Iterated Function Theory. Later in the decade 
+Michael Barnsley, a leading researcher from Georgia Tech, wrote the popular 
+book Fractals Everywhere. The book presents the mathematics of Iterated Func-
+tions Systems (IFS), and proves a result known as the Collage Theorem. The 
+Collage Theorem states what an Iterated Function System must be like in order 
+to represent an image.
+
+This presented an intriguing possibility. If, in the forward direction, frac-
+tal mathematics is good for generating natural looking images, then, in the 
+reverse direction, could it not serve to compress images? Going from a given 
+image to an Iterated Function System that can generate the original (or at 
+least closely resemble it), is known as the inverse problem. This problem 
+remains unsolved.
+
+Barnsley, however, armed with his Collage Theorem, thought he had it solved. 
+He applied for and was granted a software patent and left academia to found 
+Iterated Systems Incorporated (US patent 4,941,193. Alan Sloan is the co-
+grantee of the patent and co-founder of Iterated Systems.)  Barnsley announced 
+his success to the world in the January 1988 issue of BYTE magazine. This 
+article did not address the inverse problem but it did exhibit several images 
+purportedly compressed in excess of 10,000:1. Alas, it was not a breakthrough. 
+The images were given suggestive names such as "Black Forest" and "Monterey 
+Coast" and "Bolivian Girl" but they were all manually constructed. Barnsley's 
+patent has come to be derisively referred to as the "graduate student algo-
+rithm."
+
+Graduate Student Algorithm
+   o Acquire a graduate student.
+   o Give the student a picture.
+   o And a room with a graphics workstation.
+   o Lock the door.
+   o Wait until the student has reverse engineered the picture.
+   o Open the door.
+
+Attempts to automate this process have met little success. As Barnsley admit-
+ted in 1988: "Complex color images require about 100 hours each to encode and 
+30 minutes to decode on the Masscomp [dual processor workstation]." That's 100 
+hours with a _person_ guiding the process.
+
+Ironically, it was one of Barnsley's PhD students that made the graduate 
+student algorithm obsolete. In March 1988, according to Barnsley, he arrived 
+at a modified scheme for representing images called Partitioned Iterated 
+Function Systems (PIFS). Barnsley applied for and was granted a second patent 
+on an algorithm that can automatically convert an image into a Partitioned 
+Iterated Function System, compressing the image in the process. (US patent 
+5,065,447. Granted on Nov. 12 1991.) For his PhD thesis, Arnaud Jacquin imple-
+mented the algorithm in software, a description of which appears in his land-
+mark paper "Image Coding Based on a Fractal Theory of Iterated Contractive 
+Image Transformations." The algorithm was not sophisticated, and not speedy, 
+but it was fully automatic. This came at price: gone was the promise of 
+10,000:1 compression. A 24-bit color image could typically be compressed from 
+8:1 to 50:1 while still looking "pretty good." Nonetheless, all contemporary 
+fractal image compression programs are based upon Jacquin's paper.
+
+That is not to say there are many fractal compression programs available. 
+There are not. Iterated Systems sell the only commercial compressor/decompres-
+sor, an MS-Windows program called "Images Incorporated." There are also an 
+increasing number of academic programs being made freely available. Unfor-
+tunately, these programs are -- how should I put it? -- of merely academic 
+quality. 
+
+This scarcity has much to do with Iterated Systems' tight lipped policy about 
+their compression technology. They do, however, sell a Windows DLL for pro-
+grammers. In conjunction with independent development by researchers else-
+where, therefore, fractal compression will gradually become more pervasive. 
+Whether it becomes all-pervasive remains to be seen.
+
+Historical Highlights:
+   1977 -- Benoit Mandelbrot finishes the first edition of The Fractal 
+           Geometry of Nature.
+   1981 -- John Hutchinson publishes "Fractals and Self-Similarity."
+   1983 -- Revised edition of The Fractal Geometry of Nature is 
+           published.
+   1985 -- Michael Barnsley and Stephen Demko introduce Iterated
+           Function Theory in "Iterated Function Systems and the Global
+           Construction of Fractals."
+   1987 -- Iterated Systems Incorporated is founded.
+   1988 -- Barnsley publishes the book Fractals Everywhere.
+   1990 -- Barnsley's first patent is granted.
+   1991 -- Barnsley's second patent is granted.
+   1992 -- Arnaud Jacquin publishes an article that describes the first
+           practical fractal image compression method.
+   1993 -- The book Fractal Image Compression by Michael Barnsley and Lyman 
+           Hurd is published.
+        -- The Iterated Systems' product line matures. 
+   1994 -- Put your name here.
+
+
+ On the Inside
+ -------------
+
+The fractals that lurk within fractal image compression are not those of the 
+complex plane (Mandelbrot Set, Julia sets), but of Iterated Function Theory. 
+When lecturing to lay audiences, the mathematician Heinz-Otto Peitgen intro-
+duces the notion of Iterated Function Systems with the alluring metaphor of a 
+Multiple Reduction Copying Machine. A MRCM is imagined to be a regular copying 
+machine except that:
+
+  1. There are multiple lens arrangements to create multiple overlapping
+     copies of the original.
+  2. Each lens arrangement reduces the size of the original.
+  3. The copier operates in a feedback loop, with the output of one
+     stage the input to the next. The initial input may be anything.
+
+The first point is what makes an IFS a system. The third is what makes it 
+iterative. As for the second, it is implicitly understood that the functions 
+of an Iterated Function Systems are contractive. 
+
+An IFS, then, is a set of contractive transformations that map from a defined 
+rectangle of the real plane to smaller portions of that rectangle. Almost 
+invariably, affine transformations are used. Affine transformations act to 
+translate, scale, shear, and rotate points in the plane. Here is a simple 
+example:
+
+
+     |---------------|              |-----|
+     |x              |              |1    |
+     |               |              |     |
+     |               |         |---------------|
+     |               |         |2      |3      |
+     |               |         |       |       |
+     |---------------|         |---------------|  
+
+         Before                      After
+
+     Figure 1. IFS for generating Sierpinski's Triangle.
+
+This IFS contains three component transformations (three separate lens ar-
+rangements in the MRCM metaphor). Each one shrinks the original by a factor of 
+2, and then translates the result to a new location. It may optionally scale 
+and shift the luminance values of the rectangle, in a manner similar to the 
+contrast and brightness knobs on a TV.
+
+The amazing property of an IFS is that when the set is evaluated by iteration, 
+(i.e. when the copy machine is run), a unique image emerges. This latent image 
+is called the fixed point or attractor of the IFS. As guaranteed by a result 
+known as the Contraction Theorem, it is completely independent of the initial 
+image. Two famous examples are Sierpinski's Triangle and Barnsley's Fern. 
+Because these IFSs are contractive, self-similar detail is created at every 
+resolution down to the infinitesimal. That is why the images are fractal.
+
+The promise of using fractals for image encoding rests on two suppositions: 1. 
+many natural scenes possess this detail within detail structure (e.g. clouds), 
+and 2. an IFS can be found that generates a close approximation of a scene 
+using only a few transformations. Barnsley's fern, for example, needs but 
+four. Because only a few numbers are required to describe each transformation, 
+an image can be represented very compactly. Given an image to encode, finding 
+the optimal IFS from all those possible is known as the inverse problem.
+
+The inverse problem -- as mentioned above -- remains unsolved. Even if it 
+were, it may be to no avail. Everyday scenes are very diverse in subject 
+matter; on whole, they do not obey fractal geometry. Real ferns do not branch 
+down to infinity. They are distorted, discolored, perforated and torn. And the 
+ground on which they grow looks very much different.
+
+To capture the diversity of real images, then, Partitioned IFSs are employed. 
+In a PIFS, the transformations do not map from the whole image to the parts, 
+but from larger parts to smaller parts. An image may vary qualitatively from 
+one area to the next (e.g. clouds then sky then clouds again). A PIFS relates 
+those areas of the original image that are similar in appearance. Using Jac-
+quin's notation, the big areas are called domain blocks and the small areas 
+are called range blocks. It is necessary that every pixel of the original 
+image belong to (at least) one range block. The pattern of range blocks is 
+called the partitioning of an image.
+
+Because this system of mappings is still contractive, when iterated it will 
+quickly converge to its latent fixed point image. Constructing a PIFS amounts 
+to pairing each range block to the domain block that it most closely resembles 
+under some to-be-determined affine transformation. Done properly, the PIFS 
+encoding of an image will be much smaller than the original, while still 
+resembling it closely.
+
+Therefore, a fractal compressed image is an encoding that describes:
+   1. The grid partitioning (the range blocks).
+   2. The affine transforms (one per range block).
+
+The decompression process begins with a flat gray background. Then the set of 
+transformations is repeatedly applied. After about four iterations the attrac-
+tor stabilizes. The result will not (usually) be an exact replica of the 
+original, but reasonably close.
+
+
+ Scalelessnes and Resolution Enhancement
+ ---------------------------------------
+
+When an image is captured by an acquisition device, such as a camera or scan-
+ner, it acquires a scale determined by the sampling resolution of that device. 
+If software is used to zoom in on the image, beyond a certain point you don't 
+see additional detail, just bigger pixels. 
+
+A fractal image is different. Because the affine transformations are spatially 
+contractive, detail is created at finer and finer resolutions with each itera-
+tion. In the limit, self-similar detail is created at all levels of resolu-
+tion, down the infinitesimal. Because there is no level that 'bottoms out' 
+fractal images are considered to be scaleless.
+
+What this means in practice is that as you zoom in on a fractal image, it will 
+still look 'as it should' without the staircase effect of pixel replication. 
+The significance of this is cause of some misconception, so here is the right 
+spot for a public service announcement.
+
+                        /--- READER BEWARE ---\
+
+Iterated Systems is fond of the following argument. Take a portrait that is, 
+let us say, a grayscale image 250x250 pixels in size, 1 byte per pixel. You 
+run it through their software and get a 2500 byte file (compression ratio = 
+25:1). Now zoom in on the person's hair at 4x magnification. What do you see? 
+A texture that still looks like hair. Well then, it's as if you had an image 
+1000x1000 pixels in size. So your _effective_ compression ratio is 25x16=400.
+
+But there is a catch. Detail has not been retained, but generated. With a 
+little luck it will look as it should, but don't count on it. Zooming in on a 
+person's face will not reveal the pores. 
+
+Objectively, what fractal image compression offers is an advanced form of 
+interpolation. This is a useful and attractive property. Useful to graphic 
+artists, for example, or for printing on a high resolution device. But it does 
+not bestow fantastically high compression ratios.
+
+                        \--- READER BEWARE ---/
+
+That said, what is resolution enhancement? It is the process of compressing an 
+image, expanding it to a higher resolution, saving it, then discarding the 
+iterated function system. In other words, the compressed fractal image is the 
+means to an end, not the end itself.
+
+
+ The Speed Problem
+ -----------------
+
+The essence of the compression process is the pairing of each range block to a 
+domain block such that the difference between the two, under an affine trans-
+formation, is minimal. This involves a lot of searching. 
+
+In fact, there is nothing that says the blocks have to be squares or even 
+rectangles. That is just an imposition made to keep the problem tractable. 
+
+More generally, the method of finding a good PIFS for any given image involves 
+five main issues: 
+   1. Partitioning the image into range blocks. 
+   2. Forming the set of domain blocks. 
+   3. Choosing type of transformations that will be considered. 
+   4. Selecting a distance metric between blocks. 
+   5. Specifying a method for pairing range blocks to domain blocks. 
+
+Many possibilities exist for each of these. The choices that Jacquin offered 
+in his paper are: 
+   1. A two-level regular square grid with 8x8 pixels for the large
+      range blocks and 4x4 for the small ones. 
+   2. Domain blocks are 16x16 and 8x8 pixels in size with a subsampling 
+      step size of four. The 8 isometric symmetries (four rotations, 
+      four mirror flips) expand the domain pool to a virtual domain 
+      pool eight times larger. 
+   3. The choices in the last point imply a shrinkage by two in each 
+      direction, with a possible rotation or flip, and then a trans-
+      lation in the image plane. 
+   4. Mean squared error is used. 
+   5. The blocks are categorized as of type smooth, midrange, simple
+      edge, and complex edge. For a given range block the respective
+      category is searched for the best match.
+
+The importance of categorization can be seen by calculating the size of the 
+total domain pool. Suppose the image is partitioned into 4x4 range blocks. A 
+256x256 image contains a total of (256-8+1)^2  = 62,001 different 8x8 domain 
+blocks. Including the 8 isometric symmetries increases this total to 496,008. 
+There are (256-4+1)^2 = 64,009 4x4 range blocks, which makes for a maximum of 
+31,748,976,072 possible pairings to test. Even on a fast workstation an ex-
+haustive search is prohibitively slow. You can start the program before de-
+parting work Friday afternoon; Monday morning, it will still be churning away. 
+
+Increasing the search speed is the main challenge facing fractal image com-
+pression.
+
+
+ Similarity to Vector Quantization
+ ---------------------------------
+
+To the VQ community, a "vector" is a small rectangular block of pixels. The 
+premise of vector quantization is that some patterns occur much more frequent-
+ly than others. So the clever idea is to store only a few of these common 
+patterns in a separate file called the codebook. Some codebook vectors are 
+flat, some are sloping, some contain tight texture, some sharp edges, and so 
+on -- there is a whole corpus on how to construct a codebook. Each codebook 
+entry (each domain block) is assigned an index number. A given image, then, is 
+partitioned into a regular grid array. Each grid element (each range block) is 
+represented by an index into the codebook. Decompressing a VQ file involves 
+assembling an image out of the codebook entries. Brick by brick, so to speak.
+
+The similarity to fractal image compression is apparent, with some notable 
+differences. 
+   1. In VQ the range blocks and domain blocks are the same size; in an
+      IFS the domain blocks are always larger. 
+   2. In VQ the domain blocks are copied straight; in an IFS each domain 
+      block undergoes a luminance scaling and offset.
+   3. In VQ the codebook is stored apart from the image being coded; in 
+      an IFS the codebook is not explicitly stored. It is comprised of
+      portions of the attractor as it emerges during iteration. For that
+      reason it is called a "virtual codebook." It has no existence
+      independent of the affine transformations that define an IFS.
+   4. In VQ the codebook is shared among many images; in an IFS the 
+      virtual codebook is specific to each image.
+
+There is a more refined version of VQ called gain-shape vector quantization in 
+which a luminance scaling and offset is also allowed. This makes the similari-
+ty to fractal image compression as close as can be.
+
+
+ Compression Ratios
+ ------------------
+
+Exaggerated claims not withstanding, compression ratios typically range from 
+4:1 to 100:1. All other things equal, color images can be compressed to a 
+greater extent than grayscale images.
+
+The size of a fractal image file is largely determined by the number of trans-
+formations of the PIFS. For the sake of simplicity, and for the sake of com-
+parison to JPEG, assume that a 256x256x8 image is partitioned into a regular 
+partitioning of 8x8 blocks. There are 1024 range blocks and thus 1024 trans-
+formations to store. How many bits are required for each?
+
+In most implementations the domain blocks are twice the size of the range 
+blocks. So the spatial contraction is constant and can be hard coded into the 
+decompression program. What needs to be stored are:
+
+   x position of domain block        8     6
+   y position of domain block        8     6
+   luminance scaling                 8     5
+   luminance offset                  8     6
+   symmetry indicator                3     3
+                                    --    --
+                                    35    26 bits
+
+In the first scheme, a byte is allocated to each number except for the symme-
+try indicator. The upper bound on the compression ratio is thus (8x8x8)/35 = 
+14.63. In the second scheme, domain blocks are restricted to coordinates 
+modulo 4. Plus, experiments have revealed that 5 bits per scale factor and 6 
+bits per offset still give good visual results. So the compression ratio limit 
+is now 19.69. Respectable but not outstanding.
+
+There are other, more complicated, schemes to reduce the bit rate further. The 
+most common is to use a three or four level quadtree structure for the range 
+partitioning. That way, smooth areas can be represented with large range 
+blocks (high compression), while smaller blocks are used as necessary to 
+capture the details. In addition, entropy coding can be applied as a back-end 
+step to gain an extra 20% or so.
+
+
+ Quality: Fractal vs. JPEG
+ -------------------------
+
+The greatest irony of the coding community is that great pains are taken to 
+precisely measure and quantify the error present in a compressed image, and 
+great effort is expended toward minimizing an error measure that most often is 
+-- let us be gentle -- of dubious value. These measure include signal-to-noise 
+ratio, root mean square error, and mean absolute error. A simple example is 
+systematic shift: add a value of 10 to every pixel. Standard error measures 
+indicate a large distortion, but the image has merely been brightened.
+
+With respect to those dubious error measures, and at the risk of over-sim-
+plification, the results of tests reveal the following: for low compression 
+ratios JPEG is better, for high compression ratios fractal encoding is better. 
+The crossover point varies but is often around 40:1. This figure bodes well 
+for JPEG since beyond the crossover point images are so severely distorted 
+that they are seldom worth using. 
+
+Proponents of fractal compression counter that signal-to-noise is not a good 
+error measure and that the distortions present are much more 'natural looking' 
+than the blockiness of JPEG, at both low and high bit rates. This is a valid 
+point but is by no means universally accepted. 
+
+What the coding community desperately needs is an easy to compute error meas-
+ure that accurately captures subjective impression of human viewers. Until 
+then, your eyes are the best judge.
+
+
+ Finding Out More
+ ----------------
+
+ Please refer to item 17 in part 1 of this FAQ for a list of references,
+available software, and ftp sites concerning fractal compression.
+
+------------------------------------------------------------------------------
+
+Subject: [78] The Burrows-Wheeler block sorting algorithm (long)
+
+
+A high-quality implementation of the Burrows-Wheeler
+block-sorting-based lossless compression algorithm is available at
+http://www.cs.man.ac.uk/arch/people/j-seward/bzip-0.21.tar.gz
+
+Mark Nelson wrote an excellent article "Data Compression with the
+Burrows-Wheeler Transform" for Dr. Dobb's Journal, September 1996.  A copy
+of the article is at http://www.dogma.net/markn/articles/bwt/bwt.htm
+
+Another introduction written by Sampo Syreeni <tmaaedu@nexus.edu.lahti.fi>:
+
+    The Burrows-Wheeler block sorting compression algorithm is described in
+"A Block-sorting Lossless Data Compression Algorithm" by M. Burrows and D.J.
+Wheeler, dated in May 10, 1994. A postscript copy of this paper has been made
+available by Digital on the Systems Research Center (SRC) FTP site at
+ftp://ftp.digital.com/pub/DEC/SRC/research-reports/SRC-124.ps.Z
+
+    The method was originally discovered by one of the authors (Wheeler) back
+in 1983, but has not been published before. As such, the method is fairly new
+and hasn't yet gained popularity.
+
+    The method described in the original paper is really a composite of three
+different algorithms: the block sorting main engine (a lossless, very slightly
+expansive preprocessor), the move-to-front coder (a byte-for-byte simple,
+fast, locally adaptive noncompressive coder) and a simple statistical
+compressor (first order Huffman is mentioned as a candidate) eventually doing
+the compression. Of these three methods only the first two are discussed here
+as they are what constitutes the heart of the algorithm. These two algorithms
+combined form a completely reversible (lossless) transformation that - with
+typical input - skews the first order symbol distributions to make the data
+more compressible with simple methods. Intuitively speaking, the method
+transforms slack in the higher order probabilities of the input block (thus
+making them more even, whitening them) to slack in the lower order statistics.
+This effect is what is seen in the histogram of the resulting symbol data.
+
+    The block sorting preprocessor operates purely on a block basis. One way
+to understand the idea is to think of the input block arranged as a circular
+array where, for every symbol, the succeeding symbols are used as a predictor.
+This predictor is then used to group the symbols with similar right neighbors
+together. This predictor is realized (conceptually) as a two phase process.
+The first phase forms all cyclic shifts of the input block whose size is
+usually a power of two. Note here that the original string is always present
+intact on some row of the resulting matrix. If the block length is n then
+there exist n unique rotations of the original string (to the left). These
+rotations are now viewed as the rows of an N x N matrix of symbols. The second
+phase consists of sorting this resulting conceptual matrix. This phase results
+in the rows coming into order based on their first few symbols. If there is
+some commonly repeated string in the input block (the original paper gives
+"the" as an example), the sorting phase brings all those rotations that have a
+part of this string as the row start very close to each other. The preceding
+symbol in this common string is then found in the last column of the sorted
+matrix. This way common strings result in short bursts of just a few distinct
+characters being formed in the last column of the matrix. The last column is
+what is then output from the second phase. One further bit of information is
+derived from the input data. This is an integer with enough bits to tell the
+size of the input string (that is, log_2(n)). The number is used to note the
+row position into which the original input block got in the sorting algorithm.
+This integer always results in expansion of the data, but is necessary for us
+to be able successfully decompress the string. The absolute amount of overhead
+increases as the logarithm of the input block size so its percentage of the
+output data becomes negligible with useful block sizes anyway.
+
+    The characteristics of the transformation process make the output from the
+sort ideal for certain kinds of further manipulation. The extreme local
+fluctuations in the first order statistics of the output string lead one to
+use a transformation that boosts and flattens the local fluttering of the
+statistics. The best example (and, of course, the one given in the original
+paper) is move-to-front coding. This coder codes a symbol as the number of
+distinct symbols seen since the symbol's last occurrence. Basically this means
+that the coder outputs the index of an input symbol in a dynamic LIFO stack
+and then updates the stack by moving the symbol to the top. This is easy and
+efficient to implement and results in fast local adaptation. As just a few
+common symbols will (locally) govern the input to the coder, these symbols
+will be kept on the top of the stack and thus the output will mainly consist
+of low numbers. This makes it highly susceptible to first order statistical
+compression methods which are, in case, easy and efficient to implement.
+
+    The transform matrix described above would require enormous amounts of
+storage space and would not result in a usable algorithm as such. The method
+can, however, be realized very efficiently by suffix and quick sort methods.
+Thus the whole transformation together with the eventual simple compression
+engine is extremely fast but still achieves impressive compression on typical
+input data. When implemented well, the speeds achieved can be in the order of
+pure LZ and the compression ratios can still approach state-of-the-art Markov
+modeling coders. The engine also responds well to increasing block sizes -
+the longer the input block, the more space there is for the patterns to form
+and the more similar input strings there will be in it. This results in almost
+monotonously increasing compression ratios even as the block length goes well
+into the megabyte range.
+    The decompression cascade is basically just the compression cascade
+backwards. More logic is needed to reverse the main sorting stage, however.
+This logic involves reasoning around the order of the first the last column of
+the conceptual coding matrix. The reader is referred to the original paper for
+an in depth treatment of the subject. The original paper also contains a more
+thorough discussion of why the method works and how to implement it.
+
+    And now a little demonstration. The original block to be compressed is
+chosen to be the (rather pathological) string "good, jolly good". This was
+taken as an example because it has high redundancy and it is exactly 16 bytes
+long. The first picture shows the cyclic shifts (rotations) of the input
+string. The second shows the matrix after sorting. Note that the last column
+now has many double characters in it. Note also that the original string has
+been placed into the 6th row now. The third picture shows the output for this
+input block. The index integer has been packed to a full byte although 4 bits
+would suffice in this case (log_2(16)=4). The fourth and fifth pictures show
+the transformed string after move-to-front-coding. The sixth picture shows the
+statistical distribution of the characters in the output string. Notice the
+disproportionately large amount of ones and zeros, even with a very short
+string like this. This is the output that is then routed through the simple
+statistical encoder. It should compress very well, as the distribution of the
+characters in the input block is now very uneven.
+
+
+      0 1 2 3 4 5 6 7 8 9 A B C D E F        0 1 2 3 4 5 6 7 8 9 A B C D E F
+      -------------------------------        -------------------------------
+  0 | g o o d ,   j o l l y   g o o d    0 |   g o o d g o o d ,   j o l l y
+  1 | o o d ,   j o l l y   g o o d g    1 |   j o l l y   g o o d g o o d ,
+  2 | o d ,   j o l l y   g o o d g o    2 | ,   j o l l y   g o o d g o o d
+  3 | d ,   j o l l y   g o o d g o o    3 | d ,   j o l l y   g o o d g o o
+  4 | ,   j o l l y   g o o d g o o d    4 | d g o o d ,   j o l l y   g o o
+  5 |   j o l l y   g o o d g o o d ,    5 | g o o d ,   j o l l y   g o o d
+  6 | j o l l y   g o o d g o o d ,      6 | g o o d g o o d ,   j o l l y
+  7 | o l l y   g o o d g o o d ,   j    7 | j o l l y   g o o d g o o d ,
+  8 | l l y   g o o d g o o d ,   j o    8 | l l y   g o o d g o o d ,   j o
+  9 | l y   g o o d g o o d ,   j o l    9 | l y   g o o d g o o d ,   j o l
+  A | y   g o o d g o o d ,   j o l l    A | o d ,   j o l l y   g o o d g o
+  B |   g o o d g o o d ,   j o l l y    B | o d g o o d ,   j o l l y   g o
+  C | g o o d g o o d ,   j o l l y      C | o l l y   g o o d g o o d ,   j
+  D | o o d g o o d ,   j o l l y   g    D | o o d ,   j o l l y   g o o d g
+  E | o d g o o d ,   j o l l y   g o    E | o o d g o o d ,   j o l l y   g
+  F | d g o o d ,   j o l l y   g o o    F | y   g o o d g o o d ,   j o l l
+
+             1. The shifts                    2. In lexicographic order
+
+
+                                                121,45,102,114,0,1,36,0,
+         "y,dood  oloojggl",5                   1,113,1,0,112,110,0,3,5
+
+     3. The output from block sort          4. After move-to-front-coding
+
+
+                                             00: 4;  01: 3;  03: 1;  05: 1;
+          79,2D,66,72,0,1,24,0,              24: 1;  2D: 1;  66: 1;  6E: 1;
+          1,71,1,0,70,6E,0,3,5               70: 1;  71: 1;  72: 1;  79: 1
+
+           5. In hexadecimal                      6. The statistics
+
+------------------------------------------------------------------------------
+
+          End of part 2 of the comp.compression faq.

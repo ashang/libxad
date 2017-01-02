@@ -1,0 +1,7 @@
+section 6 of 6 of file zeroes FILE HEADER
+
+?`````````````````````````````````````````````
+``
+end
+sum -r/size 64613/54 section (from first encoded line to "end")
+sum -r/size 0/256 entire input file

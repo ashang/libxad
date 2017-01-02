@@ -1,0 +1,345 @@
+*****************************************************************************
+*   $Id: PackIt.a,v 1.2 2005/06/23 14:39:16 stoecker Exp $
+*   PackIt decrunching slave
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+
+S_PackIt10Data	dc.l	S_PackIt10Reloc
+		dc.w	2
+		dc.w	39
+		dc.l	N_PackIt10Data
+		dc.w	XFDPFF_DATA|XFDPFF_RECOGLEN|XFDPFF_USERTARGET
+		dc.w	0
+		dc.l	RB_PackIt10Data
+		dc.l	DB_PackIt10Data
+		dc.l	SD_PackIt10Data
+		dc.l	VD_PackIt10Data
+		dc.w	XFDID_PackIt10Data
+		dc.w	0
+		dc.l	24
+
+N_PackIt10Data	dc.b	'PackIt 1.0 Data',0
+		even
+
+;-------------------------------------------------
+
+RB_PackIt10Data	MOVEQ	#0,D0
+		CMP.L	#'PIco',(A0)
+		BNE.B	.Exit
+		MOVE.L	12(A0),D1
+		AND.L	#$F0F0F0F0,D1
+		BNE.B	.Exit
+		MOVE.L	16(A0),D1
+		AND.L	#$F0F0F0F0,D1
+		BNE.B	.Exit
+		MOVE.L	4(A0),xfdrr_MinTargetLen(A1)
+		MOVE.L	4(A0),xfdrr_FinalTargetLen(A1)
+		MOVEQ	#12,D1
+		ADD.L	8(A0),D1
+		MOVE.L	D1,xfdrr_MinSourceLen(A1)
+		MOVEQ	#1,D0
+.Exit		RTS
+
+;-------------------------------------------------
+
+SD_PackIt10Data	moveq	#0,d0
+		cmp.l	#'PIco',(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+.Exit		rts
+
+;-------------------------------------------------
+
+VD_PackIt10Data	move.l	12(a0),d1
+		and.l	#$f0f0f0f0,d1
+		bne.s	.Exit
+		move.l	16(a0),d1
+		and.l	#$f0f0f0f0,d1
+		bne.s	.Exit
+		moveq	#$c,d1
+		add.l	8(a0),d1	;crlen
+		cmp.l	d0,d1		;crlen > buflen ??
+		bgt.s	.Exit
+		move.l	4(a0),d0
+		sub.l	8(a0),d0	;cr > uncr ??
+		bmi.s	.Exit
+		move.l	d1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_PackIt10Data	movem.l	d2-d7/a2-a6,-(a7)
+		MOVE.L	xfdbi_SourceBuffer(A0),A2
+		MOVE.L	xfdbi_UserTargetBuf(A0),A1
+		MOVE.L	8(A2),D2
+		LEA	12(A2),A0
+		SUBQ.W	#8,A7
+		MOVE.L	A7,A4
+		MOVE.L	(A0),(A4)
+		MOVE.L	4(A0),4(A4)
+		BSR.W	D_PackIt10
+		ADDQ.W	#8,A7
+
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+**************************************************
+
+S_PackIt10Reloc	
+		IFND	XFD_LASTSLAVE
+		dc.l	S_PackIt_END
+		ELSE
+		dc.l	0
+		ENDIF
+		dc.w	2
+		dc.w	39
+		dc.l	N_PackIt10Reloc
+		dc.w	XFDPFF_RELOC!XFDPFF_RELMODE
+		dc.w	0
+		dc.l	RB_PackIt10Reloc
+		dc.l	DB_PackIt10Reloc
+		dc.l	RS_PackIt10Reloc
+		dc.l	DS_PackIt10Reloc
+		dc.w	XFDID_PackIt10
+		dc.w	0
+		dc.l	$262+20+4
+
+N_PackIt10Reloc	dc.b	'PackIt 1.0',0
+		even
+
+;-------------------------------------------------
+
+RB_PackIt10Reloc
+		cmp.l	#$2e0e286e,$28(a0)
+		bne.s	.Exit
+		cmp.l	#$01144bfa,$2c(a0)
+		bne.s	.Exit
+		cmp.l	#$42954aac,$32(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_PackIt10Reloc
+		movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+
+		move.l	xfdbi_SourceBuffer(a5),a0
+		lea	$262(a0),a2
+
+		move.l	(a2)+,d0
+		move.l	(a2)+,d2
+		
+		move.l	d0,xfdbi_TargetBufSaveLen(a5)
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit
+
+		move.l	d0,a1
+		move.l	a2,a0		
+
+		subq.w	#8,a7
+		move.l	a7,a4
+		move.l	(a2)+,(a4)
+		move.l	(a2),4(a4)
+		bsr	D_PackIt10
+		addq.w	#8,a7
+
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;-------------------------------------------------
+
+RS_PackIt10Reloc
+		add.l	a0,a0
+		add.l	a0,a0
+
+		cmp.l	#$2e0e286e,$c(a0)
+		bne.s	.Exit
+		cmp.l	#$01144bfa,$10(a0)
+		bne.s	.Exit
+		cmp.l	#$42954aac,$16(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DS_PackIt10Reloc
+		movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdsi_SegList(a5),a2
+		add.l	a2,a2
+		add.l	a2,a2
+		lea	$262-$1c(a2),a2
+
+		move.l	(a2)+,d7
+		move.l	(a2)+,d2
+		
+		move.l	d7,d0
+		moveq	#1,d1
+		move.l	a6,-(a7)
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.l	(a7)+,a6
+		move.w	#XFDERR_NOMEMORY,xfdsi_Error(a5)
+		tst.l	d0
+		beq.s	.Exit
+		move.l	d0,a3
+
+		move.l	a3,a1
+		move.l	a2,a0		
+
+		move.l	d7,-(a7)
+		subq.w	#8,a7
+		move.l	a7,a4
+		move.l	(a2)+,(a4)
+		move.l	(a2),4(a4)
+		bsr.s	D_PackIt10
+		addq.w	#8,a7
+		move.l	(a7)+,d7
+
+		move.l	xfdsi_SegList(a5),d1
+		move.l	xfdm_DosBase(a6),a6
+		jsr	-156(a6)
+
+		move.l	a3,a0
+		move.l	d7,d0
+		lea	xfdsi_SegList(a5),a1
+		clr.l	(a1)
+		move.w	xfdsi_RelMode(a5),d1
+		move.l	10*4(a7),a6
+		jsr	_LVOxfdRelocate(a6)
+		moveq	#0,d1
+		move.w	d0,xfdsi_Error(a5)
+		bne.s	.FreeBuf
+		moveq	#1,d1
+
+.FreeBuf	move.l	d1,-(a7)
+		move.l	a3,a1
+		move.l	d7,d0
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-210(a6)
+		move.l	(a7)+,d0
+
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;=================================================
+
+D_PackIt10	moveq	#-1,d7
+		add.l	d2,a0
+		move.l	-(a0),a2
+		add.l	a1,a2
+		move.l	-(a0),d0
+.Decr1		moveq	#0,d3
+		lsr.l	#1,d0
+		bne.s	.Decr2
+		bsr.s	.Decr9
+.Decr2		bcs.s	.Decr7
+.Decr3		moveq	#2,d1
+		bsr.s	.Decr10
+		add.w	d2,d3
+		cmp.w	#3,d2
+		beq.s	.Decr3
+.Decr4		moveq	#7,d1
+.Decr5		lsr.l	#1,d0
+		bne.s	.Decr6
+		bsr.s	.Decr9
+.Decr6		roxl.w	#1,d2
+		dbra	d1,.Decr5
+		move.b	d2,-(a2)
+		cmp.l	a1,a2
+		dbeq	d3,.Decr4
+		cmp.w	d7,d3
+		beq.s	.Decr7
+		rts
+
+.Decr7		moveq	#3,d1
+		bsr.s	.Decr10
+		cmp.b	#3,d2
+		beq.s	.Decr13
+		cmp.b	#7,d2
+		beq.s	.Decr13
+		move.b	(a4,d2.w),d1
+		ext.w	d1
+		and.b	#3,d2
+		addq.w	#1,d2
+		move.w	d2,d3
+		bsr.s	.Decr10
+		addq.w	#1,d2
+.Decr8		move.b	-1(a2,d2.w),-(a2)
+		cmp.l	a1,a2
+		dbeq	d3,.Decr8
+		cmp.w	d7,d3
+		beq.s	.Decr1
+		rts
+
+.Decr9		move.l	-(a0),d0
+		move.b	#$10,ccr
+		roxr.l	#1,d0
+		rts
+
+.Decr10		subq.w	#1,d1
+		clr.w	d2
+.Decr11		lsr.l	#1,d0
+		bne.s	.Decr12
+		bsr.s	.Decr9
+.Decr12		roxl.w	#1,d2
+		dbra	d1,.Decr11
+		rts
+
+.Decr13		move.b	(a4,d2.w),d1
+		ext.w	d1
+		bsr.s	.Decr10
+		addq.w	#1,d2
+		move.w	d2,d3
+		moveq	#-1,d4
+.Decr14		addq.l	#1,d4
+		moveq	#1,d1
+		bsr.s	.Decr10
+		tst.w	d2
+		bne.s	.Decr14
+		add.w	d4,d4
+		addq.l	#3,d4
+		move.w	d4,d1
+		bsr.s	.Decr10
+		addq.w	#4,d2
+		exg	d2,d3
+		bra.s	.Decr8
+S_PackIt_END
+

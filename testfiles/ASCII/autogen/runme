@@ -1,0 +1,3 @@
+execute encoder allbytes/allbytes
+execute encoder zeroes/zeroes
+execute encoder hello/hello

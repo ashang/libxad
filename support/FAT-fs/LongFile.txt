@@ -1,0 +1,12 @@
+From: "Justin Piper" <katskan@navix.net>
+To: <submit@wotsit.demon.co.uk>
+Subject: Long File Name format
+
+Long file names are quite simple.  Windows simply creates multiple entries
+for each file with a long name.  The entries are tagged with every
+attribute, including (and this is the key) the volume attribute.  Windows
+sees this, and chains the entries together to make one long file name.  The
+only directory entry that doesn't have all the attributes set is the short
+filename, which is the only one that makes any sense to DOS, so that's the
+only one it displays when you type "dir"
+

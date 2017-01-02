@@ -1,0 +1,236 @@
+*****************************************************************************
+*   $Id: SMF.a,v 1.2 2005/06/23 14:39:16 stoecker Exp $
+*   SMF Compacker decrunching slave
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+
+S_SMF		IFND	XFD_LASTSLAVE
+		dc.l	S_SMF_END
+		ELSE
+		dc.l	0
+		ENDIF
+		dc.w	2		;version
+		dc.w	39		;master version
+		dc.l	N_SMF		;name
+		dc.w	XFDPFF_ADDR
+		dc.w	0
+		dc.l	RB_SMF		;recog buffer
+		dc.l	DB_SMF		;decrunch buffer
+		dc.l	0		;recog segment
+		dc.l	0		;decrunch segment
+		dc.w	XFDID_SMF
+		dc.w	0
+		dc.l	$150+2
+
+N_SMF		dc.b	"SMF Compacker",0
+		even
+
+;-------------------------------------------------
+
+RB_SMF		moveq	#0,d0
+		cmp.l	#$41fa014e,(a0)+
+		bne.s	.Exit
+		cmp.w	#$d1fc,(a0)+
+		bne.s	.Exit
+		cmp.l	#$45fa013e,10(a0)
+		bne.s	.Exit
+		cmp.l	#$0a0000aa,18(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+.Exit		rts
+
+;-------------------------------------------------
+
+DB_SMF		movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdbi_SourceBuffer(a5),a4
+
+		move.l	#$150,d1
+		add.l	6(a4),d1
+		MOVE.L	$2c(A4),xfdbi_DecrAddress(A5)
+		MOVE.L	$66(A4),xfdbi_JmpAddress(A5)
+		move.w	#XFDERR_BUFFERTRUNCATED,xfdbi_Error(a5)
+		moveq	#0,d0
+		cmp.l	xfdbi_SourceBufLen(a5),d1
+		bgt.s	.Exit
+
+		move.l	xfdm_ExecBase(a6),a6
+		MOVEQ	#-($100-$aa),D7
+
+		bsr.s	Count_SMF
+		move.l	d0,xfdbi_TargetBufSaveLen(a5)
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit
+
+		move.l	d0,a0
+		bsr	Decr_SMF
+
+		moveq	#1,d0
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;=================================================
+
+* <- d0: uncrunched length
+
+Count_SMF	lea	$150(a4),a1
+		move.l	a1,a2
+		add.l	6(a4),a2
+		moveq	#0,d2
+
+.l83C		move.b	(a1)+,d0
+		EOR.B	D7,D0
+		cmp.b	#$b0,d0
+		beq.s	.l876
+		cmp.b	#$b1,d0
+		beq.s	.l88C
+		cmp.b	#$b2,d0
+		beq.s	.l8AA
+		cmp.b	#$b3,d0
+		beq.s	.l8CC
+.l865		addq.l	#1,d2
+.l866		cmp.l	a2,a1
+		bcs.s	.l83C
+		move.l	d2,d0
+		rts
+
+.l876		MOVE.B	(a1)+,d6
+		EOR.B	D7,D6
+		beq.s	.l865
+		subq.w	#1,a1
+		addq.l	#3,d2
+		bra.s	.l866
+
+.l88C		MOVE.B	(a1)+,d6
+		EOR.B	D7,D6
+		beq.s	.l865
+		addq.l	#3,d2
+		bra.s	.l866
+
+.l8AA		MOVE.B	(a1)+,d6
+		EOR.B	D7,D6
+		beq.s	.l865
+		moveq	#0,d1
+		move.b	d6,d1
+		subq.w	#1,d1
+		lsl.w	#8,d1
+		move.b	(a1)+,d1
+		EOR.B	D7,D1
+		bra.s	.l94C
+
+.l8CC		MOVE.B	(a1)+,d6
+		EOR.B	D7,D6
+		beq.s	.l865
+		move.b	d6,d1
+		subq.w	#1,d1
+		lsl.w	#8,d1
+		move.b	(a1)+,d1
+		EOR.B	D7,D1
+		lsl.l	#8,d1
+		move.b	(a1)+,d1
+		EOR.B	D7,D1
+		subq.w	#1,d1		;cruncher adds $01000100, but original
+		lsl.l	#8,d1		;decruncher only subs $01000000 !!!!
+		move.b	(a1)+,d1
+		EOR.B	D7,D1
+.l94C		addq.w	#1,a1
+		add.l	d1,d2
+		bra.s	.l866
+
+* -> a0: target buffer
+
+Decr_SMF	lea	$150(a4),a1
+		move.l	a1,a2
+		add.l	6(a4),a2
+
+.l83C		move.b	(a1)+,d0
+		EOR.B	D7,D0
+		cmp.b	#$b0,d0
+		beq.s	.l876
+		cmp.b	#$b1,d0
+		beq.s	.l88C
+		cmp.b	#$b2,d0
+		beq.s	.l8AA
+		cmp.b	#$b3,d0
+		beq.s	.l8CC
+.l865		move.b	d0,(a0)+
+.l866		cmp.l	a2,a1
+		bcs.s	.l83C
+		rts
+
+.l876		MOVE.B	(a1)+,d6
+		EOR.B	D7,D6
+		beq.s	.l865
+		subq.w	#1,a1
+		moveq	#0,d1
+		bra.s	.l89E
+
+.l88C		move.b	(a1)+,d1
+		EOR.B	D7,D1
+		beq.s	.l865
+.l89E		move.b	d1,(a0)+
+		move.b	d1,(a0)+
+		move.b	d1,(a0)+
+		bra.s	.l866
+
+.l8AA		MOVE.B	(a1)+,d6
+		EOR.B	D7,D6
+		beq.s	.l865
+		move.b	d6,d1
+		subq.w	#1,d1
+		lsl.w	#8,d1
+		move.b	(a1)+,d1
+		EOR.B	D7,D1
+		move.b	(a1)+,d0
+		EOR.B	D7,D0
+.l8B0		move.b	d0,(a0)+
+		subq.w	#1,d1
+		bne.s	.l8B0
+		bra.s	.l866
+
+.l8CC		MOVE.B	(a1)+,d6
+		EOR.B	D7,D6
+		beq.s	.l865
+		move.b	d6,d1
+		subq.w	#1,d1
+		lsl.w	#8,d1
+		move.b	(a1)+,d1
+		EOR.B	D7,D1
+		lsl.l	#8,d1
+		move.b	(a1)+,d1
+		EOR.B	D7,D1
+		subq.w	#1,d1		;cruncher adds $01000100, but original
+		lsl.l	#8,d1		;decruncher only subs $01000000 !!!!
+		move.b	(a1)+,d1
+		EOR.B	D7,D1
+		move.b	(a1)+,d0
+		EOR.B	D7,D0
+.l8F0		move.b	d0,(a0)+
+		subq.l	#1,d1
+		bne.s	.l8F0
+		bra.s	.l866
+
+S_SMF_END
+

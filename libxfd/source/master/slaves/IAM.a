@@ -1,0 +1,795 @@
+*****************************************************************************
+*   $Id: IAM.a,v 1.2 2005/06/23 14:39:16 stoecker Exp $
+*   IAM decrunching slave
+*
+*   XFD library system for cruncher handling
+*   Copyright (C) 1994-1998 by Georg Hörmann
+*   Copyright (C) 1998 by Dirk Stöcker <soft@dstoecker.de>
+*
+*   This library is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation; either
+*   version 2.1 of the License, or (at your option) any later version.
+*
+*   This library is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this library; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*****************************************************************************
+
+S_IAM_ATMData	dc.l	S_IAM_ATM
+		dc.w	2
+		dc.w	39
+		dc.l	N_IAM_ATMData
+		dc.w	XFDPFF_DATA|XFDPFF_USERTARGET|XFDPFF_RECOGLEN
+		dc.w	0
+		dc.l	RB_IAM_ATMData
+		dc.l	DB_IAM_ATMData
+		dc.l	SD_IAM_ATMData
+		dc.l	VD_IAM_ATMData
+		dc.w	XFDID_IAMPacker10ATM5Data
+		dc.w	0
+		dc.l	4+9
+
+N_IAM_ATMData	dc.b	'IAM Packer 1.0 (ATM5) Data',0
+		even
+
+;-------------------------------------------------
+
+RB_IAM_ATMData	BSR.B	SD_IAM_ATMData
+		TST.L	D0
+		BEQ.B	.Exit
+		MOVE.L	4(A0),D1
+		AND.L	#$00FFFFFF,D1
+		MOVE.L	D1,xfdrr_FinalTargetLen(A1)
+		MOVE.L	D1,xfdrr_MinTargetLen(A1)
+		MOVEQ	#$C,D1
+		ADD.L	8(A0),D1
+		MOVE.L	D1,xfdrr_MinSourceLen(A1)
+
+		MOVEQ	#1,D0
+.Exit		RTS
+
+;-------------------------------------------------
+
+SD_IAM_ATMData	MOVEQ	#0,D0
+		CMP.L	#'ATM5',(A0)
+		BEQ.B	.Ok
+		CMP.W	#$5064,(A0)
+		BNE.B	.Exit
+		MOVE.B	2(A0),D1
+		BEQ.B	.Exit
+		AND.B	#$F,D1
+		BNE.B	.Exit
+.Ok		TST.L	8(A0)		;Crunched length 0 ?
+		BEQ.B	.Exit
+		MOVEQ	#1,D0
+.Exit		RTS
+
+;-------------------------------------------------
+
+VD_IAM_ATMData	moveq	#$c,d1
+		add.l	8(a0),d1	;crlen
+		cmp.l	d0,d1		;crlen > buflen ??
+		BHI.B	.Exit
+		move.l	4(a0),d0
+		AND.L	#$00FFFFFF,D0
+		sub.l	8(a0),d0	;cr > uncr ??
+		bmi.s	.Exit
+		move.l	d1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_IAM_ATMData	MOVEM.L	D2-D7/A2-A6,-(A7)
+		MOVE.L	A0,A5
+		MOVE.L	xfdbi_UserTargetBuf(A5),A1
+		MOVE.L	xfdbi_SourceBuffer(A5),A0
+		BSR.W	D_IAM_ATM
+		MOVE.W	d1,xfdbi_Error(A5)
+		MOVEM.L	(A7)+,D2-D7/A2-A6
+		RTS
+
+**************************************************
+
+S_IAM_ATM	dc.l	S_IAM_ICEData
+		dc.w	2
+		dc.w	39
+		dc.l	N_IAM_ATM
+		dc.w	XFDPFF_RELOC!XFDPFF_RELMODE
+		dc.w	0
+		dc.l	RB_IAM_ATM
+		dc.l	DB_IAM_ATM
+		dc.l	RS_IAM_ATM
+		dc.l	DS_IAM_ATM
+		dc.w	XFDID_IAMPacker10ATM5
+		dc.w	0
+		dc.l	$368+12+4
+
+N_IAM_ATM	dc.b	'IAM Packer 1.0 (ATM5)',0
+		even
+
+;-------------------------------------------------
+
+RB_IAM_ATM	cmp.l	#$487a0172,$24(a0)
+		bne.s	.Exit
+		cmp.l	#$4e52ffe4,$1a8(a0)
+		bne.s	.Exit
+		cmp.l	#$1b3250ee,$21e(a0)
+		bne.s	.Exit
+		cmp.l	#'ATM5',$364(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_IAM_ATM	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+
+		move.l	xfdbi_SourceBuffer(a5),a2
+		move.l	$18(a2),d0
+		lsl.l	#2,d0
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	_LVOAllocMem(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit
+
+		lea	$364(a2),a0
+		move.l	4(a0),xfdbi_TargetBufSaveLen(a5)
+
+		MOVE.L	D0,A1
+		BSR.W	D_IAM_ATM
+		MOVE.W	d1,xfdbi_Error(A5)
+		tst.l	d0
+		beq.b	.free
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+.free		move.l	xfdbi_TargetBuffer(a5),a1
+		move.l	xfdbi_TargetBufLen(a5),d0
+		jsr	_LVOFreeMem(a6)
+		moveq	#0,d0
+		bra.b	.Exit
+
+;-------------------------------------------------
+
+RS_IAM_ATM	add.l	a0,a0
+		add.l	a0,a0
+
+		cmp.l	#($cd*4)+8,-4(a0)
+		bne.s	.Exit
+		cmp.l	#$487a0172,$4(a0)
+		bne.s	.Exit
+		cmp.l	#$4e52ffe4,$188(a0)
+		bne.s	.Exit
+		cmp.l	#$1b3250ee,$1fe(a0)
+		bne.s	.Exit
+		cmp.l	#'ATM5',$180(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DS_IAM_ATM	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdsi_SegList(a5),a4
+		clr.l	xfdsi_SegList(a5)
+		add.l	a4,a4
+		add.l	a4,a4
+
+		move.l	(a4),a0
+		add.l	a0,a0
+		add.l	a0,a0
+		MOVE.L	-4(A0),D1
+		addq.w	#4,a0		;source
+		move.l	4(a0),d0
+		SUB.L	D0,D1
+		LEA	-8(A0,D1),A1	;destination
+
+		movem.l	d0/a0/a1/a4/a6,-(a7)
+		bsr	D_IAM_ATM
+		movem.l	(a7)+,d0/a0/a1/a4/a6
+		MOVE.L	A1,A0		;buffer
+
+		lea	xfdsi_SegList(a5),a1
+		move.w	xfdsi_RelMode(a5),d1
+		jsr	_LVOxfdRelocate(a6)
+		moveq	#0,d1
+		move.w	d0,xfdsi_Error(a5)
+		bne.s	.FreeSeg
+		moveq	#1,d1
+
+.FreeSeg	move.l	d1,-(a7)
+		move.l	a4,d1
+		lsr.l	#2,d1
+		move.l	xfdm_DosBase(a6),a6
+		JSR	_LVOUnLoadSeg(A6)
+		move.l	(a7)+,d0
+
+		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+**************************************************
+
+S_IAM_ICEData	dc.l	S_IAM_ICE
+		dc.w	2
+		dc.w	39
+		dc.l	N_IAM_ICEData
+		dc.w	XFDPFF_DATA|XFDPFF_USERTARGET|XFDPFF_RECOGLEN
+		dc.w	0
+		dc.l	RB_IAM_ICEData
+		dc.l	DB_IAM_ICEData
+		dc.l	SD_IAM_ICEData
+		dc.l	VD_IAM_ICEData
+		dc.w	XFDID_IAMPacker10ICEData
+		dc.w	0
+		dc.l	4+9
+
+N_IAM_ICEData	dc.b	'IAM Packer 1.0 (ICE!) Data',0
+		even
+
+;-------------------------------------------------
+
+RB_IAM_ICEData	BSR.B	SD_IAM_ICEData
+		TST.L	D0
+		BEQ.B	.Exit
+
+		MOVE.L	8(A0),D1
+		MOVE.L	D1,xfdrr_FinalTargetLen(A1)
+		ADD.L	#$100,D1
+		MOVE.L	D1,xfdrr_MinTargetLen(A1)
+		MOVE.L	4(A0),D1
+		MOVE.L	D1,xfdrr_MinSourceLen(A1)
+.Exit		RTS
+
+SD_IAM_ICEData	MOVEQ	#0,D0
+		CMP.L	#'ICE!',(A0)
+		BEQ.B	.Valid
+		CMP.L	#'AU5!',(A0)
+		BNE.B	.Exit
+.Valid		MOVEQ	#1,D0
+.Exit		RTS
+
+;-------------------------------------------------
+
+VD_IAM_ICEData	move.l	4(a0),d1	;crlen
+		cmp.l	d0,d1		;crlen > buflen ??
+		bgt.s	.Exit
+		move.l	8(a0),d0
+		sub.l	4(a0),d0	;cr > uncr ??
+		bmi.s	.Exit
+		move.l	d1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_IAM_ICEData	MOVEM.L	D2-D7/A2-A6,-(A7)
+		MOVE.L	xfdbi_UserTargetBuf(A0),A1
+		MOVE.L	xfdbi_SourceBuffer(A0),A2
+		MOVE.L	4(A2),D1
+.Copy		MOVE.B	(A2)+,(A1)+
+		SUBQ.L	#1,D1
+		BNE.B	.Copy
+
+		MOVE.W	#XFDERR_CORRUPTEDDATA,xfdbi_Error(A0)
+		MOVE.L	xfdbi_UserTargetBuf(A0),A0
+		BSR.W	D_IAM_ICE
+		MOVEM.L	(A7)+,D2-D7/A2-A6
+		RTS
+
+**************************************************
+
+S_IAM_ICE
+		IFND	XFD_LASTSLAVE
+		dc.l	S_IAM_END
+		ELSE
+		dc.l	0
+		ENDIF
+		dc.w	2
+		dc.w	39
+		dc.l	N_IAM_ICE
+		dc.w	XFDPFF_RELOC!XFDPFF_RELMODE
+		dc.w	0
+		dc.l	RB_IAM_ICE
+		dc.l	DB_IAM_ICE
+		dc.l	RS_IAM_ICE
+		dc.l	DS_IAM_ICE
+		dc.w	XFDID_IAMPacker10ICE
+		dc.w	0
+		dc.l	$338+12+4
+
+N_IAM_ICE	dc.b	'IAM Packer 1.0 (ICE!)',0
+		even
+
+;-------------------------------------------------
+
+RB_IAM_ICE	cmp.l	#$487a0172,$24(a0)
+		bne.s	.Exit
+		cmp.l	#$4e53ff88,$19a(a0)
+		bne.s	.Exit
+		cmp.l	#$4893000f,$206(a0)
+		bne.s	.Exit
+		cmp.l	#'ICE!',$334(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DB_IAM_ICE	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+
+		move.l	xfdbi_SourceBuffer(a5),a2
+		move.l	$18(a2),d0
+		lsl.l	#2,d0
+		move.l	d0,xfdbi_TargetBufLen(a5)
+
+		move.l	xfdbi_TargetBufMemType(a5),d1
+		move.l	xfdm_ExecBase(a6),a6
+		jsr	-198(a6)
+		move.w	#XFDERR_NOMEMORY,xfdbi_Error(a5)
+		move.l	d0,xfdbi_TargetBuffer(a5)
+		beq.s	.Exit
+		
+		lea	$334(a2),a0
+		move.l	d0,a1
+		move.l	8(a0),xfdbi_TargetBufSaveLen(a5)
+		move.l	-4(a0),d1
+.Copy		move.l	(a0)+,(a1)+
+		subq.l	#1,d1
+		bne.s	.Copy
+
+		move.l	d0,a0
+		MOVE.W	#XFDERR_CORRUPTEDDATA,xfdbi_Error(A5)
+		bsr	D_IAM_ICE
+.Exit		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;-------------------------------------------------
+
+RS_IAM_ICE	add.l	a0,a0
+		add.l	a0,a0
+
+		cmp.l	#($c1*4)+8,-4(a0)
+		bne.s	.Exit
+		cmp.l	#$487a0172,$4(a0)
+		bne.s	.Exit
+		cmp.l	#$4e53ff88,$17a(a0)
+		bne.s	.Exit
+		cmp.l	#$4893000f,$1e6(a0)
+		bne.s	.Exit
+		cmp.l	#'ICE!',$18c(a0)
+		bne.s	.Exit
+		moveq	#1,d0
+		rts
+
+.Exit		moveq	#0,d0
+		rts
+
+;-------------------------------------------------
+
+DS_IAM_ICE	movem.l	d2-d7/a2-a6,-(a7)
+		move.l	a0,a5
+		move.l	xfdsi_SegList(a5),a4
+		clr.l	xfdsi_SegList(a5)
+		add.l	a4,a4
+		add.l	a4,a4
+
+		move.l	(a4),a0
+		add.l	a0,a0
+		add.l	a0,a0
+		addq.w	#4,a0		;source
+		move.l	8(a0),d0
+
+		MOVE.W	#XFDERR_CORRUPTEDDATA,xfdsi_Error(A5)
+		movem.l	d0/a0/a4/a6,-(a7)
+		bsr	D_IAM_ICE
+		MOVE.L	D0,D1
+		movem.l	(a7)+,d0/a0/a4/a6
+		TST.L	D1
+		BEQ.B	.FreeSeg
+
+		lea	xfdsi_SegList(a5),a1
+		move.w	xfdsi_RelMode(a5),d1
+		jsr	_LVOxfdRelocate(a6)
+		moveq	#0,d1
+		move.w	d0,xfdsi_Error(a5)
+		bne.s	.FreeSeg
+		moveq	#1,d1
+
+.FreeSeg	move.l	d1,-(a7)
+		move.l	a4,d1
+		lsr.l	#2,d1
+		move.l	xfdm_DosBase(a6),a6
+		jsr	-156(a6)
+		move.l	(a7)+,d0
+
+		movem.l	(a7)+,d2-d7/a2-a6
+		rts
+
+;=================================================
+
+D_IAM_ATM	movem.l	a5/a6,-(a7)
+		lea	-$1c(a7),a7
+		movea.l	a1,a2
+		addq.l	#4,a0
+		move.l	(a0)+,d0
+		AND.L	#$00FFFFFF,D0
+		LEA	(A1,D0.L),A5
+		move.l	(a0)+,d0
+		move.l	a0,a6
+		add.l	d0,a6
+		MOVE.B	-(A6),D7
+		BNE.B	.Next
+		move.b	-(a6),d7
+.Next		BRA.W	.Decr31
+
+.Decr1		move.w	d3,d5
+.Decr2		add.b	d7,d7
+.Decr3		dbcs	d5,.Decr2
+		beq.s	.Decr6
+		bcc.s	.Decr4
+		sub.w	d3,d5
+		neg.w	d5
+		bra.s	.Decr9
+
+.Decr4		moveq	#3,d6
+		bsr.s	.Decr15
+		beq.s	.Decr5
+		bra.s	.Decr8
+
+.Decr5		moveq	#7,d6
+		bsr.s	.Decr15
+		beq.s	.Decr7
+		add.w	#15,d5
+		bra.s	.Decr8
+
+.Decr6		move.b	-(a6),d7
+		addx.b	d7,d7
+		bra.s	.Decr3
+
+.Decr7		moveq	#13,d6
+		bsr.s	.Decr15
+		add.w	#$10E,d5
+.Decr8		add.w	d3,d5
+.Decr9		lea	.Tab(pc),a4
+		move.w	d5,d2
+		bne.s	.Decr18
+		add.b	d7,d7
+		bne.s	.Decr10
+		move.b	-(a6),d7
+		addx.b	d7,d7
+.Decr10		bcs.s	.Decr11
+		moveq	#1,d6
+		bra.s	.Decr19
+
+.Decr11		moveq	#3,d6
+		bsr.s	.Decr15
+		tst.b	(a7)
+		beq.s	.Decr12
+		cmp.l	a2,a5
+		bls.b	.Error
+		move.b	10(a7,d5.w),-(a5)
+		bra.w	.Decr30
+
+.Decr12		move.b	(a5),d0
+		btst	#3,d5
+		bne.s	.Decr13
+		bra.s	.Decr14
+
+.Decr13		add.b	#$F0,d5
+.Decr14		sub.b	d5,d0
+		cmp.l	a2,a5
+		bls.b	.Error
+		move.b	d0,-(a5)
+		bra.w	.Decr30
+
+.Decr15		clr.w	d5
+.Decr16		add.b	d7,d7
+		bne.s	.Decr17
+		move.b	-(a6),d7
+		addx.b	d7,d7
+.Decr17		addx.w	d5,d5
+		dbra	d6,.Decr16
+		tst.w	d5
+		rts
+.Error		moveq	#0,d0
+		moveq	#XFDERR_CORRUPTEDDATA,d1
+		bra.w	.end
+
+.Decr18		moveq	#2,d6
+.Decr19		bsr.s	.Decr15
+		move.w	d5,d4
+		move.b	14(a4,d4.w),d6
+		ext.w	d6
+		tst.b	1(a7)
+		bne.s	.Decr20
+		addq.w	#4,d6
+		bra.s	.Decr24
+
+.Decr20		bsr.s	.Decr15
+		move.w	d5,d1
+		lsl.w	#4,d1
+		moveq	#2,d6
+		bsr.s	.Decr15
+		cmp.b	#7,d5
+		blt.s	.Decr22
+		moveq	#0,d6
+		bsr.s	.Decr15
+		beq.s	.Decr21
+		moveq	#2,d6
+		bsr.s	.Decr15
+		add.w	d5,d5
+		or.w	d1,d5
+		bra.s	.Decr25
+
+.Decr21		or.b	2(a7),d1
+		bra.s	.Decr23
+
+.Decr22		or.b	3(a7,d5.w),d1
+.Decr23		move.w	d1,d5
+		bra.s	.Decr25
+
+.Decr24		bsr.s	.Decr15
+.Decr25		add.w	d4,d4
+		beq.s	.Decr26
+		add.w	-2(a4,d4.w),d5
+.Decr26		lea	1(a5,d5.w),a4
+		cmp.l	a2,a5
+		bls.b	.Error
+		move.b	-(a4),-(a5)
+.Decr27		cmp.l	a2,a5
+		bls.b	.Error
+		move.b	-(a4),-(a5)
+		dbra	d2,.Decr27
+		bra.s	.Decr30
+
+.Decr28		add.b	d7,d7
+		bne.s	.Decr29
+		move.b	-(a6),d7
+		addx.b	d7,d7
+.Decr29		bcs	.Decr1
+		cmp.l	a2,a5
+		bls.b	.Error
+		move.b	-(a6),-(a5)
+.Decr30		cmp.l	a5,a3
+		bne.s	.Decr28
+		cmp.l	a6,a0
+		beq.s	.Decr39
+.Decr31		moveq	#0,d6
+		bsr	.Decr15
+		beq.s	.Decr34
+		move.b	-(a6),d0
+		lea	2(a7),a1
+		move.b	d0,(a1)+
+		moveq	#1,d1
+		moveq	#6,d2
+.Decr32		cmp.b	d0,d1
+		bne.s	.Decr33
+		addq.w	#2,d1
+.Decr33		move.b	d1,(a1)+
+		addq.w	#2,d1
+		dbra	d2,.Decr32
+		st	1(a7)
+		bra.s	.Decr35
+
+.Decr34		sf	1(a7)
+.Decr35		moveq	#0,d6
+		bsr	.Decr15
+		beq.s	.Decr37
+		lea	10(a7),a1
+		moveq	#15,d0
+.Decr36		move.b	-(a6),(a1)+
+		dbra	d0,.Decr36
+		st	(a7)
+		bra.s	.Decr38
+
+.Decr37		sf	(a7)
+.Decr38		clr.w	d3
+		move.b	-(a6),d3
+		move.b	-(a6),d0
+		lsl.w	#8,d0
+		move.b	-(a6),d0
+		move.l	a5,a3
+		sub.w	d0,a3
+		bra.s	.Decr28
+
+.Decr39		moveq	#1,d0
+		moveq	#0,d1
+.end		lea	$1C(a7),a7
+		movem.l	(a7)+,a5/a6
+		rts
+
+.Tab		dc.w	$20
+		dc.w	$60
+		dc.w	$160
+		dc.w	$360
+		dc.w	$760
+		dc.w	$F60
+		dc.w	$1F60
+		dc.w	1
+		dc.w	$304
+		dc.w	$506
+		dc.w	$708
+
+;=================================================
+
+D_IAM_ICE	lea	$78(a0),a4		; a4 start of destination buffer
+		move.l	a4,a6			
+		addq.w	#4,a0			; kennung
+		move.l	(a0)+,d0		; source length
+		lea	-8(a0,d0.l),a5		; end of source
+		move.l	(a0)+,d0		; destination length
+		MOVE.L	D0,-(A7)
+		add.l	d0,a6			; a6 end of destination
+		move.l	a6,a3
+		move.b	-(a5),d7
+		bsr.s	.Decr8
+		move.l	a3,a5
+		bsr.w	.Decr12
+		bcc.s	.Decr5
+		move.w	#$f9f,d7
+		bsr.b	.Decr12
+		bcc.s	.Decr2
+		moveq	#15,d0
+		bsr.w	.Decr14
+		move.w	d1,d7
+.Decr2		moveq	#4-1,d6
+.Decr3		move.w	-(a3),d4
+		moveq	#4-1,d5
+.Decr4		add.w	d4,d4
+		addx.w	d0,d0
+		add.w	d4,d4
+		addx.w	d1,d1
+		add.w	d4,d4
+		addx.w	d2,d2
+		add.w	d4,d4
+		addx.w	d3,d3
+		dbra	d5,.Decr4
+		dbra	d6,.Decr3
+		CMP.L	A4,A3
+		BLO.B	.Decr5
+		movem.w	d0-d3,(a3)
+		dbra	d7,.Decr2
+.Decr5		MOVE.L	(A7)+,D0
+		LEA	-$78(A4),A0
+.Decr6		move.b	(a4)+,(a0)+
+		subq.l	#1,d0
+		bne.s	.Decr6
+		MOVEQ	#1,D0
+		rts
+
+.Error		ADDQ.L	#8,A7		* return address and saved register
+		MOVEQ	#0,D0
+		RTS
+
+.Decr8		bsr.s	.Decr12
+		bcc.s	.Decr11
+		moveq	#0,d1
+		bsr.s	.Decr12
+		bcc.s	.Decr10
+		lea	.Tab1(pc),a1
+		moveq	#4,d3
+.Decr9		move.l	-(a1),d0
+		bsr.s	.Decr14
+		swap	d0
+		cmp.w	d0,d1
+		dbne	d3,.Decr9
+		add.l	20(a1),d1
+		LEA	1(A4,D1.W),A2
+		CMP.L	A2,A6		* as we go backwards, the first border is modified!
+		BLO.B	.Error
+.Decr10		move.b	-(a5),-(a6)
+		dbra	d1,.Decr10
+.Decr11		cmp.l	a4,a6
+		bgt.s	.Decr17
+		rts
+
+.Decr12		add.b	d7,d7
+		bne.s	.Decr13
+		move.b	-(a5),d7
+		addx.b	d7,d7
+.Decr13		rts
+
+.Decr14		moveq	#0,d1
+.Decr15		add.b	d7,d7
+		bne.s	.Decr16
+		move.b	-(a5),d7
+		addx.b	d7,d7
+.Decr16		addx.w	d1,d1
+		dbra	d0,.Decr15
+		rts
+
+.Decr17		lea	.Tab2(pc),a1
+		moveq	#3,d2
+.Decr18		bsr.s	.Decr12
+		dbcc	d2,.Decr18
+		moveq	#0,d4
+		moveq	#0,d1
+		move.b	1(a1,d2.w),d0
+		ext.w	d0
+		bmi.s	.Decr19
+		bsr.s	.Decr14
+.Decr19		move.b	6(a1,d2.w),d4
+		add.w	d1,d4
+		beq.s	.Decr21
+		lea	.Tab3(pc),a1
+		moveq	#1,d2
+.Decr20		bsr.s	.Decr12
+		dbcc	d2,.Decr20
+		moveq	#0,d1
+		move.b	1(a1,d2.w),d0
+		ext.w	d0
+		bsr.s	.Decr14
+		add.w	d2,d2
+		add.w	6(a1,d2.w),d1
+		bpl.s	.Decr23
+		sub.w	d4,d1
+		bra.s	.Decr23
+
+.Decr21		moveq	#0,d1
+		moveq	#5,d0
+		moveq	#-1,d2
+		bsr.b	.Decr12
+		bcc.s	.Decr22
+		moveq	#8,d0
+		moveq	#$3f,d2
+.Decr22		bsr.s	.Decr14
+		add.w	d2,d1
+.Decr23		lea	2(a6,d4.w),a1
+		add.w	d1,a1
+		LEA	2(A4,D4.W),A2
+		CMP.L	A2,A6		* as we go backwards, the first border is modified!
+		BLO.W	.Error
+		move.b	-(a1),-(a6)
+.Decr24		move.b	-(a1),-(a6)
+		dbra	d4,.Decr24
+		bra	.Decr8
+
+		dc.w	$7fff,14
+		dc.w	$ff,7
+		dc.w	7,2
+		dc.w	3,1
+		dc.w	3,1
+.Tab1		dc.l	$10d
+		dc.l	$e
+		dc.l	7
+		dc.l	4
+		dc.l	1
+
+.Tab2		dc.b	$09,$01,$00,$ff
+		dc.b	$ff,$08,$04,$02
+		dc.b	$01,$00
+
+.Tab3		dc.b	$0b,$04,$07,$00
+		dc.w	$011f,$ffff
+		dc.w	$001f,$0000
+		dc.w	$0000,$0000
+		dc.w	$0000
+
+S_IAM_END
+
